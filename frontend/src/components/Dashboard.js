@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
+import { GmailIntegration } from './GmailIntegration';
 
 
 
@@ -19,7 +20,26 @@ export function InternshipDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [oauthMessage, setOauthMessage] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle OAuth callback response
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const gmailConnected = params.get('gmail_connected');
+    const gmailError = params.get('gmail_error');
+    
+    if (gmailConnected === 'true') {
+      setOauthMessage({ type: 'success', text: 'Gmail connected successfully! You can now scan for job applications.' });
+      // Clear the URL parameters
+      navigate('/dashboard', { replace: true });
+    } else if (gmailError === 'true') {
+      setOauthMessage({ type: 'error', text: 'Failed to connect Gmail. Please try again.' });
+      // Clear the URL parameters
+      navigate('/dashboard', { replace: true });
+    }
+  }, [location, navigate]);
 
   // Fetch jobs from backend
   useEffect(() => {
@@ -152,6 +172,31 @@ export function InternshipDashboard() {
             Track your internship applications and stay organized
           </p>
         </div>
+
+        {/* OAuth Message */}
+        {oauthMessage && (
+          <div className={`mb-6 p-4 rounded-md ${
+            oauthMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            <p className="text-sm">{oauthMessage.text}</p>
+          </div>
+        )}
+
+        {/* Gmail Integration */}
+        <GmailIntegration onApplicationsFound={(applications) => {
+          // Refresh the internships list when new applications are found
+          console.log('Applications found in Dashboard:', applications);
+          // Instead of reloading, fetch the updated list
+          axios.get("http://localhost:3001/api/jobs")
+            .then((res) => {
+              setInternships(res.data);
+            })
+            .catch((err) => {
+              console.error("Error refreshing jobs:", err);
+            });
+        }} />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">

@@ -12,8 +12,15 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(err));
 
-// Job model
+// Models
 const Job = require("./models/Job");
+
+// Routes
+const gmailRoutes = require("./routes/gmail");
+app.use("/api/gmail", gmailRoutes);
+
+// Add OAuth callback route at root level
+app.use("/", gmailRoutes);
 
 // Routes
 app.get("/api/jobs", async (req, res) => {

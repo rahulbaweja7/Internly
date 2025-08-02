@@ -8,6 +8,7 @@ const jobSchema = new mongoose.Schema({
   stipend: String,
   dateApplied: Date,
   notes: String,
+  emailId: String, // Gmail message ID to track processed emails
 });
 
 module.exports = mongoose.model("Job", jobSchema); 
