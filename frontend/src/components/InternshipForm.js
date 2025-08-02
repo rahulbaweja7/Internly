@@ -108,17 +108,17 @@ export function InternshipForm({ internship, onSubmit, onCancel }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Applied">Applied</SelectItem>
-                  <SelectItem value="Interview">Interview</SelectItem>
-                  <SelectItem value="Offer">Offer</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
+                                <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                    <SelectItem value="Applied">Applied</SelectItem>
+                    <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+                    <SelectItem value="Phone Interview">Phone Interview</SelectItem>
+                    <SelectItem value="Technical Interview">Technical Interview</SelectItem>
+                    <SelectItem value="Final Interview">Final Interview</SelectItem>
+                    <SelectItem value="Accepted">Accepted</SelectItem>
+                    <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+                  </Select>
             </div>
           </div>
 

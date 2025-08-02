@@ -45,9 +45,14 @@ export function InternshipDashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Applied': return 'bg-blue-100 text-blue-800';
-      case 'Interview': return 'bg-yellow-100 text-yellow-800';
-      case 'Offer': return 'bg-green-100 text-green-800';
+      case 'Online Assessment': return 'bg-purple-100 text-purple-800';
+      case 'Phone Interview': return 'bg-indigo-100 text-indigo-800';
+      case 'Technical Interview': return 'bg-cyan-100 text-cyan-800';
+      case 'Final Interview': return 'bg-teal-100 text-teal-800';
+      case 'Accepted': return 'bg-green-100 text-green-800';
+      case 'Waitlisted': return 'bg-orange-100 text-orange-800';
       case 'Rejected': return 'bg-red-100 text-red-800';
+      case 'Withdrawn': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -133,46 +138,11 @@ export function InternshipDashboard() {
               <Plus className="h-4 w-4 mr-2" />
               Add Internship
             </Button>
-            
-            {/* Add/Edit Internship Modal */}
-            {isFormOpen && (
-              <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <div className="flex items-center justify-between">
-                    <DialogTitle>
-                      {editingInternship ? 'Edit Internship' : 'Add New Internship'}
-                    </DialogTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsFormOpen(false);
-                        setEditingInternship(null);
-                      }}
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                </DialogHeader>
-            
-                <InternshipForm
-                  internship={editingInternship}
-                  onSubmit={editingInternship ? handleEditInternship : handleAddInternship}
-                  onCancel={() => {
-                    setIsFormOpen(false);
-                    setEditingInternship(null);
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-            
-            )}
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-7xl relative z-10">
 
 
         {/* Header */}
@@ -184,7 +154,7 @@ export function InternshipDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
@@ -193,32 +163,48 @@ export function InternshipDashboard() {
               <div className="text-2xl font-bold">{internships.length}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Interviews</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statusCounts.Interview || 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Offers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statusCounts.Offer || 0}</div>
-            </CardContent>
-          </Card>
+                  <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Online Assessments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts['Online Assessment'] || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.Accepted || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Waitlisted</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.Waitlisted || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.Rejected || 0}</div>
+          </CardContent>
+        </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {internships.length > 0 
-                  ? Math.round(((statusCounts.Interview || 0) + (statusCounts.Offer || 0)) / internships.length * 100)
-                  : 0}%
-              </div>
+                          <div className="text-2xl font-bold">
+              {internships.length > 0 
+                ? Math.round(((statusCounts['Online Assessment'] || 0) + (statusCounts.Accepted || 0)) / internships.length * 100)
+                : 0}%
+            </div>
             </CardContent>
           </Card>
         </div>
@@ -235,16 +221,16 @@ export function InternshipDashboard() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Applied">Applied</SelectItem>
-              <SelectItem value="Interview">Interview</SelectItem>
-              <SelectItem value="Offer">Offer</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
-            </SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Applied">Applied</SelectItem>
+            <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+            <SelectItem value="Phone Interview">Phone Interview</SelectItem>
+            <SelectItem value="Technical Interview">Technical Interview</SelectItem>
+            <SelectItem value="Final Interview">Final Interview</SelectItem>
+            <SelectItem value="Accepted">Accepted</SelectItem>
+            <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+            <SelectItem value="Rejected">Rejected</SelectItem>
+            <SelectItem value="Withdrawn">Withdrawn</SelectItem>
           </Select>
         </div>
 
@@ -342,6 +328,40 @@ export function InternshipDashboard() {
       <button className="fixed bottom-6 right-6 h-12 w-12 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 transition-colors">
         <HelpCircle className="h-6 w-6" />
       </button>
+
+      {/* Add/Edit Internship Modal */}
+      {isFormOpen && (
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle>
+                  {editingInternship ? 'Edit Internship' : 'Add New Internship'}
+                </DialogTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsFormOpen(false);
+                    setEditingInternship(null);
+                  }}
+                >
+                  ✕
+                </Button>
+              </div>
+            </DialogHeader>
+        
+            <InternshipForm
+              internship={editingInternship}
+              onSubmit={editingInternship ? handleEditInternship : handleAddInternship}
+              onCancel={() => {
+                setIsFormOpen(false);
+                setEditingInternship(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

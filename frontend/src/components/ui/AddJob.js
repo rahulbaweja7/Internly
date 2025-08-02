@@ -127,15 +127,11 @@ function AddJob() {
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Applied">Applied</SelectItem>
-                      <SelectItem value="Interview">Interview</SelectItem>
-                      <SelectItem value="Offer">Offer</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                    </SelectContent>
+                    <SelectItem value="Applied">Applied</SelectItem>
+                    <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+                    <SelectItem value="Accepted">Accepted</SelectItem>
+                    <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
                   </Select>
                 </div>
               </div>
