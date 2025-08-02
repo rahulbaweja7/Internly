@@ -1,119 +1,131 @@
-# Internly
+# Internly - Internship Tracking Application
 
-A modern web application for managing internships and connecting students with opportunities.
+A modern web application for tracking internship applications with a beautiful UI and full-stack functionality.
 
-## 🚀 Features
+## Features
 
-- **Student Portal**: Browse and apply for internships
-- **Company Portal**: Post internship opportunities and manage applications
-- **Admin Dashboard**: Oversee the platform and manage users
-- **Real-time Notifications**: Stay updated on application status
-- **Responsive Design**: Works seamlessly across all devices
+- 📊 **Dashboard Overview** - Track total applications, interviews, offers, and response rates
+- 📝 **Add/Edit Internships** - Easy form to add and edit internship applications
+- 🔍 **Search & Filter** - Search by company, position, or location and filter by status
+- 📱 **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- 🎨 **Modern UI** - Clean, professional interface with Tailwind CSS
+- 💾 **Persistent Data** - MongoDB backend for data storage
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Frontend**: React.js with TypeScript
-- **Backend**: Node.js with Express
-- **Database**: MongoDB
-- **Authentication**: JWT
-- **Styling**: Tailwind CSS
-- **State Management**: Redux Toolkit
+### Frontend
+- **React** - UI framework
+- **Tailwind CSS** - Styling
+- **React Router** - Navigation
+- **Axios** - HTTP client
+- **Lucide React** - Icons
 
-## 📦 Installation
+### Backend
+- **Node.js** - Runtime environment
+- **Express** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **CORS** - Cross-origin resource sharing
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB Atlas account (or local MongoDB)
+
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/rahulbaweja7/Internly.git
+   git clone <your-repo-url>
    cd Internly
    ```
 
-2. **Install dependencies**
+2. **Install backend dependencies**
    ```bash
-   # Install backend dependencies
    cd backend
    npm install
-   
-   # Install frontend dependencies
+   ```
+
+3. **Install frontend dependencies**
+   ```bash
    cd ../frontend
    npm install
    ```
 
-3. **Set up environment variables**
+4. **Set up environment variables**
    ```bash
-   # Backend (.env)
-   cp backend/.env.example backend/.env
+   cd ../backend
+   cp env.example .env
+   ```
    
-   # Frontend (.env)
-   cp frontend/.env.example frontend/.env
+   Edit `.env` and add your MongoDB connection string:
+   ```
+   MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/internly?retryWrites=true&w=majority
    ```
 
-4. **Start the development servers**
+5. **Start the backend server**
    ```bash
-   # Start backend server
    cd backend
    npm run dev
-   
-   # Start frontend server (in a new terminal)
+   ```
+
+6. **Start the frontend development server**
+   ```bash
    cd frontend
    npm start
    ```
 
-## 📁 Project Structure
+7. **Open your browser**
+   Navigate to `http://localhost:3000`
+
+## Usage
+
+1. **Landing Page** - Click "Get Started" to access the dashboard
+2. **Dashboard** - View your internship applications and statistics
+3. **Add Internship** - Click the "+ Add Internship" button to add new applications
+4. **Edit/Delete** - Use the action buttons on each internship card
+5. **Search & Filter** - Use the search bar and status filter to find specific applications
+
+## Project Structure
 
 ```
 Internly/
-├── backend/                 # Backend API server
-│   ├── src/
-│   │   ├── controllers/     # Route controllers
-│   │   ├── models/         # Database models
-│   │   ├── routes/         # API routes
-│   │   ├── middleware/     # Custom middleware
-│   │   └── utils/          # Utility functions
+├── backend/
+│   ├── models/
+│   │   └── Job.js
+│   ├── index.js
 │   ├── package.json
 │   └── .env
-├── frontend/               # React frontend application
+├── frontend/
 │   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── services/      # API services
-│   │   ├── store/         # Redux store
-│   │   └── utils/         # Utility functions
-│   ├── package.json
-│   └── .env
-├── docs/                  # Documentation
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   ├── Dashboard.js
+│   │   │   ├── LandingPage.js
+│   │   │   └── InternshipForm.js
+│   │   ├── App.js
+│   │   └── index.css
+│   └── package.json
 └── README.md
 ```
 
-## 🔧 Development
+## Environment Variables
 
-- **Backend API**: Runs on `http://localhost:5000`
-- **Frontend App**: Runs on `http://localhost:3000`
-- **Database**: MongoDB (local or cloud)
+Create a `.env` file in the backend directory with:
 
-## 📝 API Documentation
+- `MONGO_URI` - Your MongoDB connection string
+- `PORT` - Server port (default: 3001)
+- `NODE_ENV` - Environment (development/production)
 
-API documentation is available at `/api/docs` when the backend server is running.
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**Rahul Baweja**
-- GitHub: [@rahulbaweja7](https://github.com/rahulbaweja7)
-
-## 🙏 Acknowledgments
-
-- React.js community
-- Node.js community
-- MongoDB Atlas
-- All contributors and supporters
+This project is licensed under the MIT License.

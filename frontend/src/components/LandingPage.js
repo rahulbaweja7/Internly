@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowRight, CheckCircle, BarChart3, Search, Bell, Users, Target, TrendingUp } from 'lucide-react';
 
-export function LandingPage({ onGetStarted }) {
+export function LandingPage() {
+  const navigate = useNavigate();
   const features = [
     {
       icon: Target,
@@ -57,7 +59,7 @@ export function LandingPage({ onGetStarted }) {
               </div>
               <span className="font-semibold text-xl">Internly</span>
             </div>
-            <Button onClick={onGetStarted}>
+            <Button onClick={() => navigate('/dashboard')}>
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -81,7 +83,7 @@ export function LandingPage({ onGetStarted }) {
             Track applications, manage deadlines, and monitor your progress all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-6">
+            <Button size="lg" onClick={() => navigate('/dashboard')} className="text-lg px-8 py-6">
               Start Tracking Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -195,7 +197,7 @@ export function LandingPage({ onGetStarted }) {
             Join thousands of students who have successfully tracked their applications 
             and landed amazing internships.
           </p>
-          <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-6">
+          <Button size="lg" onClick={() => navigate('/dashboard')} className="text-lg px-8 py-6">
             Get Started for Free
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
