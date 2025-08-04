@@ -124,30 +124,42 @@ export function GmailIntegration({ onApplicationsFound }) {
       // Remove email-specific fields before sending to job tracker
       const { emailId, subject, snippet, ...jobData } = application;
       
+      console.log('Sending job data to backend:', {
+        company: jobData.company,
+        role: jobData.position,
+        location: jobData.location,
+        status: jobData.status,
+        stipend: '', // No salary info from email parsing
+        dateApplied: jobData.appliedDate,
+        notes: `Imported from Gmail\nSubject: ${subject}\nSnippet: ${snippet}`,
+        emailId: emailId
+      });
+      
       await axios.post('http://localhost:3001/api/jobs', {
         company: jobData.company,
         role: jobData.position,
         location: jobData.location,
         status: jobData.status,
-        stipend: jobData.salary || '',
+        stipend: '', // No salary info from email parsing
         dateApplied: jobData.appliedDate,
         notes: `Imported from Gmail\nSubject: ${subject}\nSnippet: ${snippet}`,
         emailId: emailId // Include the email ID to track processed emails
       });
 
-      console.log('Added application with emailId:', emailId);
+      console.log('Successfully added application with emailId:', emailId);
 
       // Remove from detected applications
       setDetectedApplications(prev => 
         prev.filter(app => app.emailId !== application.emailId)
       );
 
-      // Refresh the parent component
+      // Refresh the parent component to show the newly added job
       if (onApplicationsFound) {
-        onApplicationsFound([]);
+        onApplicationsFound(['refresh']); // Signal to refresh the dashboard
       }
     } catch (error) {
       console.error('Error adding application to tracker:', error);
+      console.error('Error response:', error.response?.data);
       setError('Failed to add application to tracker');
     }
   };
@@ -162,6 +174,11 @@ export function GmailIntegration({ onApplicationsFound }) {
       
       // Clear all detected applications after adding them all
       setDetectedApplications([]);
+      
+      // Refresh the parent component to show all newly added jobs
+      if (onApplicationsFound) {
+        onApplicationsFound(['refresh']); // Signal to refresh the dashboard
+      }
     } catch (error) {
       console.error('Error adding all applications:', error);
       setError('Failed to add some applications');

@@ -7,9 +7,10 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target } from 'lucide-react';
+import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target, RefreshCw, LogOut, User } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { GmailIntegration } from './GmailIntegration';
+import { useAuth } from '../contexts/AuthContext';
 
 
 
@@ -23,6 +24,7 @@ export function InternshipDashboard() {
   const [oauthMessage, setOauthMessage] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   // Handle OAuth callback response
   useEffect(() => {
@@ -42,9 +44,10 @@ export function InternshipDashboard() {
   }, [location, navigate]);
 
   // Fetch jobs from backend
-  useEffect(() => {
+  const fetchJobs = () => {
     axios.get("http://localhost:3001/api/jobs")
       .then((res) => {
+        console.log('Fetched jobs from backend:', res.data);
         setInternships(res.data);
         setLoading(false);
       })
@@ -52,11 +55,15 @@ export function InternshipDashboard() {
         console.error("Error fetching jobs:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchJobs();
   }, []);
 
   const filteredInternships = internships.filter(internship => {
     const matchesSearch = internship.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         internship.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          internship.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || internship.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -149,15 +156,39 @@ export function InternshipDashboard() {
               </div>
               <span className="font-semibold text-xl">Internly</span>
             </div>
-            <Button 
-              onClick={() => {
-                setEditingInternship(null);
-                setIsFormOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Internship
-            </Button>
+            <div className="flex items-center space-x-4">
+              {user && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{user.name}</span>
+                  {user.picture && (
+                    <img 
+                      src={user.picture} 
+                      alt={user.name} 
+                      className="h-6 w-6 rounded-full"
+                    />
+                  )}
+                </div>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={logout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+              <Button 
+                onClick={() => {
+                  setEditingInternship(null);
+                  setIsFormOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Internship
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -186,16 +217,14 @@ export function InternshipDashboard() {
 
         {/* Gmail Integration */}
         <GmailIntegration onApplicationsFound={(applications) => {
-          // Refresh the internships list when new applications are found
+          // Refresh the internships list when new applications are found or added
           console.log('Applications found in Dashboard:', applications);
-          // Instead of reloading, fetch the updated list
-          axios.get("http://localhost:3001/api/jobs")
-            .then((res) => {
-              setInternships(res.data);
-            })
-            .catch((err) => {
-              console.error("Error refreshing jobs:", err);
-            });
+          
+          // If applications is an array with 'refresh' signal, or if there are actual applications
+          if (applications.length > 0) {
+            // Fetch the updated list from the backend
+            fetchJobs();
+          }
         }} />
 
         {/* Stats Cards */}
@@ -277,6 +306,14 @@ export function InternshipDashboard() {
             <SelectItem value="Rejected">Rejected</SelectItem>
             <SelectItem value="Withdrawn">Withdrawn</SelectItem>
           </Select>
+          <Button
+            variant="outline"
+            onClick={fetchJobs}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
 
         {/* Internship Cards */}

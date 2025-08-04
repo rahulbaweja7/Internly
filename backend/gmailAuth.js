@@ -42,7 +42,7 @@ const setCredentials = (tokens) => {
 const fetchJobApplicationEmails = async (maxResults = 200) => {
   try {
     // Simple search for all emails containing "application"
-    const query = 'application';g
+    const query = 'application';
     
     console.log('Searching for emails containing "application"...');
     
