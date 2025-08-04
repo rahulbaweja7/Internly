@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target, RefreshCw, LogOut, User } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { GmailIntegration } from './GmailIntegration';
+import { Navbar } from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
 
 
@@ -142,56 +143,7 @@ export function InternshipDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={() => navigate('/')} className="flex items-center">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                <Target className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-xl">Internly</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{user.name}</span>
-                  {user.picture && (
-                    <img 
-                      src={user.picture} 
-                      alt={user.name} 
-                      className="h-6 w-6 rounded-full"
-                    />
-                  )}
-                </div>
-              )}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={logout}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-              <Button 
-                onClick={() => {
-                  setEditingInternship(null);
-                  setIsFormOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Internship
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="container mx-auto p-6 max-w-7xl relative z-10">
 
