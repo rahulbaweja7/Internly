@@ -5,6 +5,7 @@ import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
 import Dashboard from './components/Dashboard'; 
 import AddJob from './components/ui/AddJob';
+import { Analytics } from './components/Analytics';
 import './App.css';
 
 // Protected Route Component
@@ -42,6 +43,11 @@ function AppRoutes() {
       <Route path="/add" element={
         <ProtectedRoute>
           <AddJob />
+        </ProtectedRoute>
+      } />
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
         </ProtectedRoute>
       } />
     </Routes>

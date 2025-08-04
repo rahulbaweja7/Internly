@@ -13,6 +13,7 @@ import {
   X, 
   Home,
   BarChart3,
+  TrendingUp,
   Settings,
   Bell,
   Search
@@ -27,6 +28,7 @@ export function Navbar() {
   const isAuthenticated = !!user;
   const isDashboard = location.pathname === '/dashboard';
   const isAddJob = location.pathname === '/add';
+  const isAnalytics = location.pathname === '/analytics';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';
 
@@ -163,6 +165,15 @@ export function Navbar() {
           </Button>
 
           <Button 
+            variant={isAnalytics ? "default" : "ghost"}
+            onClick={() => navigate('/analytics')}
+            className={isAnalytics ? "bg-gradient-to-r from-blue-600 to-purple-600" : "text-gray-600 hover:text-gray-900"}
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+
+          <Button 
             onClick={() => {
               navigate('/add');
             }}
@@ -267,6 +278,17 @@ export function Navbar() {
                   >
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Dashboard
+                  </Button>
+                  <Button 
+                    variant={isAnalytics ? "default" : "ghost"}
+                    onClick={() => {
+                      navigate('/analytics');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Analytics
                   </Button>
                   <Button 
                     onClick={() => {
