@@ -7,13 +7,11 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target, RefreshCw, LogOut, User } from 'lucide-react';
+import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target, RefreshCw, LogOut, User, Trash2, CheckSquare, Square, X } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { GmailIntegration } from './GmailIntegration';
 import { Navbar } from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
-
-
 
 export function InternshipDashboard() {
   const [internships, setInternships] = useState([]);
@@ -23,6 +21,9 @@ export function InternshipDashboard() {
   const [editingInternship, setEditingInternship] = useState(null);
   const [loading, setLoading] = useState(true);
   const [oauthMessage, setOauthMessage] = useState(null);
+  const [selectedJobs, setSelectedJobs] = useState(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -130,10 +131,59 @@ export function InternshipDashboard() {
     try {
       await axios.delete(`http://localhost:3001/api/jobs/${id}`);
       setInternships(internships.filter(internship => internship._id !== id));
+      // Remove from selected jobs if it was selected
+      setSelectedJobs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     } catch (error) {
       console.error("Error deleting job:", error);
       alert("Failed to delete job");
     }
+  };
+
+  // Bulk delete functionality
+  const handleBulkDelete = async () => {
+    try {
+      const selectedIds = Array.from(selectedJobs);
+      const deletePromises = selectedIds.map(id => axios.delete(`http://localhost:3001/api/jobs/${id}`));
+      await Promise.all(deletePromises);
+      
+      setInternships(internships.filter(internship => !selectedJobs.has(internship._id)));
+      setSelectedJobs(new Set());
+      setIsSelectionMode(false);
+      setIsBulkDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error bulk deleting jobs:", error);
+      alert("Failed to delete some jobs");
+    }
+  };
+
+  const toggleJobSelection = (jobId) => {
+    setSelectedJobs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(jobId)) {
+        newSet.delete(jobId);
+      } else {
+        newSet.add(jobId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllJobs = () => {
+    const filteredIds = filteredInternships.map(job => job._id);
+    setSelectedJobs(new Set(filteredIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedJobs(new Set());
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedJobs(new Set());
   };
 
   const statusCounts = internships.reduce((acc, internship) => {
@@ -141,13 +191,14 @@ export function InternshipDashboard() {
     return acc;
   }, {});
 
+  const selectedCount = selectedJobs.size;
+  const hasSelection = selectedCount > 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="container mx-auto p-6 max-w-7xl relative z-10">
-
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Internship Tracker</h1>
@@ -235,7 +286,7 @@ export function InternshipDashboard() {
           </Card>
         </div>
 
-        {/* Filters */}
+        {/* Filters and Actions */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -266,7 +317,76 @@ export function InternshipDashboard() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+          
+          {/* Selection Mode Toggle */}
+          {!isSelectionMode && filteredInternships.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setIsSelectionMode(true)}
+              className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+            >
+              <CheckSquare className="h-4 w-4" />
+              Select Multiple
+            </Button>
+          )}
         </div>
+
+        {/* Selection Mode Header */}
+        {isSelectionMode && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-orange-800">
+                  Selection Mode
+                </span>
+                {hasSelection && (
+                  <span className="text-sm text-orange-700">
+                    {selectedCount} job{selectedCount !== 1 ? 's' : ''} selected
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {hasSelection && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={selectAllJobs}
+                      className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
+                      className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                    >
+                      Clear
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setIsBulkDeleteDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Selected
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={exitSelectionMode}
+                  className="text-orange-600 hover:bg-orange-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Internship Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -276,10 +396,26 @@ export function InternshipDashboard() {
             </div>
           ) : (
             filteredInternships.map((internship) => (
-              <Card key={internship._id} className="hover:shadow-lg transition-shadow">
+              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative">
+                {/* Selection Checkbox - Only show in selection mode */}
+                {isSelectionMode && (
+                  <div className="absolute top-3 left-3 z-10">
+                    <button
+                      onClick={() => toggleJobSelection(internship._id)}
+                      className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                    >
+                      {selectedJobs.has(internship._id) ? (
+                        <CheckSquare className="h-5 w-5 text-orange-600" />
+                      ) : (
+                        <Square className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className={isSelectionMode ? "pr-8" : ""}>
                       <CardTitle className="text-lg">{internship.role}</CardTitle>
                       <CardDescription className="flex items-center mt-1">
                         <Building className="h-4 w-4 mr-1" />
@@ -396,6 +532,40 @@ export function InternshipDashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Confirm Bulk Delete
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to delete <strong>{selectedCount} selected job{selectedCount !== 1 ? 's' : ''}</strong>? 
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete {selectedCount} Job{selectedCount !== 1 ? 's' : ''}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
