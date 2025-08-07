@@ -1,15 +1,61 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Target, Building, Users, TrendingUp } from 'lucide-react';
+import axios from 'axios';
 
 export function Login() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setError(''); // Clear error when user types
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post('http://localhost:3001/api/auth/login', {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      });
+
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.response?.data?.error || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
@@ -146,29 +192,84 @@ export function Login() {
                 </div>
               </div>
 
-              {/* Coming Soon */}
-              <div className="space-y-4">
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                    <Mail className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Sign-in Coming Soon</h3>
-                  <p className="text-sm text-gray-600">
-                    We're working on email/password authentication. For now, please use Google Sign-in.
-                  </p>
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                 </div>
-              </div>
+              )}
+
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      placeholder="Enter your email"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => handleChange('password', e.target.value)}
+                      placeholder="Enter your password"
+                      className="pl-10 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Signing In...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      Sign In
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </form>
 
               {/* Footer */}
-              <div className="text-center text-xs text-gray-500 space-y-2">
+              <div className="text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
                 <p>
                   By signing in, you agree to our{' '}
-                  <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>
                   {' '}and{' '}
-                  <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a>
                 </p>
-                <p className="text-gray-400">
-                  New users will be automatically created when signing in with Google
+                <p>
+                  Don't have an account?{' '}
+                  <Link to="/register" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    Sign up
+                  </Link>
                 </p>
               </div>
             </CardContent>

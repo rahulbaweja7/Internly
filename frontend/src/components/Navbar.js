@@ -67,7 +67,14 @@ export function Navbar() {
             </Button>
             <ThemeToggle />
             <Button 
+              variant="ghost" 
               onClick={() => navigate('/login')}
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+            >
+              Sign In
+            </Button>
+            <Button 
+              onClick={() => navigate('/register')}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
             >
               Get Started

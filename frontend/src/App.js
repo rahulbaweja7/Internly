@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
+import { Register } from './components/Register';
+import { VerifyEmail } from './components/VerifyEmail';
 import Dashboard from './components/Dashboard'; 
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
@@ -36,6 +38,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
