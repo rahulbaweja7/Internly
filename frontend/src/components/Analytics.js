@@ -45,9 +45,9 @@ export function Analytics() {
                            (statusCounts['Technical Interview'] || 0) + 
                            (statusCounts['Final Interview'] || 0);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+      return (
+      <div className="min-h-screen bg-background dark:bg-gray-900">
+        <Navbar />
 
       <div className="container mx-auto p-6 max-w-7xl relative z-10">
         {/* Header */}

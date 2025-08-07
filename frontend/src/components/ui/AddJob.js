@@ -57,7 +57,7 @@ function AddJob() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
       <Navbar />
 
       <div className="container mx-auto p-6 max-w-2xl">

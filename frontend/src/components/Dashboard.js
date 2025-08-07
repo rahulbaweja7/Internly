@@ -194,9 +194,9 @@ export function InternshipDashboard() {
   const selectedCount = selectedJobs.size;
   const hasSelection = selectedCount > 0;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+      return (
+      <div className="min-h-screen bg-background dark:bg-gray-900">
+        <Navbar />
 
       <div className="container mx-auto p-6 max-w-7xl relative z-10">
         {/* Header */}
@@ -211,8 +211,8 @@ export function InternshipDashboard() {
         {oauthMessage && (
           <div className={`mb-6 p-4 rounded-md ${
             oauthMessage.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
-              : 'bg-red-50 border border-red-200 text-red-800'
+              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' 
+              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
           }`}>
             <p className="text-sm">{oauthMessage.text}</p>
           </div>
@@ -333,14 +333,14 @@ export function InternshipDashboard() {
 
         {/* Selection Mode Header */}
         {isSelectionMode && (
-          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-orange-800">
+                <span className="text-sm font-medium text-orange-800 dark:text-orange-200">
                   Selection Mode
                 </span>
                 {hasSelection && (
-                  <span className="text-sm text-orange-700">
+                  <span className="text-sm text-orange-700 dark:text-orange-300">
                     {selectedCount} job{selectedCount !== 1 ? 's' : ''} selected
                   </span>
                 )}
@@ -352,7 +352,7 @@ export function InternshipDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={selectAllJobs}
-                      className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                      className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20"
                     >
                       Select All
                     </Button>
@@ -360,7 +360,7 @@ export function InternshipDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={clearSelection}
-                      className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                      className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20"
                     >
                       Clear
                     </Button>
@@ -379,7 +379,7 @@ export function InternshipDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={exitSelectionMode}
-                  className="text-orange-600 hover:bg-orange-100"
+                  className="text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/20"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -495,7 +495,7 @@ export function InternshipDashboard() {
       </div>
 
       {/* Help Button */}
-      <button className="fixed bottom-6 right-6 h-12 w-12 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 transition-colors">
+      <button className="fixed bottom-6 right-6 h-12 w-12 bg-gray-800 dark:bg-gray-700 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
         <HelpCircle className="h-6 w-6" />
       </button>
 
