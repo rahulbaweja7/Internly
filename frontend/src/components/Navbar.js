@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
@@ -25,6 +25,24 @@ export function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Keyboard shortcut for search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder="Search internships..."]');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const isAuthenticated = !!user;
   const isDashboard = location.pathname === '/dashboard';
@@ -56,15 +74,6 @@ export function Navbar() {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
-              Features
-            </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
-              Pricing
-            </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
-              About
-            </Button>
             <ThemeToggle />
             <Button 
               variant="ghost" 
@@ -161,9 +170,30 @@ export function Navbar() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
-              placeholder="Search internships..."
+              placeholder="Search internships... (⌘K)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  navigate(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);
+                  setSearchQuery('');
+                }
+              }}
               className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  navigate('/dashboard');
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Navigation buttons */}
@@ -261,15 +291,6 @@ export function Navbar() {
             <div className="px-4 py-2 space-y-1">
               {isLanding && (
                 <>
-                  <Button variant="ghost" className="w-full justify-start text-gray-600 dark:text-gray-300">
-                    Features
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-600 dark:text-gray-300">
-                    Pricing
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-600 dark:text-gray-300">
-                    About
-                  </Button>
                   <div className="flex items-center justify-between px-3 py-2">
                     <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>
                     <ThemeToggle />
@@ -277,6 +298,12 @@ export function Navbar() {
                   <Button 
                     onClick={() => navigate('/login')}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/register')}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white"
                   >
                     Get Started
                   </Button>

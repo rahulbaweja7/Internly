@@ -5,8 +5,9 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent } from './ui/card';
+import { Trash2 } from 'lucide-react';
 
-export function InternshipForm({ internship, onSubmit, onCancel }) {
+export function InternshipForm({ internship, onSubmit, onCancel, onDelete }) {
   const [formData, setFormData] = useState({
     company: '',
     position: '',
@@ -173,6 +174,17 @@ export function InternshipForm({ internship, onSubmit, onCancel }) {
             <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
               Cancel
             </Button>
+            {internship && onDelete && (
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={onDelete}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            )}
           </div>
         </form>
   );

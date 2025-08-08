@@ -190,50 +190,162 @@ const parseJobApplicationFromEmail = (email) => {
     const from = email.payload?.headers?.find(h => h.name === 'From')?.value || '';
     const date = email.payload?.headers?.find(h => h.name === 'Date')?.value || '';
     const snippet = email.snippet || '';
+    const fullText = (subject + ' ' + snippet).toLowerCase();
 
     console.log('Parsing email:', { subject, snippet });
 
-    // Determine application status based on email content
+    // === STATUS ===
     let status = 'Applied';
-    const fullText = (subject + ' ' + snippet).toLowerCase();
-    
-    if (fullText.includes('online assessment') || fullText.includes('coding challenge') || 
-        fullText.includes('hackerrank') || fullText.includes('leetcode') || 
-        fullText.includes('technical assessment') || fullText.includes('coding test')) {
+    if (fullText.includes('online assessment') || fullText.includes('hackerrank') || fullText.includes('coding challenge')) {
       status = 'Online Assessment';
-    } else if (fullText.includes('phone interview') || fullText.includes('screening call') || 
-               fullText.includes('initial interview') || fullText.includes('recruiter call')) {
+    } else if (fullText.includes('phone interview') || fullText.includes('screening call')) {
       status = 'Phone Interview';
-    } else if (fullText.includes('technical interview') || fullText.includes('coding interview') || 
-               fullText.includes('technical round') || fullText.includes('technical discussion')) {
+    } else if (fullText.includes('technical interview')) {
       status = 'Technical Interview';
-    } else if (fullText.includes('final interview') || fullText.includes('onsite interview') || 
-               fullText.includes('final round') || fullText.includes('superday')) {
+    } else if (fullText.includes('final interview') || fullText.includes('onsite')) {
       status = 'Final Interview';
-    } else if (fullText.includes('accepted') || fullText.includes('congratulations') || 
-               fullText.includes('offer') || fullText.includes('welcome')) {
+    } else if (fullText.includes('offer') || fullText.includes('congratulations')) {
       status = 'Accepted';
-    } else if (fullText.includes('rejected') || fullText.includes('unfortunately') || 
-               fullText.includes('not moving forward') || fullText.includes('not selected')) {
+    } else if (fullText.includes('rejected') || fullText.includes('unfortunately')) {
       status = 'Rejected';
-    } else if (fullText.includes('waitlist') || fullText.includes('wait list') || 
-               fullText.includes('on hold') || fullText.includes('pending')) {
+    } else if (fullText.includes('waitlist') || fullText.includes('pending')) {
       status = 'Waitlisted';
     } else if (fullText.includes('withdrawn') || fullText.includes('withdraw')) {
       status = 'Withdrawn';
     }
 
-    // Extract company name from subject or snippet
+    // === POSITION ===
+    let position = 'Unknown Position';
+
+    // Try known pattern matches first
+    const knownRoles = [
+      'Software Engineer Intern', 'Frontend Developer Intern', 'Backend Developer Intern',
+      'Full Stack Developer Intern', 'Data Scientist Intern', 'Product Manager Intern',
+      'Designer Intern', 'UX Designer Intern', 'Marketing Intern', 'Cybersecurity Intern',
+      'DevOps Intern', 'Cloud Engineer Intern', 'Mobile Developer Intern', 'Java Developer Intern',
+      'React Developer Intern', 'Python Developer Intern', 'Trading Intern', 'Consulting Intern',
+      'Finance Intern', 'Quantitative Analyst Intern', 'Graduate Program', 'Summer Intern'
+    ];
+    for (const role of knownRoles) {
+      if (fullText.includes(role.toLowerCase())) {
+        position = role;
+        break;
+      }
+    }
+
+    // Try to extract from subject line patterns
+    if (position === 'Unknown Position') {
+      // Look for patterns like "Software Engineer - Frontend" in subject
+      const subjectMatch = subject.match(/(software engineer[^,\n]*?)(?:\s+-\s+|\s+opening|\s+position|\s*$)/i);
+      if (subjectMatch) {
+        position = subjectMatch[1].trim();
+        // Only add "Intern" if it's not already there
+        if (!position.toLowerCase().includes('intern')) {
+          position += ' Intern';
+        }
+      }
+    }
+
+    // If no known role found, try to extract from "at" pattern
+    if (position === 'Unknown Position') {
+      // Try to extract from "You Successfully Applied To X" pattern
+      const successMatch = snippet.match(/you successfully applied to (.+?)(?:\s+at|\s+internship|\s*$)/i);
+      if (successMatch) {
+        position = successMatch[1].trim();
+        // Only add "Intern" if it's not already there
+        if (!position.toLowerCase().includes('intern')) {
+          position += ' Intern';
+        }
+      }
+      
+      // Try to extract from "X internship at Y" pattern
+      if (position === 'Unknown Position') {
+        const atPattern = /(.+?)\s+internship\s+at\s+/i;
+        const atMatch = snippet.match(atPattern);
+        if (atMatch) {
+          position = atMatch[1].trim();
+          // Only add "Intern" if it's not already there
+          if (!position.toLowerCase().includes('intern')) {
+            position += ' Intern';
+          }
+        }
+      }
+      
+      // Try to extract from "University Grad" pattern
+      if (position === 'Unknown Position') {
+        const gradMatch = snippet.match(/university grad \d{4}:\s*(.+?)(?:\s+opening|\s+position|\s+at|\s*$)/i);
+        if (gradMatch) {
+          position = gradMatch[1].trim();
+          // Only add "Intern" if it's not already there
+          if (!position.toLowerCase().includes('intern')) {
+            position += ' Intern';
+          }
+        }
+      }
+      
+      // Try to extract from "Software Engineer" pattern
+      if (position === 'Unknown Position') {
+        const engineerMatch = snippet.match(/(software engineer[^,\n]*?)(?:\s+opening|\s+position|\s+at|\s*$)/i);
+        if (engineerMatch) {
+          position = engineerMatch[1].trim();
+          // Only add "Intern" if it's not already there
+          if (!position.toLowerCase().includes('intern')) {
+            position += ' Intern';
+          }
+        }
+      }
+      
+      // If still not found, try to extract from the beginning of the snippet
+      if (position === 'Unknown Position') {
+        const startMatch = snippet.match(/^([^,]+?)(?:\s+at\s+|\s+internship\s+at\s+)/i);
+        if (startMatch) {
+          position = startMatch[1].trim();
+          // Only add "Intern" if it's not already there
+          if (!position.toLowerCase().includes('intern')) {
+            position += ' Intern';
+          }
+        }
+      }
+    }
+
+    // Clean position - remove any "at company" or "on day" parts
+    position = position
+      .replace(/\sat\s+[^,\n]+/gi, '') // remove "at Redis on Monday"
+      .replace(/\son\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi, '')
+      .replace(/\s+apply\s+to\s+similar\s+jobs\?/gi, '')
+      .replace(/[^\w\s]/g, '') // remove punctuation
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Capitalize title
+    position = position.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+    // Final cleanup: remove duplicate "Intern" if it appears twice
+    position = position.replace(/\bIntern\s+Intern\b/gi, 'Intern');
+
+    // Fallback: extract from "applied to" pattern
+    if (position === 'Unknown Position') {
+      const appliedMatch = fullText.match(/applied to (.+?) at /i);
+      if (appliedMatch) {
+        position = appliedMatch[1].trim();
+        // Only add "Intern" if it's not already there
+        if (!position.toLowerCase().includes('intern')) {
+          position += ' Intern';
+        }
+      }
+    }
+
+    // === COMPANY ===
     let company = 'Unknown Company';
     
-    // First try to extract from subject
+    // First try to extract from common email patterns
     const subjectCompanyPatterns = [
+      /you applied to ([^!,\n]+)/i,
       /thank you for applying to ([^!,\n]+)/i,
       /application to ([^!,\n]+)/i,
       /we received your application for ([^!,\n]+)/i,
       /thank you for your interest in ([^!,\n]+)/i
     ];
-    
     for (const pattern of subjectCompanyPatterns) {
       const match = subject.match(pattern);
       if (match) {
@@ -242,172 +354,44 @@ const parseJobApplicationFromEmail = (email) => {
       }
     }
     
-    // If not found in subject, try to extract from snippet
+    // If not found in subject, try to extract from snippet using "at" pattern
     if (company === 'Unknown Company') {
-      // Direct string matching for common patterns
-      if (snippet.includes('Software Engineer, Internship at Palantir')) {
-        company = 'Palantir';
-      } else if (snippet.includes('Software Engineer, Internship at')) {
-        const match = snippet.match(/Software Engineer, Internship at ([A-Z][a-zA-Z\s&]+?)(?:\s+\.|\.|,|!|\?|$)/i);
-        if (match) company = match[1].trim();
-      } else if (snippet.includes('Internship at')) {
-        const match = snippet.match(/Internship at ([A-Z][a-zA-Z\s&]+?)(?:\s+\.|\.|,|!|\?|$)/i);
-        if (match) company = match[1].trim();
-      } else if (snippet.includes('at ')) {
-        const match = snippet.match(/at ([A-Z][a-zA-Z\s&]+?)(?:\s+\.|\.|,|!|\?|$)/i);
-        if (match) company = match[1].trim();
+      // Try the specific pattern for "internship at company on day"
+      const atMatch = snippet.match(/(?:internship|position|role)\s+at\s+([A-Z][a-zA-Z\s&]+?)(?:\s+on\s+[A-Za-z]+|\s+\.|\.|,|!|\?|$)/i);
+      if (atMatch) {
+        company = atMatch[1].trim();
       }
-    }
-
-    // Clean up company name
-    company = company.replace(/\s+successfully submitted$/i, '');
-    company = company.replace(/\s+work with\s+/i, '');
-    company = company.replace(/\s+team$/i, '');
-    company = company.replace(/\s+\.$/i, '');
-    company = company.replace(/\s+,$/i, '');
-    company = company.charAt(0).toUpperCase() + company.slice(1).toLowerCase();
-
-    // Extract position from subject or snippet
-    let position = 'Unknown Position';
-    
-    // Direct string matching for common patterns
-    if (snippet.includes('Software Engineer, Internship at')) {
-      position = 'Software Engineer Intern';
-    } else if (snippet.includes('Software Engineer Intern')) {
-      position = 'Software Engineer Intern';
-    } else if (snippet.includes('Frontend Developer Intern')) {
-      position = 'Frontend Developer Intern';
-    } else if (snippet.includes('Backend Developer Intern')) {
-      position = 'Backend Developer Intern';
-    } else if (snippet.includes('Full Stack Developer Intern')) {
-      position = 'Full Stack Developer Intern';
-    } else if (snippet.includes('Data Scientist Intern')) {
-      position = 'Data Scientist Intern';
-    } else if (snippet.includes('Product Manager Intern')) {
-      position = 'Product Manager Intern';
-    } else if (snippet.includes('Designer Intern')) {
-      position = 'Designer Intern';
-    } else if (snippet.includes('UX Designer Intern')) {
-      position = 'UX Designer Intern';
-    } else if (snippet.includes('UI Designer Intern')) {
-      position = 'UI Designer Intern';
-    } else if (snippet.includes('Marketing Intern')) {
-      position = 'Marketing Intern';
-    } else if (snippet.includes('Sales Intern')) {
-      position = 'Sales Intern';
-    } else if (snippet.includes('Finance Intern')) {
-      position = 'Finance Intern';
-    } else if (snippet.includes('Consulting Intern')) {
-      position = 'Consulting Intern';
-    } else if (snippet.includes('Investment Banking Intern')) {
-      position = 'Investment Banking Intern';
-    } else if (snippet.includes('Trading Intern')) {
-      position = 'Trading Intern';
-    } else if (snippet.includes('Quantitative Analyst Intern')) {
-      position = 'Quantitative Analyst Intern';
-    } else if (snippet.includes('Cybersecurity Intern')) {
-      position = 'Cybersecurity Intern';
-    } else if (snippet.includes('DevOps Intern')) {
-      position = 'DevOps Intern';
-    } else if (snippet.includes('Cloud Engineer Intern')) {
-      position = 'Cloud Engineer Intern';
-    } else if (snippet.includes('Mobile Developer Intern')) {
-      position = 'Mobile Developer Intern';
-    } else if (snippet.includes('iOS Developer Intern')) {
-      position = 'iOS Developer Intern';
-    } else if (snippet.includes('Android Developer Intern')) {
-      position = 'Android Developer Intern';
-    } else if (snippet.includes('React Developer Intern')) {
-      position = 'React Developer Intern';
-    } else if (snippet.includes('Python Developer Intern')) {
-      position = 'Python Developer Intern';
-    } else if (snippet.includes('Java Developer Intern')) {
-      position = 'Java Developer Intern';
-    } else if (snippet.includes('C++ Developer Intern')) {
-      position = 'C++ Developer Intern';
-    } else if (snippet.includes('Go Developer Intern')) {
-      position = 'Go Developer Intern';
-    } else if (snippet.includes('Rust Developer Intern')) {
-      position = 'Rust Developer Intern';
-    } else if (snippet.includes('Blockchain Developer Intern')) {
-      position = 'Blockchain Developer Intern';
-    } else if (snippet.includes('Web3 Developer Intern')) {
-      position = 'Web3 Developer Intern';
-    } else if (snippet.includes('Summer Intern')) {
-      position = 'Summer Intern';
-    } else if (snippet.includes('Fall Intern')) {
-      position = 'Fall Intern';
-    } else if (snippet.includes('Spring Intern')) {
-      position = 'Spring Intern';
-    } else if (snippet.includes('Graduate Program')) {
-      position = 'Graduate Program';
-    } else if (snippet.includes('Analyst Program')) {
-      position = 'Analyst Program';
-    } else if (snippet.includes('Associate Program')) {
-      position = 'Associate Program';
-    } else {
-      // Fallback to regex patterns
-      const fullText = (subject + ' ' + snippet).toLowerCase();
-      const positionPatterns = [
-        /software engineer[^,\n]*intern[^,\n]*/i,
-        /frontend[^,\n]*intern[^,\n]*/i,
-        /backend[^,\n]*intern[^,\n]*/i,
-        /full stack[^,\n]*intern[^,\n]*/i,
-        /data scientist[^,\n]*intern[^,\n]*/i,
-        /machine learning[^,\n]*intern[^,\n]*/i,
-        /ai[^,\n]*intern[^,\n]*/i,
-        /product manager[^,\n]*intern[^,\n]*/i,
-        /quantitative[^,\n]*intern[^,\n]*/i,
-        /investment[^,\n]*intern[^,\n]*/i,
-        /trading[^,\n]*intern[^,\n]*/i,
-        /finance[^,\n]*intern[^,\n]*/i,
-        /consulting[^,\n]*intern[^,\n]*/i,
-        /marketing[^,\n]*intern[^,\n]*/i,
-        /sales[^,\n]*intern[^,\n]*/i,
-        /design[^,\n]*intern[^,\n]*/i,
-        /ux[^,\n]*intern[^,\n]*/i,
-        /ui[^,\n]*intern[^,\n]*/i,
-        /cybersecurity[^,\n]*intern[^,\n]*/i,
-        /devops[^,\n]*intern[^,\n]*/i,
-        /cloud[^,\n]*intern[^,\n]*/i,
-        /mobile[^,\n]*intern[^,\n]*/i,
-        /ios[^,\n]*intern[^,\n]*/i,
-        /android[^,\n]*intern[^,\n]*/i,
-        /react[^,\n]*intern[^,\n]*/i,
-        /python[^,\n]*intern[^,\n]*/i,
-        /java[^,\n]*intern[^,\n]*/i,
-        /c\+\+[^,\n]*intern[^,\n]*/i,
-        /golang[^,\n]*intern[^,\n]*/i,
-        /rust[^,\n]*intern[^,\n]*/i,
-        /blockchain[^,\n]*intern[^,\n]*/i,
-        /web3[^,\n]*intern[^,\n]*/i,
-        /summer[^,\n]*intern[^,\n]*/i,
-        /fall[^,\n]*intern[^,\n]*/i,
-        /spring[^,\n]*intern[^,\n]*/i,
-        /graduate[^,\n]*program[^,\n]*/i,
-        /analyst[^,\n]*program[^,\n]*/i,
-        /associate[^,\n]*program[^,\n]*/i
-      ];
       
-      for (const pattern of positionPatterns) {
-        const match = fullText.match(pattern);
-        if (match) {
-          position = match[0].trim();
-          console.log('Found position from common pattern:', position);
-          break;
+      // If still not found, try a more general pattern
+      if (company === 'Unknown Company') {
+        const generalMatch = snippet.match(/at\s+([A-Z][a-zA-Z\s&]+?)(?:\s+on\s+[A-Za-z]+|\s+\.|\.|,|!|\?|$)/i);
+        if (generalMatch) {
+          company = generalMatch[1].trim();
         }
       }
     }
 
-    console.log('Final parsed result:', { company, position, status });
+    // Clean company name - remove day names and other unwanted text
+    company = company
+      .replace(/\son\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi, '')
+      .replace(/\s+team$/i, '')
+      .replace(/\s+successfully submitted$/i, '')
+      .replace(/\s+apply\s+to\s+similar\s+jobs\?/gi, '')
+      .replace(/[^\w\s&]/g, '') // remove punctuation
+      .trim()
+      .split(' ').slice(0, 3).join(' '); // max 3 words
+    company = company.charAt(0).toUpperCase() + company.slice(1);
+
+    // Capitalize title
+    position = position.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
     // Parse date
     const emailDate = new Date(date);
     const formattedDate = emailDate.toISOString().split('T')[0];
 
     return {
-      company: company,
-      position: position,
+      company: company || 'Unknown Company',
+      position: position || 'Unknown Position',
       location: '', // Would need to extract from email body
       status: status,
       appliedDate: formattedDate,
@@ -415,9 +399,18 @@ const parseJobApplicationFromEmail = (email) => {
       subject: subject,
       snippet: snippet
     };
-  } catch (error) {
-    console.error('Error parsing email:', error);
-    return null;
+
+  } catch (err) {
+    console.error('Error parsing email:', err);
+    return {
+      company: 'Unknown Company',
+      position: 'Unknown Position',
+      status: 'Applied',
+      appliedDate: new Date().toISOString().split('T')[0],
+      emailId: email.id,
+      subject: '',
+      snippet: ''
+    };
   }
 };
 

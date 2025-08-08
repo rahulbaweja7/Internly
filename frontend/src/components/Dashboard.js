@@ -17,6 +17,7 @@ export function InternshipDashboard() {
   const [internships, setInternships] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [urlSearchTerm, setUrlSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,15 +25,17 @@ export function InternshipDashboard() {
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // Handle OAuth callback response
+  // Handle OAuth callback response and search parameters
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const gmailConnected = params.get('gmail_connected');
     const gmailError = params.get('gmail_error');
+    const searchParam = params.get('search');
     
     if (gmailConnected === 'true') {
       setOauthMessage({ type: 'success', text: 'Gmail connected successfully! You can now scan for job applications.' });
@@ -41,6 +44,12 @@ export function InternshipDashboard() {
     } else if (gmailError === 'true') {
       setOauthMessage({ type: 'error', text: 'Failed to connect Gmail. Please try again.' });
       // Clear the URL parameters
+      navigate('/dashboard', { replace: true });
+    } else if (searchParam) {
+      // Handle search from navbar
+      setSearchTerm(searchParam);
+      setUrlSearchTerm(searchParam);
+      // Clear the search parameter from URL
       navigate('/dashboard', { replace: true });
     }
   }, [location, navigate]);
@@ -64,9 +73,12 @@ export function InternshipDashboard() {
   }, []);
 
   const filteredInternships = internships.filter(internship => {
-    const matchesSearch = internship.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = internship.company.toLowerCase().includes(searchLower) ||
+                         internship.role.toLowerCase().includes(searchLower) ||
+                         internship.location.toLowerCase().includes(searchLower) ||
+                         (internship.notes && internship.notes.toLowerCase().includes(searchLower)) ||
+                         (internship.stipend && internship.stipend.toLowerCase().includes(searchLower));
     const matchesStatus = statusFilter === 'all' || internship.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -157,6 +169,23 @@ export function InternshipDashboard() {
     } catch (error) {
       console.error("Error bulk deleting jobs:", error);
       alert("Failed to delete some jobs");
+    }
+  };
+
+  // Delete all internships functionality
+  const handleDeleteAll = async () => {
+    try {
+      console.log('Attempting to delete all jobs...');
+      const response = await axios.delete('http://localhost:3001/api/jobs/delete-all');
+      console.log('Delete all response:', response.data);
+      setInternships([]);
+      setSelectedJobs(new Set());
+      setIsSelectionMode(false);
+      setIsDeleteAllDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting all jobs:", error);
+      console.error("Error response:", error.response?.data);
+      alert("Failed to delete all internships: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -291,11 +320,19 @@ export function InternshipDashboard() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Search companies, positions, or locations..."
+              placeholder="Search companies, positions, locations, notes, or stipends..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectItem value="all">All Statuses</SelectItem>
@@ -326,7 +363,7 @@ export function InternshipDashboard() {
               className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
             >
               <CheckSquare className="h-4 w-4" />
-              Select Multiple
+              Select
             </Button>
           )}
         </div>
@@ -346,16 +383,25 @@ export function InternshipDashboard() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllJobs}
+                  className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                >
+                  Select All
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteAllDialogOpen(true)}
+                  className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-600 hover:bg-red-100 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete All
+                </Button>
                 {hasSelection && (
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={selectAllJobs}
-                      className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20"
-                    >
-                      Select All
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -385,6 +431,32 @@ export function InternshipDashboard() {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Search Results Indicator */}
+        {searchTerm && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Search Results
+                </span>
+                <span className="text-sm text-blue-600 dark:text-blue-400">
+                  {filteredInternships.length} of {internships.length} internships
+                </span>
+              </div>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+              >
+                Clear Search
+              </button>
+            </div>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              Showing results for: <span className="font-medium">"{searchTerm}"</span>
+            </p>
           </div>
         )}
 
@@ -468,14 +540,6 @@ export function InternshipDashboard() {
                     >
                       Edit
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteInternship(internship._id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      Delete
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -528,6 +592,11 @@ export function InternshipDashboard() {
                 setIsFormOpen(false);
                 setEditingInternship(null);
               }}
+              onDelete={editingInternship ? () => {
+                handleDeleteInternship(editingInternship._id);
+                setIsFormOpen(false);
+                setEditingInternship(null);
+              } : undefined}
             />
           </DialogContent>
         </Dialog>
@@ -561,6 +630,63 @@ export function InternshipDashboard() {
               >
                 <Trash2 className="h-4 w-4" />
                 Delete {selectedCount} Job{selectedCount !== 1 ? 's' : ''}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <Dialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Delete All Internships
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Warning: This action cannot be undone
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                    <p>
+                      You are about to delete <strong>all {internships.length} internship{internships.length !== 1 ? 's' : ''}</strong> from your account. 
+                      This will permanently remove all your application data, including:
+                    </p>
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li>All application records</li>
+                      <li>Interview schedules</li>
+                      <li>Notes and comments</li>
+                      <li>Application history</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteAllDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAll}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete All {internships.length} Internship{internships.length !== 1 ? 's' : ''}
               </Button>
             </div>
           </div>

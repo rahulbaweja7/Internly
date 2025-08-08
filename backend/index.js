@@ -159,4 +159,23 @@ app.delete("/api/jobs/:id", async (req, res) => {
   }
 });
 
+// Delete all jobs for a user
+app.delete("/api/jobs/delete-all", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const result = await Job.deleteMany({ userId: req.user._id });
+    
+    res.json({ 
+      message: `Successfully deleted ${result.deletedCount} internship${result.deletedCount !== 1 ? 's' : ''}`,
+      deletedCount: result.deletedCount 
+    });
+  } catch (error) {
+    console.error('Error deleting all jobs:', error);
+    res.status(500).json({ message: 'Failed to delete all internships' });
+  }
+});
+
 app.listen(3001, () => console.log("Server running on port 3001")); 

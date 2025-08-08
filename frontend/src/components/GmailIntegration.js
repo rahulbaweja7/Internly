@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit } from 'lucide-react';
 import axios from 'axios';
 
 export function GmailIntegration({ onApplicationsFound }) {
@@ -11,6 +15,8 @@ export function GmailIntegration({ onApplicationsFound }) {
   const [isFetching, setIsFetching] = useState(false);
   const [detectedApplications, setDetectedApplications] = useState([]);
   const [error, setError] = useState(null);
+  const [editingApplication, setEditingApplication] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Check Gmail connection status on component mount
   useEffect(() => {
@@ -164,6 +170,28 @@ export function GmailIntegration({ onApplicationsFound }) {
     }
   };
 
+  const editApplication = (application) => {
+    setEditingApplication(application);
+    setIsEditModalOpen(true);
+  };
+
+  const saveEditedApplication = (editedData) => {
+    setDetectedApplications(prev => 
+      prev.map(app => 
+        app.emailId === editingApplication.emailId 
+          ? { ...app, ...editedData }
+          : app
+      )
+    );
+    setEditingApplication(null);
+    setIsEditModalOpen(false);
+  };
+
+  const cancelEdit = () => {
+    setEditingApplication(null);
+    setIsEditModalOpen(false);
+  };
+
   const addAllApplications = async () => {
     try {
       setIsLoading(true);
@@ -286,10 +314,10 @@ export function GmailIntegration({ onApplicationsFound }) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{app.company}</span>
+                        <span className="font-medium">{app.position}</span>
                         <Badge variant="secondary">{app.status}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">{app.position}</p>
+                      <p className="text-sm text-gray-600 mb-1">{app.company}</p>
                       <p className="text-xs text-gray-500">
                         Applied: {new Date(app.appliedDate).toLocaleDateString()}
                       </p>
@@ -299,14 +327,22 @@ export function GmailIntegration({ onApplicationsFound }) {
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addApplicationToTracker(app)}
-                      className="ml-2"
-                    >
-                      Add
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => editApplication(app)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addApplicationToTracker(app)}
+                      >
+                        Add
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -411,7 +447,128 @@ export function GmailIntegration({ onApplicationsFound }) {
             </Button>
           </div>
         )}
+
+        {/* Edit Application Modal */}
+        {isEditModalOpen && editingApplication && (
+          <EditApplicationModal
+            application={editingApplication}
+            onSave={saveEditedApplication}
+            onCancel={cancelEdit}
+          />
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+// Edit Application Modal Component
+function EditApplicationModal({ application, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    company: application.company,
+    position: application.position,
+    status: application.status,
+    location: application.location || '',
+    appliedDate: application.appliedDate
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onCancel}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Edit className="h-5 w-5" />
+            Edit Application
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="company">Company *</Label>
+              <Input
+                id="company"
+                value={formData.company}
+                onChange={(e) => handleChange('company', e.target.value)}
+                placeholder="e.g., Google"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="position">Position *</Label>
+              <Input
+                id="position"
+                value={formData.position}
+                onChange={(e) => handleChange('position', e.target.value)}
+                placeholder="e.g., Software Engineering Intern"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder="e.g., San Francisco, CA"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                  <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+                  <SelectItem value="Phone Interview">Phone Interview</SelectItem>
+                  <SelectItem value="Technical Interview">Technical Interview</SelectItem>
+                  <SelectItem value="Final Interview">Final Interview</SelectItem>
+                  <SelectItem value="Accepted">Accepted</SelectItem>
+                  <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appliedDate">Application Date *</Label>
+            <Input
+              id="appliedDate"
+              type="date"
+              value={formData.appliedDate}
+              onChange={(e) => handleChange('appliedDate', e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" className="flex-1">
+              Save Changes
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 } 

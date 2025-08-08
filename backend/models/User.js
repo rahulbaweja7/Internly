@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
-  // OAuth fields (optional for email/password users)
   googleId: {
     type: String,
     unique: true,
