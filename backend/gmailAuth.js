@@ -10,11 +10,13 @@ const oauth2Client = new google.auth.OAuth2(
 
 const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-// Function to generate OAuth URL
 const generateAuthUrl = () => {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
-    scope: ["https://www.googleapis.com/auth/gmail.readonly"],
+    scope: [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.modify"
+    ],
     prompt: "consent",
     include_granted_scopes: true,
     response_type: "code"
@@ -135,12 +137,25 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
 const getProcessedEmailIds = async () => {
   try {
     const Job = require('./models/Job');
+    const ProcessedEmail = require('./models/ProcessedEmail');
+    
+    // Get email IDs from jobs that were added to tracker
     const existingJobs = await Job.find({}, 'emailId company role');
-    const processedIds = existingJobs.map(job => job.emailId).filter(id => id);
-    console.log('Found processed email IDs:', processedIds.length);
-    console.log('Processed IDs:', processedIds.slice(0, 5)); // Log first 5 for debugging
-    console.log('Existing jobs:', existingJobs.map(job => ({ company: job.company, role: job.role, emailId: job.emailId })));
-    return processedIds;
+    const jobEmailIds = existingJobs.map(job => job.emailId).filter(id => id);
+    
+    // Get email IDs that were marked as processed (but not added to tracker)
+    const processedEmails = await ProcessedEmail.find({}, 'emailId');
+    const processedEmailIds = processedEmails.map(email => email.emailId);
+    
+    // Combine both sets of processed email IDs
+    const allProcessedIds = [...new Set([...jobEmailIds, ...processedEmailIds])];
+    
+    console.log('Found processed email IDs from jobs:', jobEmailIds.length);
+    console.log('Found processed email IDs from marked emails:', processedEmailIds.length);
+    console.log('Total processed email IDs:', allProcessedIds.length);
+    console.log('Processed IDs:', allProcessedIds.slice(0, 5)); // Log first 5 for debugging
+    
+    return allProcessedIds;
   } catch (error) {
     console.error('Error getting processed email IDs:', error);
     return [];

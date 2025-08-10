@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit } from 'lucide-react';
+import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 export function GmailIntegration({ onApplicationsFound }) {
@@ -87,7 +87,11 @@ export function GmailIntegration({ onApplicationsFound }) {
         console.log('Applications found:', response.data.applications.length);
         console.log('First application:', response.data.applications[0]);
         
-        // Filter out any applications that might already be in the database
+        // Get deleted email IDs from localStorage
+        const deletedEmails = JSON.parse(localStorage.getItem('deletedEmails') || '[]');
+        console.log('Deleted emails from localStorage:', deletedEmails);
+        
+        // Filter out any applications that might already be in the database or were deleted
         const filteredApplications = response.data.applications.filter(app => {
           // Check if this email ID is already in the detected applications
           const isAlreadyDetected = detectedApplications.some(detected => detected.emailId === app.emailId);
@@ -95,6 +99,14 @@ export function GmailIntegration({ onApplicationsFound }) {
             console.log('Filtering out already detected application:', app.emailId);
             return false;
           }
+          
+          // Check if this email ID was deleted by user
+          const isDeleted = deletedEmails.includes(app.emailId);
+          if (isDeleted) {
+            console.log('Filtering out deleted application:', app.emailId);
+            return false;
+          }
+          
           return true;
         });
         
@@ -190,6 +202,21 @@ export function GmailIntegration({ onApplicationsFound }) {
   const cancelEdit = () => {
     setEditingApplication(null);
     setIsEditModalOpen(false);
+  };
+
+  const handleDeleteEmail = (emailId) => {
+    console.log('Removing email from scan results:', emailId);
+    
+    // Store the deleted email ID in localStorage so it won't show up in future scans
+    const deletedEmails = JSON.parse(localStorage.getItem('deletedEmails') || '[]');
+    if (!deletedEmails.includes(emailId)) {
+      deletedEmails.push(emailId);
+      localStorage.setItem('deletedEmails', JSON.stringify(deletedEmails));
+    }
+    
+    // Remove from detected applications
+    setDetectedApplications(prev => prev.filter(app => app.emailId !== emailId));
+    console.log('Email removed from scan results and stored as deleted:', emailId);
   };
 
   const addAllApplications = async () => {
@@ -341,6 +368,15 @@ export function GmailIntegration({ onApplicationsFound }) {
                         onClick={() => addApplicationToTracker(app)}
                       >
                         Add
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteEmail(app.emailId)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        title="Remove from scan results (won't show up in future scans)"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

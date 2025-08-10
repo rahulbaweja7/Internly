@@ -6,7 +6,8 @@ const {
   setCredentials, 
   fetchJobApplicationEmails, 
   parseJobApplicationFromEmail,
-  fetchNewJobApplicationEmails
+  fetchNewJobApplicationEmails,
+  gmail
 } = require('../gmailAuth');
 const GmailToken = require('../models/GmailToken');
 
@@ -105,6 +106,86 @@ router.get('/status', async (req, res) => {
   } catch (error) {
     console.error('Error checking Gmail status:', error);
     res.status(500).json({ error: 'Failed to check Gmail status' });
+  }
+});
+
+// Step 5: Mark email as processed (so it won't show up in future scans)
+router.post('/mark-processed', async (req, res) => {
+  try {
+    const { emailId } = req.body;
+    const userId = 'default-user';
+    
+    if (!emailId) {
+      return res.status(400).json({ error: 'emailId is required' });
+    }
+
+    // Store this email ID as processed so it won't show up in future scans
+    // We can use a simple collection to track processed email IDs
+    const ProcessedEmail = require('../models/ProcessedEmail');
+    
+    // Check if already processed
+    const existing = await ProcessedEmail.findOne({ emailId, userId });
+    if (!existing) {
+      await ProcessedEmail.create({
+        emailId: emailId,
+        userId: userId,
+        processedAt: new Date()
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Email marked as processed',
+      emailId: emailId
+    });
+  } catch (error) {
+    console.error('Error marking email as processed:', error);
+    res.status(500).json({ 
+      error: 'Failed to mark email as processed', 
+      details: error.message 
+    });
+  }
+});
+
+// Step 5: Delete email from Gmail (keeping this for reference, but not using it)
+router.delete('/delete-email/:emailId', async (req, res) => {
+  try {
+    const { emailId } = req.params;
+    const userId = 'default-user';
+    
+    // Get stored tokens
+    const tokenDoc = await GmailToken.findOne({ userId });
+    
+    if (!tokenDoc) {
+      return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
+    }
+
+    // Set credentials from stored tokens
+    setCredentials({
+      access_token: tokenDoc.access_token,
+      refresh_token: tokenDoc.refresh_token,
+      scope: tokenDoc.scope,
+      token_type: tokenDoc.token_type,
+      expiry_date: tokenDoc.expiry_date
+    });
+
+    // Delete the email from Gmail
+    await gmail.users.messages.delete({
+      userId: 'me',
+      id: emailId
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Email deleted successfully from Gmail',
+      emailId: emailId
+    });
+  } catch (error) {
+    console.error('Error deleting email from Gmail:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete email from Gmail', 
+      details: error.message 
+    });
   }
 });
 

@@ -59,6 +59,15 @@ export function InternshipDashboard() {
     axios.get("http://localhost:3001/api/jobs")
       .then((res) => {
         console.log('Fetched jobs from backend:', res.data);
+        // Debug: Check if jobs have emailId
+        res.data.forEach((job, index) => {
+          console.log(`Job ${index + 1}:`, {
+            company: job.company,
+            position: job.role,
+            hasEmailId: !!job.emailId,
+            emailId: job.emailId
+          });
+        });
         setInternships(res.data);
         setLoading(false);
       })
@@ -186,6 +195,20 @@ export function InternshipDashboard() {
       console.error("Error deleting all jobs:", error);
       console.error("Error response:", error.response?.data);
       alert("Failed to delete all internships: " + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleDeleteEmail = async (emailId) => {
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/gmail/delete-email/${emailId}`);
+      if (response.data.success) {
+        alert('Email deleted successfully from Gmail!');
+        // Optionally refresh the jobs list or update the specific job
+        fetchJobs();
+      }
+    } catch (error) {
+      console.error("Error deleting email from Gmail:", error);
+      alert('Failed to delete email from Gmail. Please try again.');
     }
   };
 
@@ -597,6 +620,7 @@ export function InternshipDashboard() {
                 setIsFormOpen(false);
                 setEditingInternship(null);
               } : undefined}
+              onDeleteEmail={handleDeleteEmail}
             />
           </DialogContent>
         </Dialog>

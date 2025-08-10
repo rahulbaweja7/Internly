@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent } from './ui/card';
 import { Trash2 } from 'lucide-react';
 
-export function InternshipForm({ internship, onSubmit, onCancel, onDelete }) {
+export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDeleteEmail }) {
   const [formData, setFormData] = useState({
     company: '',
     position: '',
@@ -21,6 +21,8 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete }) {
 
   useEffect(() => {
     if (internship) {
+      console.log('Internship data in form:', internship);
+      console.log('Has emailId:', !!internship.emailId);
       setFormData({
         company: internship.company,
         position: internship.position,
@@ -183,6 +185,18 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete }) {
               >
                 <Trash2 className="h-4 w-4" />
                 Delete
+              </Button>
+            )}
+            {internship && internship.emailId && onDeleteEmail && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onDeleteEmail(internship.emailId)}
+                className="flex items-center gap-2"
+                title="Delete email from Gmail"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Email
               </Button>
             )}
           </div>
