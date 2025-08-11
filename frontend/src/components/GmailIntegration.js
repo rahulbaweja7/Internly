@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit, Trash2 } from 'lucide-react';
+import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 
 export function GmailIntegration({ onApplicationsFound }) {
@@ -17,6 +17,7 @@ export function GmailIntegration({ onApplicationsFound }) {
   const [error, setError] = useState(null);
   const [editingApplication, setEditingApplication] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Check Gmail connection status on component mount
   useEffect(() => {
@@ -243,17 +244,55 @@ export function GmailIntegration({ onApplicationsFound }) {
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" />
-          Gmail Integration
-        </CardTitle>
+    <Card className="mb-4">
+      <CardHeader className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            <CardTitle>Gmail Integration</CardTitle>
+            {gmailStatus.connected && (
+              <Badge variant="secondary" className="ml-2">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Connected
+              </Badge>
+            )}
+            {detectedApplications.length > 0 && (
+              <Badge variant="outline" className="ml-2">
+                {detectedApplications.length} detected
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!isExpanded && gmailStatus.connected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchJobApplications();
+                }}
+                disabled={isFetching}
+              >
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </div>
+        </div>
         <CardDescription>
           Connect your Gmail to automatically detect job application emails
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      {isExpanded && (
+        <CardContent className="space-y-3">
         {/* Connection Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -332,7 +371,7 @@ export function GmailIntegration({ onApplicationsFound }) {
               </Button>
             </div>
             
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {detectedApplications
                 .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate)) // Sort by date, newest first
                 .map((app) => (
@@ -388,103 +427,7 @@ export function GmailIntegration({ onApplicationsFound }) {
           </div>
         )}
         
-        {/* Debug info */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="text-xs text-gray-500 mt-2">
-            Debug: detectedApplications.length = {detectedApplications.length}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const testData = [
-                  {
-                    company: 'Test Company',
-                    position: 'Test Position',
-                    status: 'Applied',
-                    appliedDate: '2025-08-02',
-                    emailId: 'test-1',
-                    subject: 'Test Subject'
-                  }
-                ];
-                console.log('Setting test data:', testData);
-                setDetectedApplications(testData);
-              }}
-              className="ml-2"
-            >
-              Test Display
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const response = await axios.get('http://localhost:3001/api/gmail/check-processed');
-                  console.log('Processed emails check:', response.data);
-                  alert(`Total jobs: ${response.data.totalJobs}\nJobs with emailId: ${response.data.jobsWithEmailId}\nDuplicates: ${response.data.duplicates.length}`);
-                } catch (error) {
-                  console.error('Error checking processed emails:', error);
-                }
-              }}
-              className="ml-2"
-            >
-              Check Duplicates
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const response = await axios.delete('http://localhost:3001/api/gmail/clear-duplicates');
-                  console.log('Clear duplicates result:', response.data);
-                  alert(`Deleted ${response.data.deletedCount} duplicates`);
-                  // Refresh the page to show updated data
-                  window.location.reload();
-                } catch (error) {
-                  console.error('Error clearing duplicates:', error);
-                }
-              }}
-              className="ml-2"
-            >
-              Clear Duplicates
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const response = await axios.post('http://localhost:3001/api/gmail/update-email-ids');
-                  console.log('Update email IDs result:', response.data);
-                  alert(`Updated ${response.data.updatedCount} jobs with email IDs`);
-                  // Refresh the page to show updated data
-                  window.location.reload();
-                } catch (error) {
-                  console.error('Error updating email IDs:', error);
-                }
-              }}
-              className="ml-2"
-            >
-              Update Email IDs
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const response = await axios.delete('http://localhost:3001/api/gmail/clear-duplicates-by-content');
-                  console.log('Clear duplicates by content result:', response.data);
-                  alert(`Deleted ${response.data.deletedCount} duplicates by content`);
-                  // Refresh the page to show updated data
-                  window.location.reload();
-                } catch (error) {
-                  console.error('Error clearing duplicates by content:', error);
-                }
-              }}
-              className="ml-2"
-            >
-              Clear by Content
-            </Button>
-          </div>
-        )}
+
 
         {/* Edit Application Modal */}
         {isEditModalOpen && editingApplication && (
@@ -495,6 +438,7 @@ export function GmailIntegration({ onApplicationsFound }) {
           />
         )}
       </CardContent>
+      )}
     </Card>
   );
 }

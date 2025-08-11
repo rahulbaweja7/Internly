@@ -51,8 +51,8 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.company || !formData.position || !formData.location || !formData.appliedDate) {
-      alert('Please fill in all required fields');
+    if (!formData.company || !formData.position) {
+      alert('Please fill in company and position fields');
       return;
     }
 
@@ -100,40 +100,43 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
+              <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleChange('location', e.target.value)}
                 placeholder="e.g., San Francisco, CA"
-                required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-                                <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                    <SelectItem value="Applied">Applied</SelectItem>
-                    <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-                    <SelectItem value="Phone Interview">Phone Interview</SelectItem>
-                    <SelectItem value="Technical Interview">Technical Interview</SelectItem>
-                    <SelectItem value="Final Interview">Final Interview</SelectItem>
-                    <SelectItem value="Accepted">Accepted</SelectItem>
-                    <SelectItem value="Waitlisted">Waitlisted</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                    <SelectItem value="Withdrawn">Withdrawn</SelectItem>
-                  </Select>
+              <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                  <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+                  <SelectItem value="Phone Interview">Phone Interview</SelectItem>
+                  <SelectItem value="Technical Interview">Technical Interview</SelectItem>
+                  <SelectItem value="Final Interview">Final Interview</SelectItem>
+                  <SelectItem value="Accepted">Accepted</SelectItem>
+                  <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="appliedDate">Application Date *</Label>
+              <Label htmlFor="appliedDate">Application Date</Label>
               <Input
                 id="appliedDate"
                 type="date"
                 value={formData.appliedDate}
                 onChange={(e) => handleChange('appliedDate', e.target.value)}
-                required
               />
             </div>
             <div className="space-y-2">

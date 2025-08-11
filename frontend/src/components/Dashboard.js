@@ -252,7 +252,7 @@ export function InternshipDashboard() {
       <div className="min-h-screen bg-background dark:bg-gray-900">
         <Navbar />
 
-      <div className="container mx-auto p-6 max-w-7xl relative z-10">
+      <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Internship Tracker</h1>
@@ -341,7 +341,7 @@ export function InternshipDashboard() {
         </div>
 
         {/* Filters and Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 relative">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -360,25 +360,22 @@ export function InternshipDashboard() {
             )}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Applied">Applied</SelectItem>
-            <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-            <SelectItem value="Phone Interview">Phone Interview</SelectItem>
-            <SelectItem value="Technical Interview">Technical Interview</SelectItem>
-            <SelectItem value="Final Interview">Final Interview</SelectItem>
-            <SelectItem value="Accepted">Accepted</SelectItem>
-            <SelectItem value="Waitlisted">Waitlisted</SelectItem>
-            <SelectItem value="Rejected">Rejected</SelectItem>
-            <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+            <SelectTrigger>
+              <SelectValue>Filters</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="Applied">Applied</SelectItem>
+              <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+              <SelectItem value="Phone Interview">Phone Interview</SelectItem>
+              <SelectItem value="Technical Interview">Technical Interview</SelectItem>
+              <SelectItem value="Final Interview">Final Interview</SelectItem>
+              <SelectItem value="Accepted">Accepted</SelectItem>
+              <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+              <SelectItem value="Rejected">Rejected</SelectItem>
+              <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+            </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            onClick={fetchJobs}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
           
           {/* Selection Mode Toggle */}
           {!isSelectionMode && filteredInternships.length > 0 && (

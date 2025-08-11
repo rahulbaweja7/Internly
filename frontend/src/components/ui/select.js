@@ -18,25 +18,50 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
     setSelectedValue(value || "")
   }, [value])
 
+  // Find SelectTrigger and SelectContent from children
+  let trigger = null
+  let content = null
+  
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child)) {
+      if (child.type === SelectTrigger) {
+        trigger = child
+      } else if (child.type === SelectContent) {
+        content = child
+      }
+    }
+  })
+
   return (
     <div className="relative" ref={ref}>
-      <div
-        className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+      {trigger && React.cloneElement(trigger, {
+        onClick: () => setIsOpen(!isOpen),
+        isOpen: isOpen,
+        className: cn(
+          trigger.props.className,
+          "cursor-pointer",
           isOpen && "ring-2 ring-ring ring-offset-2"
-        )}
-        onClick={() => setIsOpen(!isOpen)}
-        {...props}
-      >
-        <span className="block truncate">
-          {selectedValue || "Select an option"}
-        </span>
-        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
-      </div>
+        ),
+        children: React.Children.map(trigger.props.children, (child) => {
+          if (React.isValidElement(child) && child.type === SelectValue) {
+            // Only override if it's the dashboard filter (when selectedValue is "all")
+            if (selectedValue === "all" && child.props.children === "Filters") {
+              return React.cloneElement(child, {
+                children: "Filters"
+              })
+            }
+            // For other cases (like forms), show the actual selected value
+            return React.cloneElement(child, {
+              children: selectedValue || child.props.placeholder || "Select an option"
+            })
+          }
+          return child
+        })
+      })}
       
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-[9999] mt-1 max-h-80 overflow-auto rounded-md border bg-white shadow-lg">
-          {React.Children.map(children, (child) => {
+      {isOpen && content && (
+        <div className="absolute top-full left-0 right-0 z-[9999] mt-1 max-h-80 overflow-auto rounded-md border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
+          {React.Children.map(content.props.children, (child) => {
             if (React.isValidElement(child) && child.type === SelectItem) {
               return React.cloneElement(child, {
                 onClick: () => handleSelect(child.props.value),
@@ -55,7 +80,7 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
 })
 Select.displayName = "Select"
 
-const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) => (
+const SelectTrigger = React.forwardRef(({ className, children, isOpen, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
@@ -65,6 +90,7 @@ const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) 
     {...props}
   >
     {children}
+    <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
   </div>
 ))
 SelectTrigger.displayName = "SelectTrigger"
@@ -82,7 +108,7 @@ const SelectContent = React.forwardRef(({ className, children, ...props }, ref) 
   <div
     ref={ref}
     className={cn(
-      "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+      "relative z-[9999] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
       className
     )}
     {...props}

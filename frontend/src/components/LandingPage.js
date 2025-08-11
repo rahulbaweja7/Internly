@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -8,6 +9,7 @@ import { Navbar } from './Navbar';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const features = [
     {
       icon: Target,
@@ -68,13 +70,27 @@ export function LandingPage() {
             Track applications, manage deadlines, and monitor your progress all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/register')} className="text-lg px-8 py-6">
-              Start Tracking Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="text-lg px-8 py-6">
-              Sign In
-            </Button>
+            {user ? (
+              <>
+                <Button size="lg" onClick={() => navigate('/dashboard')} className="text-lg px-8 py-6">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => navigate('/add')} className="text-lg px-8 py-6">
+                  Add New Application
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="lg" onClick={() => navigate('/register')} className="text-lg px-8 py-6">
+                  Start Tracking Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="text-lg px-8 py-6">
+                  Sign In
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
