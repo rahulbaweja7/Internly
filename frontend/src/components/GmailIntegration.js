@@ -333,7 +333,9 @@ export function GmailIntegration({ onApplicationsFound }) {
             </div>
             
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {detectedApplications.map((app) => (
+              {detectedApplications
+                .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate)) // Sort by date, newest first
+                .map((app) => (
                 <div
                   key={app.emailId}
                   className="p-3 border rounded-md bg-gray-50"

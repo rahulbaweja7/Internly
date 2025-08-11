@@ -81,16 +81,18 @@ export function InternshipDashboard() {
     fetchJobs();
   }, []);
 
-  const filteredInternships = internships.filter(internship => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = internship.company.toLowerCase().includes(searchLower) ||
-                         internship.role.toLowerCase().includes(searchLower) ||
-                         internship.location.toLowerCase().includes(searchLower) ||
-                         (internship.notes && internship.notes.toLowerCase().includes(searchLower)) ||
-                         (internship.stipend && internship.stipend.toLowerCase().includes(searchLower));
-    const matchesStatus = statusFilter === 'all' || internship.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredInternships = internships
+    .filter(internship => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = internship.company.toLowerCase().includes(searchLower) ||
+                           internship.role.toLowerCase().includes(searchLower) ||
+                           internship.location.toLowerCase().includes(searchLower) ||
+                           (internship.notes && internship.notes.toLowerCase().includes(searchLower)) ||
+                           (internship.stipend && internship.stipend.toLowerCase().includes(searchLower));
+      const matchesStatus = statusFilter === 'all' || internship.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => new Date(b.dateApplied) - new Date(a.dateApplied)); // Sort by date, newest first
 
   const getStatusColor = (status) => {
     switch (status) {
