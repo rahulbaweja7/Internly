@@ -1,4 +1,5 @@
 const { google } = require("googleapis");
+const { parseJobEmail } = require('./utils/jobEmailParser');
 require('dotenv').config();
 
 const oauth2Client = new google.auth.OAuth2(
@@ -43,8 +44,8 @@ const setCredentials = (tokens) => {
 // Function to fetch recent emails with job application keywords
 const fetchJobApplicationEmails = async (maxResults = 200) => {
   try {
-    // Simple search for all emails containing "application"
-    const query = 'application';
+    // Broaden search to capture common application workflows
+    const query = '(application OR applied OR "status update" OR interview OR assessment OR offer OR "thank you for applying" OR "thank you for your application")';
     
     console.log('Searching for emails containing "application"...');
     
@@ -122,7 +123,87 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
         fullText.includes('developer') ||
         fullText.includes('engineer');
       
-      return isJobApplication;
+      // Exclude obvious newsletters/marketing digests and general marketing/transactional emails
+      const isNoise =
+        fullText.includes('career brew') ||
+        fullText.includes('hottest jobs') ||
+        fullText.includes('do not miss') ||
+        fullText.includes('newsletter') ||
+        fullText.includes('digest') ||
+        fullText.includes('roundup') ||
+        fullText.includes('curated') ||
+        fullText.includes('live q&a') ||
+        fullText.includes('webinar') ||
+        fullText.includes('ask a recruiter') ||
+        fullText.includes('your top job matches') ||
+        fullText.includes('job matches') ||
+        fullText.includes('matches for you') ||
+        fullText.includes('jobs and internship jobs') ||
+        fullText.includes('meet our new') ||
+        fullText.includes('verification code') ||
+        fullText.includes('appointment booked') ||
+        fullText.includes('discount') ||
+        fullText.includes('driving score') ||
+        fullText.includes('free rewards') ||
+        fullText.includes('reward') ||
+        fullText.includes('receipt') ||
+        fullText.includes('invoice') ||
+        fullText.includes('order') ||
+        fullText.includes('cart') ||
+        fullText.includes('shipping') ||
+        fullText.includes('delivery') ||
+        fullText.includes('coupon') ||
+        fullText.includes('sale') ||
+        fullText.includes('is hiring') ||
+        fullText.includes('explore new opportunities') ||
+        fullText.includes('unsubscribe') ||
+        fullText.includes('insurance') ||
+        fullText.includes('policy') ||
+        fullText.includes('payment') ||
+        fullText.includes('bank') ||
+        fullText.includes('facebook') ||
+        fullText.includes('instagram') ||
+        fullText.includes('twitter') ||
+        fullText.includes('linkedin notifications');
+
+      // Treat ATS senders as high-signal application mail even if keywords are missing
+      const from = email.payload?.headers?.find(h => h.name === 'From')?.value || '';
+      const fromDomain = (from.match(/<([^>]+)>/)?.[1] || from).split('@')[1] || '';
+      const atsDomains = ['greenhouse.io', 'boards.greenhouse.io', 'lever.co', 'workday.com', 'myworkday.com', 'ashbyhq.com', 'smartrecruiters.com', 'bamboohr.com', 'successfactors.com'];
+      const isAtsSender = atsDomains.some(d => fromDomain.endsWith(d));
+
+      // Additional job intent signals (focus on your application-related phrases)
+      const jobSignalPhrases = [
+        'thank you for applying',
+        'thank you for your application',
+        'we received your application',
+        'application received',
+        'application submitted',
+        'successfully submitted',
+        'application status',
+        'your application',
+        'applied to',
+        'you applied to',
+        'status update',
+        'schedule interview',
+        'interview',
+        'online assessment',
+        'assessment',
+        'coding challenge',
+        'hackerrank',
+        'oa ',
+        ' offer ',
+        'congratulations',
+        'final interview',
+        'phone interview',
+        'technical interview'
+      ];
+      const hasJobSignal = jobSignalPhrases.some(k => fullText.includes(k));
+
+      // Keep if: ATS sender OR (has job signal and not clearly noise)
+      if (isAtsSender) return true;
+      if (hasJobSignal && !isNoise) return true;
+      return false;
     });
     
     console.log('Filtered to job application emails:', jobApplicationEmails.length);
@@ -198,223 +279,102 @@ const fetchNewJobApplicationEmails = async (maxResults = 200) => {
   }
 };
 
-// Function to parse job application data from email
+// Helpers
+const toTitleCasePreserve = (text) => {
+  if (!text) return '';
+  return text
+    .split(/\s+/)
+    .map((word) => {
+      if (word.length <= 2) return word.toUpperCase();
+      // Preserve common acronyms
+      if (/^(ai|ml|ui|ux|qa|sde|sdet|pm|ds)$/i.test(word)) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ')
+    .replace(/\bIi\b/g, 'II')
+    .replace(/\bIii\b/g, 'III');
+};
+
+const extractDomainCompany = (fromHeader) => {
+  try {
+    // Examples: "Acme Careers <careers@acme.com>", "Greenhouse <no-reply@boards.greenhouse.io>"
+    const emailMatch = fromHeader.match(/<([^>]+)>/);
+    const address = (emailMatch ? emailMatch[1] : fromHeader).trim();
+    const domain = address.split('@')[1] || '';
+    if (!domain) return null;
+    const atsDomains = [
+      'greenhouse.io',
+      'boards.greenhouse.io',
+      'lever.co',
+      'myworkday.com',
+      'workday.com',
+      'smartrecruiters.com',
+      'successfactors.com',
+      'rippling.com',
+      'ashbyhq.com',
+      'bamboohr.com',
+    ];
+    if (atsDomains.some((d) => domain.endsWith(d))) return null;
+    const parts = domain.split('.');
+    // take second-level label (e.g., acme.com -> acme, careers.acme.com -> acme)
+    const core = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    if (!core) return null;
+    return toTitleCasePreserve(core.replace(/[-_]/g, ' '));
+  } catch {
+    return null;
+  }
+};
+
+const htmlToText = (html) => {
+  return html
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\s*\/p\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const getEmailText = (email) => {
+  const getParts = (payload) => {
+    if (!payload) return [];
+    if (payload.parts && payload.parts.length > 0) {
+      return payload.parts.flatMap((p) => getParts(p));
+    }
+    return [payload];
+  };
+  const parts = getParts(email.payload);
+  let text = '';
+  for (const part of parts) {
+    const mimeType = part.mimeType || '';
+    const bodyData = part.body && part.body.data ? part.body.data : '';
+    if (!bodyData) continue;
+    const buffer = Buffer.from(bodyData.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    const content = buffer.toString('utf8');
+    if (mimeType.includes('text/plain')) {
+      text += '\n' + content;
+    } else if (mimeType.includes('text/html')) {
+      text += '\n' + htmlToText(content);
+    }
+  }
+  return text.trim();
+};
+
+// Function to parse job application data from email (delegates to parser util)
 const parseJobApplicationFromEmail = (email) => {
   try {
-    const subject = email.payload?.headers?.find(h => h.name === 'Subject')?.value || '';
-    const from = email.payload?.headers?.find(h => h.name === 'From')?.value || '';
-    const date = email.payload?.headers?.find(h => h.name === 'Date')?.value || '';
-    const snippet = email.snippet || '';
-    const fullText = (subject + ' ' + snippet).toLowerCase();
-
-    console.log('Parsing email:', { subject, snippet });
-
-    // === STATUS ===
-    let status = 'Applied';
-    if (fullText.includes('online assessment') || fullText.includes('hackerrank') || fullText.includes('coding challenge')) {
-      status = 'Online Assessment';
-    } else if (fullText.includes('phone interview') || fullText.includes('screening call')) {
-      status = 'Phone Interview';
-    } else if (fullText.includes('technical interview')) {
-      status = 'Technical Interview';
-    } else if (fullText.includes('final interview') || fullText.includes('onsite')) {
-      status = 'Final Interview';
-    } else if (fullText.includes('offer') || fullText.includes('congratulations')) {
-      status = 'Accepted';
-    } else if (fullText.includes('rejected') || fullText.includes('unfortunately')) {
-      status = 'Rejected';
-    } else if (fullText.includes('waitlist') || fullText.includes('pending')) {
-      status = 'Waitlisted';
-    } else if (fullText.includes('withdrawn') || fullText.includes('withdraw')) {
-      status = 'Withdrawn';
-    }
-
-    // === POSITION ===
-    let position = 'Unknown Position';
-
-    // Try known pattern matches first
-    const knownRoles = [
-      'Software Engineer Intern', 'Frontend Developer Intern', 'Backend Developer Intern',
-      'Full Stack Developer Intern', 'Data Scientist Intern', 'Product Manager Intern',
-      'Designer Intern', 'UX Designer Intern', 'Marketing Intern', 'Cybersecurity Intern',
-      'DevOps Intern', 'Cloud Engineer Intern', 'Mobile Developer Intern', 'Java Developer Intern',
-      'React Developer Intern', 'Python Developer Intern', 'Trading Intern', 'Consulting Intern',
-      'Finance Intern', 'Quantitative Analyst Intern', 'Graduate Program', 'Summer Intern'
-    ];
-    for (const role of knownRoles) {
-      if (fullText.includes(role.toLowerCase())) {
-        position = role;
-        break;
-      }
-    }
-
-    // Try to extract from subject line patterns
-    if (position === 'Unknown Position') {
-      // Look for patterns like "Software Engineer - Frontend" in subject
-      const subjectMatch = subject.match(/(software engineer[^,\n]*?)(?:\s+-\s+|\s+opening|\s+position|\s*$)/i);
-      if (subjectMatch) {
-        position = subjectMatch[1].trim();
-        // Only add "Intern" if it's not already there
-        if (!position.toLowerCase().includes('intern')) {
-          position += ' Intern';
-        }
-      }
-    }
-
-    // If no known role found, try to extract from "at" pattern
-    if (position === 'Unknown Position') {
-      // Try to extract from "You Successfully Applied To X" pattern
-      const successMatch = snippet.match(/you successfully applied to (.+?)(?:\s+at|\s+internship|\s*$)/i);
-      if (successMatch) {
-        position = successMatch[1].trim();
-        // Only add "Intern" if it's not already there
-        if (!position.toLowerCase().includes('intern')) {
-          position += ' Intern';
-        }
-      }
-      
-      // Try to extract from "X internship at Y" pattern
-      if (position === 'Unknown Position') {
-        const atPattern = /(.+?)\s+internship\s+at\s+/i;
-        const atMatch = snippet.match(atPattern);
-        if (atMatch) {
-          position = atMatch[1].trim();
-          // Only add "Intern" if it's not already there
-          if (!position.toLowerCase().includes('intern')) {
-            position += ' Intern';
-          }
-        }
-      }
-      
-      // Try to extract from "University Grad" pattern
-      if (position === 'Unknown Position') {
-        const gradMatch = snippet.match(/university grad \d{4}:\s*(.+?)(?:\s+opening|\s+position|\s+at|\s*$)/i);
-        if (gradMatch) {
-          position = gradMatch[1].trim();
-          // Only add "Intern" if it's not already there
-          if (!position.toLowerCase().includes('intern')) {
-            position += ' Intern';
-          }
-        }
-      }
-      
-      // Try to extract from "Software Engineer" pattern
-      if (position === 'Unknown Position') {
-        const engineerMatch = snippet.match(/(software engineer[^,\n]*?)(?:\s+opening|\s+position|\s+at|\s*$)/i);
-        if (engineerMatch) {
-          position = engineerMatch[1].trim();
-          // Only add "Intern" if it's not already there
-          if (!position.toLowerCase().includes('intern')) {
-            position += ' Intern';
-          }
-        }
-      }
-      
-      // If still not found, try to extract from the beginning of the snippet
-      if (position === 'Unknown Position') {
-        const startMatch = snippet.match(/^([^,]+?)(?:\s+at\s+|\s+internship\s+at\s+)/i);
-        if (startMatch) {
-          position = startMatch[1].trim();
-          // Only add "Intern" if it's not already there
-          if (!position.toLowerCase().includes('intern')) {
-            position += ' Intern';
-          }
-        }
-      }
-    }
-
-    // Clean position - remove any "at company" or "on day" parts
-    position = position
-      .replace(/\sat\s+[^,\n]+/gi, '') // remove "at Redis on Monday"
-      .replace(/\son\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi, '')
-      .replace(/\s+apply\s+to\s+similar\s+jobs\?/gi, '')
-      .replace(/[^\w\s]/g, '') // remove punctuation
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Capitalize title
-    position = position.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
-    // Final cleanup: remove duplicate "Intern" if it appears twice
-    position = position.replace(/\bIntern\s+Intern\b/gi, 'Intern');
-
-    // Fallback: extract from "applied to" pattern
-    if (position === 'Unknown Position') {
-      const appliedMatch = fullText.match(/applied to (.+?) at /i);
-      if (appliedMatch) {
-        position = appliedMatch[1].trim();
-        // Only add "Intern" if it's not already there
-        if (!position.toLowerCase().includes('intern')) {
-          position += ' Intern';
-        }
-      }
-    }
-
-    // === COMPANY ===
-    let company = 'Unknown Company';
-    
-    // First try to extract from common email patterns
-    const subjectCompanyPatterns = [
-      /you applied to ([^!,\n]+)/i,
-      /thank you for applying to ([^!,\n]+)/i,
-      /application to ([^!,\n]+)/i,
-      /we received your application for ([^!,\n]+)/i,
-      /thank you for your interest in ([^!,\n]+)/i
-    ];
-    for (const pattern of subjectCompanyPatterns) {
-      const match = subject.match(pattern);
-      if (match) {
-        company = match[1].trim();
-        break;
-      }
-    }
-    
-    // If not found in subject, try to extract from snippet using "at" pattern
-    if (company === 'Unknown Company') {
-      // Try the specific pattern for "internship at company on day"
-      const atMatch = snippet.match(/(?:internship|position|role)\s+at\s+([A-Z][a-zA-Z\s&]+?)(?:\s+on\s+[A-Za-z]+|\s+\.|\.|,|!|\?|$)/i);
-      if (atMatch) {
-        company = atMatch[1].trim();
-      }
-      
-      // If still not found, try a more general pattern
-      if (company === 'Unknown Company') {
-        const generalMatch = snippet.match(/at\s+([A-Z][a-zA-Z\s&]+?)(?:\s+on\s+[A-Za-z]+|\s+\.|\.|,|!|\?|$)/i);
-        if (generalMatch) {
-          company = generalMatch[1].trim();
-        }
-      }
-    }
-
-    // Clean company name - remove day names and other unwanted text
-    company = company
-      .replace(/\son\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi, '')
-      .replace(/\s+team$/i, '')
-      .replace(/\s+successfully submitted$/i, '')
-      .replace(/\s+apply\s+to\s+similar\s+jobs\?/gi, '')
-      .replace(/[^\w\s&]/g, '') // remove punctuation
-      .trim()
-      .split(' ').slice(0, 3).join(' '); // max 3 words
-    company = company.charAt(0).toUpperCase() + company.slice(1);
-
-    // Capitalize title
-    position = position.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
-    // Parse date
-    const emailDate = new Date(date);
-    const formattedDate = emailDate.toISOString().split('T')[0];
-
+    const parsed = parseJobEmail(email);
     return {
-      company: company || 'Unknown Company',
-      position: position || 'Unknown Position',
-      location: '', // Would need to extract from email body
-      status: status,
-      appliedDate: formattedDate,
-      emailId: email.id,
-      subject: subject,
-      snippet: snippet
+      company: parsed.company,
+      position: parsed.position,
+      location: '',
+      status: parsed.status,
+      appliedDate: parsed.appliedDate,
+      emailId: parsed.emailId,
+      subject: parsed.subject,
+      snippet: parsed.snippet,
     };
-
   } catch (err) {
     console.error('Error parsing email:', err);
     return {

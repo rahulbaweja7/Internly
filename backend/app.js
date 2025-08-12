@@ -86,6 +86,19 @@ app.get('/healthz', (req, res) => {
   res.json({ ok: true, service: 'internly-api', time: new Date().toISOString() });
 });
 
+// Status precedence for auto-promotion
+const statusRank = {
+  'Applied': 1,
+  'Online Assessment': 2,
+  'Phone Interview': 3,
+  'Technical Interview': 4,
+  'Final Interview': 5,
+  'Waitlisted': 6,
+  'Accepted': 7,
+  'Rejected': 7,
+  'Withdrawn': 7,
+};
+
 // Protected job routes
 app.get('/api/jobs', isAuthenticated, async (req, res) => {
   try {
@@ -98,12 +111,51 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 
 app.post('/api/jobs', isAuthenticated, async (req, res) => {
   try {
-    const job = new Job({
-      ...req.body,
-      userId: req.user._id,
-    });
+    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend } = req.body;
+
+    const normalize = (v) => (v || '').toString().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+    const normalizedCompany = normalize(company);
+    const normalizedRole = normalize(role);
+
+    // Find existing job for same user + company + role
+    let job = await Job.findOne({ userId: req.user._id, normalizedCompany, normalizedRole });
+
+    if (!job) {
+      job = new Job({
+        userId: req.user._id,
+        company,
+        role,
+        location,
+        status: status || 'Applied',
+        stipend,
+        dateApplied,
+        notes,
+        emailId,
+        statusHistory: [
+          { status: status || 'Applied', at: new Date(dateApplied || Date.now()), source: 'gmail', emailId, subject },
+        ],
+      });
+      await job.save();
+      return res.status(201).json(job);
+    }
+
+    // Merge into existing: promote status by precedence
+    const currentRank = statusRank[job.status] || 0;
+    const incomingRank = statusRank[status] || 0;
+    if (incomingRank > currentRank) {
+      job.status = status;
+    }
+    if (location && !job.location) job.location = location;
+    if (stipend && !job.stipend) job.stipend = stipend;
+    if (dateApplied && (!job.dateApplied || new Date(dateApplied) < job.dateApplied)) {
+      job.dateApplied = dateApplied; // keep earliest application date
+    }
+    if (notes) job.notes = job.notes ? `${job.notes}\n${notes}` : notes;
+    if (emailId) job.emailId = emailId;
+    job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+
     await job.save();
-    res.status(201).json(job);
+    res.status(200).json(job);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
