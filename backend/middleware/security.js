@@ -4,6 +4,10 @@ const cors = require('cors');
 
 // Rate limiting middleware
 const createRateLimiter = (windowMs, max, message) => {
+  // Disable rate limiting entirely in development or when explicitly disabled
+  if (process.env.NODE_ENV === 'development' || process.env.RATE_LIMIT_DISABLED === 'true') {
+    return (req, res, next) => next();
+  }
   return rateLimit({
     windowMs: windowMs || 15 * 60 * 1000, // 15 minutes default
     max: max || 100, // limit each IP to 100 requests per windowMs
@@ -15,8 +19,8 @@ const createRateLimiter = (windowMs, max, message) => {
 
 // General API rate limiter
 const apiLimiter = createRateLimiter(
-  parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+  parseInt(process.env.API_RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
+  parseInt(process.env.API_RATE_LIMIT_MAX_REQUESTS, 10) || 300
 );
 
 // Stricter rate limiter for auth routes (configurable via env)
@@ -28,9 +32,9 @@ const authLimiter = createRateLimiter(
 
 // Gmail API rate limiter
 const gmailLimiter = createRateLimiter(
-  60 * 1000, // 1 minute
-  10, // 10 requests per minute
-  'Too many Gmail API requests, please try again later.'
+  parseInt(process.env.GMAIL_RATE_LIMIT_WINDOW_MS, 10) || 60 * 1000,
+  parseInt(process.env.GMAIL_RATE_LIMIT_MAX_REQUESTS, 10) || 60,
+  process.env.GMAIL_RATE_LIMIT_MESSAGE || 'Too many Gmail API requests, please try again later.'
 );
 
 // CORS configuration

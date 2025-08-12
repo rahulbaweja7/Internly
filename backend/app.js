@@ -142,17 +142,33 @@ app.post('/api/jobs', isAuthenticated, async (req, res) => {
     // Merge into existing: promote status by precedence
     const currentRank = statusRank[job.status] || 0;
     const incomingRank = statusRank[status] || 0;
+    let updated = false;
     if (incomingRank > currentRank) {
       job.status = status;
+      updated = true;
     }
-    if (location && !job.location) job.location = location;
-    if (stipend && !job.stipend) job.stipend = stipend;
+    if (location && !job.location) { job.location = location; updated = true; }
+    if (stipend && !job.stipend) { job.stipend = stipend; updated = true; }
     if (dateApplied && (!job.dateApplied || new Date(dateApplied) < job.dateApplied)) {
       job.dateApplied = dateApplied; // keep earliest application date
+      updated = true;
     }
-    if (notes) job.notes = job.notes ? `${job.notes}\n${notes}` : notes;
-    if (emailId) job.emailId = emailId;
-    job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+    if (notes) { job.notes = job.notes ? `${job.notes}\n${notes}` : notes; updated = true; }
+
+    const hasEmailInHistory = emailId && (job.emailId === emailId || (job.statusHistory || []).some(h => h.emailId === emailId));
+    if (emailId && !hasEmailInHistory) {
+      if (!job.emailId) job.emailId = emailId;
+      job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+      updated = true;
+    } else if (incomingRank > currentRank) {
+      // Record status change without duplicating emailId
+      job.statusHistory.push({ status: status, at: new Date(), source: 'gmail', subject });
+      updated = true;
+    }
+
+    if (!updated) {
+      return res.status(200).json(job);
+    }
 
     await job.save();
     res.status(200).json(job);

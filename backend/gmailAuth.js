@@ -221,8 +221,11 @@ const getProcessedEmailIds = async () => {
     const ProcessedEmail = require('./models/ProcessedEmail');
     
     // Get email IDs from jobs that were added to tracker
-    const existingJobs = await Job.find({}, 'emailId company role');
-    const jobEmailIds = existingJobs.map(job => job.emailId).filter(id => id);
+    const existingJobs = await Job.find({}, 'emailId statusHistory');
+    const jobEmailIds = [
+      ...existingJobs.map(job => job.emailId).filter(id => id),
+      ...existingJobs.flatMap(job => (job.statusHistory || []).map(h => h.emailId).filter(Boolean)),
+    ];
     
     // Get email IDs that were marked as processed (but not added to tracker)
     const processedEmails = await ProcessedEmail.find({}, 'emailId');

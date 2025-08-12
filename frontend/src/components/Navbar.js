@@ -16,7 +16,6 @@ import {
   BarChart3,
   TrendingUp,
   Settings,
-  Bell,
   Search
 } from 'lucide-react';
 
@@ -237,10 +236,6 @@ export function Navbar() {
           {/* User menu */}
           <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-            </Button>
             
             <div className="flex items-center space-x-2">
               {user?.picture ? (

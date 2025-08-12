@@ -16,6 +16,7 @@ export function GmailIntegration({ onApplicationsFound }) {
   const [isFetching, setIsFetching] = useState(false);
   const [detectedApplications, setDetectedApplications] = useState([]);
   const [error, setError] = useState(null);
+  const [info, setInfo] = useState(null);
   const [editingApplication, setEditingApplication] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,6 +46,7 @@ export function GmailIntegration({ onApplicationsFound }) {
   const connectGmail = () => {
     setIsLoading(true);
     setError(null);
+    setInfo(null);
     // Redirect to backend OAuth endpoint
     window.location.href = `${config.API_BASE_URL}/api/gmail/auth`;
   };
@@ -114,16 +116,25 @@ export function GmailIntegration({ onApplicationsFound }) {
         
         console.log('Filtered applications:', filteredApplications.length);
         
-        setDetectedApplications(filteredApplications);
+        // De-duplicate on company+position to avoid repeated entries
+        const uniqueMap = new Map();
+        for (const app of filteredApplications) {
+          const key = `${(app.company||'').toLowerCase()}::${(app.position||'').toLowerCase()}`;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, app);
+        }
+        const uniqueApplications = Array.from(uniqueMap.values());
+
+        setDetectedApplications(uniqueApplications);
+        setInfo(uniqueApplications.length === 0 ? 'No new job application emails found.' : null);
         
         // Force a re-render by updating state
         setTimeout(() => {
           console.log('Current detectedApplications state:', detectedApplications);
         }, 100);
         
-        if (filteredApplications.length > 0) {
-          console.log('Calling onApplicationsFound with:', filteredApplications);
-          onApplicationsFound(filteredApplications);
+        if (uniqueApplications.length > 0) {
+          console.log('Calling onApplicationsFound with:', uniqueApplications);
+          onApplicationsFound(uniqueApplications);
         }
       } else {
         console.error('Response indicates failure:', response.data);
@@ -350,10 +361,15 @@ export function GmailIntegration({ onApplicationsFound }) {
           )}
         </div>
 
-        {/* Error Message */}
+        {/* Error/Info Message */}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+        {info && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-700">{info}</p>
           </div>
         )}
 

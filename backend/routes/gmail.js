@@ -81,9 +81,22 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     const emails = await fetchNewJobApplicationEmails(200); // Get last 200 emails
     
     // Parse job applications from emails
-    const jobApplications = emails
-      .map(email => parseJobApplicationFromEmail(email))
-      .filter(app => app !== null); // Remove any failed parses
+    // De-duplicate by Gmail threadId (group conversation) and message id
+    const seenMessageIds = new Set();
+    const seenThreadIds = new Set();
+    const parsed = [];
+    for (const email of emails) {
+      if (seenMessageIds.has(email.id)) continue;
+      if (email.threadId && seenThreadIds.has(email.threadId)) continue;
+      const app = parseJobApplicationFromEmail(email);
+      if (app) {
+        parsed.push(app);
+        seenMessageIds.add(email.id);
+        if (email.threadId) seenThreadIds.add(email.threadId);
+      }
+    }
+
+    const jobApplications = parsed;
 
     res.json({
       success: true,

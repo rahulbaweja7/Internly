@@ -18,6 +18,12 @@ const ROLE_KEYWORDS = [
   'intern', 'internship', 'graduate', 'new grad', 'coop', 'co-op'
 ];
 
+const ROLE_STOPWORDS = new Set([
+  'your','you','we','our','application','applied','status','update','thank','congratulations','offer',
+  'assessment','interview','schedule','invite','draft','reminder','policy','receipt','invoice','discount',
+  'webinar','newsletter','digest','reward','free','music','amazon','spotify','unsubscribe'
+]);
+
 const COMPANY_STOPPHRASES = new Set([
   'home', 'this time', 'any time', 'time of order', 'you were added', 'works best', 'your earliest convenience',
   'involves equity and', 'after reviewing your', 'was only the', 'have impacted and', 'best match you', 'search and future endeavors',
@@ -154,6 +160,55 @@ const inferStatus = (text) => {
   return 'Applied';
 };
 
+const extractCandidateRoles = (subject, snippet, bodyText) => {
+  const sources = [subject || '', snippet || '', bodyText || ''];
+  const candidates = [];
+  const pushCandidate = (raw, sourceWeight = 0) => {
+    if (!raw) return;
+    let phrase = raw.trim();
+    phrase = phrase.replace(/\s+/g, ' ');
+    const tokens = phrase.split(' ');
+    if (tokens.length === 0 || tokens.length > 7) return; // keep concise
+    const lower = phrase.toLowerCase();
+    // must include at least one role keyword
+    if (!ROLE_KEYWORDS.some(k => lower.includes(k))) return;
+    // filter if majority are stopwords or contains obvious non-role words
+    const stopRatio = tokens.filter(t => ROLE_STOPWORDS.has(t.toLowerCase())).length / tokens.length;
+    if (stopRatio > 0.4) return;
+    candidates.push({ phrase, score: 0, sourceWeight });
+  };
+
+  // From subject: stronger weight
+  const s = subject || '';
+  // 1) Patterns ending with Intern/Internship
+  (s.match(/([A-Za-z/&+\- ]{0,60}?(?:Internship|Intern))(?![A-Za-z])/gi) || []).forEach(m => pushCandidate(m, 2));
+  // 2) Noun role patterns
+  (s.match(/((?:[A-Za-z/&+\-]+\s+){0,4}(?:Engineer|Developer|Programmer|Designer|Scientist|Analyst|Manager|Researcher|Product)(?:\s+(?:Intern|Internship))?)/gi) || []).forEach(m => pushCandidate(m, 2));
+
+  // From snippet/body: normal weight
+  for (const text of sources) {
+    // Intern/Internship enders
+    (text.match(/([A-Za-z/&+\- ]{0,60}?(?:Internship|Intern))(?![A-Za-z])/gi) || []).forEach(m => pushCandidate(m, 1));
+    // Role nouns window
+    (text.match(/((?:[A-Za-z/&+\-]+\s+){0,4}(?:Engineer|Developer|Programmer|Designer|Scientist|Analyst|Manager|Researcher|Product)(?:\s+(?:Intern|Internship))?)/gi) || []).forEach(m => pushCandidate(m, 1));
+    // Window around role keywords (up to 3 tokens on each side)
+    (text.match(/(?:\b\w+\b\s+){0,3}(?:engineer|developer|designer|scientist|analyst|manager|researcher|product|frontend|backend|full\s*stack|data|security|devops|mobile|ios|android)(?:\s+\b\w+\b){0,3}/gi) || []).forEach(m => pushCandidate(m, 1));
+  }
+
+  // Score candidates: +2 if contains intern, +1 per extra role keyword, +sourceWeight, prefer shorter
+  candidates.forEach(c => {
+    const lower = c.phrase.toLowerCase();
+    if (/(internship|intern)\b/.test(lower)) c.score += 2;
+    c.score += ROLE_KEYWORDS.reduce((acc, k) => acc + (lower.includes(k) ? 1 : 0), 0) * 0.2;
+    c.score += c.sourceWeight;
+    c.score -= Math.max(0, c.phrase.split(' ').length - 4) * 0.2; // penalize long phrases
+  });
+
+  candidates.sort((a, b) => b.score - a.score || a.phrase.split(' ').length - b.phrase.split(' ').length);
+  const best = candidates[0]?.phrase || '';
+  return best ? cleanRole(best.replace(/\bInternship\b/i, 'Intern')) : '';
+};
+
 const parseJobEmail = (email) => {
   const subject = email.payload?.headers?.find((h) => h.name === 'Subject')?.value || '';
   const from = email.payload?.headers?.find((h) => h.name === 'From')?.value || '';
@@ -210,6 +265,13 @@ const parseJobEmail = (email) => {
   }
   if (position !== 'Unknown Position') position = cleanRole(position);
   if (position && !/intern|internship/i.test(position)) position += ' Intern';
+
+  // Fallback: choose best concise role-like phrase instead of Unknown
+  if (position === 'Unknown Position') {
+    const fallback = extractCandidateRoles(subject, snippet, bodyText);
+    if (fallback) position = fallback;
+    if (position && !/intern|internship/i.test(position)) position += ' Intern';
+  }
 
   // Status
   const status = inferStatus(combined);
