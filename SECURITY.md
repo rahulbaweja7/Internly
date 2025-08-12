@@ -4,7 +4,7 @@ We take user trust and data protection seriously. This document outlines how we 
 
 ## Report a vulnerability
 
-- Email: security@internly.example (replace with your address)
+- Email: rahulbaweja2004@gmail.com
 - Please include reproduction steps and impact. We aim to respond within 72 hours.
 
 ## Secrets management
