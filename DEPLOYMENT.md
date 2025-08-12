@@ -26,17 +26,19 @@ Create production environment files:
 
 **Backend (.env)**
 
+DO NOT commit real secrets or credential-shaped connection strings to the repo. Set these as environment variables in your hosting platform.
+
 ```env
 NODE_ENV=production
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/internly
+MONGO_URI=YOUR_MONGO_URI # e.g., mongodb+srv://<USERNAME>:<PASSWORD>@<CLUSTER>.mongodb.net/<DB_NAME>
 GOOGLE_CLIENT_ID=your_production_client_id
 GOOGLE_CLIENT_SECRET=your_production_client_secret
 SESSION_SECRET=your-32-character-session-secret
 JWT_SECRET=your-32-character-jwt-secret
-EMAIL_USER=your-email@gmail.com
+EMAIL_USER=your-email@provider.com
 EMAIL_PASS=your-app-password
-FRONTEND_URL=https://your-domain.com
-ALLOWED_ORIGINS=https://your-domain.com
+FRONTEND_URL=https://your-frontend-domain.com
+ALLOWED_ORIGINS=https://your-frontend-domain.com
 ```
 
 **Frontend (.env.production)**

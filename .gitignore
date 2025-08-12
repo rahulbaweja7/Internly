@@ -11,7 +11,25 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Secrets & keys
+*.pem
+*.key
+*.p12
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
 # Build outputs
+/frontend/build
+/backend/logs
+
 build/
 dist/
 .next/
