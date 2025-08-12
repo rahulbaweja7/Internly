@@ -12,7 +12,6 @@ import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Sq
 import { InternshipForm } from './InternshipForm';
 import { GmailIntegration } from './GmailIntegration';
 import { Navbar } from './Navbar';
-import { useAuth } from '../contexts/AuthContext';
 
 export function InternshipDashboard() {
   const [internships, setInternships] = useState([]);
@@ -29,7 +28,7 @@ export function InternshipDashboard() {
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  // Removed unused auth destructuring to satisfy CI
 
   // Handle OAuth callback response and search parameters
   useEffect(() => {

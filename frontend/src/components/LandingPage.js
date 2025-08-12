@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { ArrowRight, CheckCircle, BarChart3, Search, Bell, Users, Target, TrendingUp } from 'lucide-react';
+import { ArrowRight, BarChart3, Search, Bell, Users, Target, TrendingUp } from 'lucide-react';
 import { Navbar } from './Navbar';
 
 export function LandingPage() {
