@@ -43,7 +43,15 @@ export const AuthProvider = ({ children }) => {
         setUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       } else {
-        // Fallback to session-based auth (for Google OAuth)
+        // If Google OAuth redirected with a token in hash, capture it once
+        const hash = window.location.hash;
+        if (hash && hash.includes('token=')) {
+          const t = new URLSearchParams(hash.substring(1)).get('token');
+          if (t) {
+            localStorage.setItem('token', t);
+            window.location.hash = '';
+          }
+        }
         const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
         setUser(response.data.user);
       }

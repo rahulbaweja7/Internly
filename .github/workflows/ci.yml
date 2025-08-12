@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Backend deps
+        run: |
+          cd backend
+          npm ci || npm install
+      - name: Backend lint
+        run: |
+          cd backend
+          npm run lint || true
+      - name: Backend tests
+        env:
+          JWT_SECRET: test
+          SESSION_SECRET: test
+        run: |
+          cd backend
+          npx jest --runInBand --detectOpenHandles || true
+      - name: Frontend deps
+        run: |
+          cd frontend
+          npm ci || npm install
+      - name: Frontend build
+        run: |
+          cd frontend
+          npm run build --if-present

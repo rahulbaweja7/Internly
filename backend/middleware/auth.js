@@ -17,15 +17,10 @@ const isAuthenticated = async (req, res, next) => {
           return next();
         }
       } catch (jwtError) {
-        // JWT verification failed, continue to session check
+        // JWT verification failed
       }
     }
-    
-    // Fallback to session-based authentication (for Google OAuth)
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    
+
     res.status(401).json({ error: 'Not authenticated' });
   } catch (error) {
     console.error('Authentication error:', error);
@@ -34,7 +29,9 @@ const isAuthenticated = async (req, res, next) => {
 };
 
 const isNotAuthenticated = (req, res, next) => {
-  if (!req.isAuthenticated()) {
+  // If a valid JWT was attached earlier in the pipeline, req.user will be set
+  // We do not rely on passport sessions
+  if (!req.user) {
     return next();
   }
   res.status(400).json({ error: 'Already authenticated' });

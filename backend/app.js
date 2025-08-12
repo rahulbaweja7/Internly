@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const { setupSecurity } = require('./middleware/security');
+const Sentry = require('@sentry/node');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -9,6 +10,12 @@ const app = express();
 // Trust proxy in production (for correct secure cookies behind proxies)
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
+}
+
+// Observability
+if (process.env.SENTRY_DSN) {
+  Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
+  app.use(Sentry.Handlers.requestHandler());
 }
 
 // Security and basic middleware
@@ -215,6 +222,9 @@ app.delete('/api/jobs/delete-all', isAuthenticated, async (req, res) => {
 });
 
 // 404 and error handlers
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
 app.use(notFound);
 app.use(errorHandler);
 

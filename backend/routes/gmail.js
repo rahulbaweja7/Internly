@@ -56,7 +56,7 @@ router.get('/oauth2callback', async (req, res) => {
   }
 });
 
-// Step 3: Fetch job application emails
+// Step 3: Fetch job application emails (optionally enqueue background job later)
 router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user?._id?.toString() || 'default-user';

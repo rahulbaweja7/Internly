@@ -15,11 +15,12 @@ router.get('/google', isNotAuthenticated, passport.authenticate('google', {
 }));
 
 router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   (req, res) => {
-    // Successful authentication, redirect to frontend
+    // Issue JWT and redirect with token in hash fragment
+    const token = generateToken(req.user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard`);
+    res.redirect(`${frontendUrl}/dashboard#token=${token}`);
   }
 );
 
@@ -242,15 +243,10 @@ router.get('/me', isAuthenticated, (req, res) => {
   });
 });
 
-// Logout
+// Logout (JWT: client-side token removal)
 router.get('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error during logout' });
-    }
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/`);
-  });
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  res.redirect(`${frontendUrl}/`);
 });
 
 module.exports = router; 
