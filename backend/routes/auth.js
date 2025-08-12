@@ -8,6 +8,61 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emai
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 
 const router = express.Router();
+// Export user data (jobs + basic profile)
+router.get('/export', async (req, res) => {
+  try {
+    // Allow token via Authorization or query ?token=...
+    let user = req.user;
+    if (!user) {
+      const authHeader = req.headers.authorization;
+      let token = null;
+      if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.substring(7);
+      if (!token && req.query.token) token = req.query.token;
+      if (!token) return res.status(401).json({ error: 'Not authenticated' });
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        user = await User.findById(decoded.id);
+        if (!user || !user.isActive) return res.status(401).json({ error: 'Not authenticated' });
+      } catch (e) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+    }
+
+    const Job = require('../models/Job');
+    const jobs = await Job.find({ userId: user._id }).lean();
+    const data = {
+      user: user.toPublicJSON(),
+      jobs,
+      exportedAt: new Date().toISOString(),
+      version: 1,
+    };
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="internly-export.json"');
+    res.send(JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error('Export error:', e);
+    res.status(500).json({ error: 'Export failed' });
+  }
+});
+
+// Delete account and data
+router.delete('/delete', isAuthenticated, async (req, res) => {
+  try {
+    const Job = require('../models/Job');
+    const GmailToken = require('../models/GmailToken');
+    const User = require('../models/User');
+
+    await Promise.all([
+      Job.deleteMany({ userId: req.user._id }),
+      GmailToken.deleteMany({ userId: req.user._id.toString() }),
+    ]);
+    await User.deleteOne({ _id: req.user._id });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Delete account error:', e);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
 
 // Google OAuth routes
 router.get('/google', isNotAuthenticated, passport.authenticate('google', { 
@@ -19,7 +74,8 @@ router.get('/google/callback',
   (req, res) => {
     // Issue JWT and redirect with token in hash fragment
     const token = generateToken(req.user);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = rawUrl.replace(/\/$/, ''); // strip trailing slash
     res.redirect(`${frontendUrl}/dashboard#token=${token}`);
   }
 );

@@ -237,7 +237,7 @@ export function Navbar() {
           <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700">
             <ThemeToggle />
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/profile')}>
               {user?.picture ? (
                 <img 
                   src={user.picture} 

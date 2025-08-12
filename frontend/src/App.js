@@ -9,6 +9,7 @@ import { VerifyEmail } from './components/VerifyEmail';
 import Dashboard from './components/Dashboard'; 
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
+import Profile from './components/Profile';
 import './App.css';
 
 // Protected Route Component
@@ -43,6 +44,11 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       } />
       <Route path="/add" element={

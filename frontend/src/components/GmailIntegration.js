@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import config from '../config/config';
+import { useAuth } from '../contexts/AuthContext';
 
 export function GmailIntegration({ onApplicationsFound }) {
+  const { user } = useAuth();
   const [gmailStatus, setGmailStatus] = useState({ connected: false, lastConnected: null });
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -47,8 +49,12 @@ export function GmailIntegration({ onApplicationsFound }) {
     setIsLoading(true);
     setError(null);
     setInfo(null);
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${config.API_BASE_URL}/api/gmail/auth`;
+    // Redirect to backend OAuth endpoint with user id if available
+    const uid = user?.id || user?._id;
+    const url = uid
+      ? `${config.API_BASE_URL}/api/gmail/auth?u=${encodeURIComponent(uid)}`
+      : `${config.API_BASE_URL}/api/gmail/auth`;
+    window.location.href = url;
   };
 
   const disconnectGmail = async () => {
@@ -208,6 +214,14 @@ export function GmailIntegration({ onApplicationsFound }) {
           : app
       )
     );
+    setEditingApplication(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Save edits and immediately add the application to the tracker
+  const saveEditedAndAdd = async (editedData) => {
+    const merged = { ...editingApplication, ...editedData };
+    await addApplicationToTracker(merged);
     setEditingApplication(null);
     setIsEditModalOpen(false);
   };
@@ -451,6 +465,7 @@ export function GmailIntegration({ onApplicationsFound }) {
           <EditApplicationModal
             application={editingApplication}
             onSave={saveEditedApplication}
+            onSaveAndAdd={saveEditedAndAdd}
             onCancel={cancelEdit}
           />
         )}
@@ -461,7 +476,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 }
 
 // Edit Application Modal Component
-function EditApplicationModal({ application, onSave, onCancel }) {
+function EditApplicationModal({ application, onSave, onSaveAndAdd, onCancel }) {
   const [formData, setFormData] = useState({
     company: application.company,
     position: application.position,
@@ -561,6 +576,14 @@ function EditApplicationModal({ application, onSave, onCancel }) {
           <div className="flex gap-3 pt-4">
             <Button type="submit" className="flex-1">
               Save Changes
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSaveAndAdd(formData)}
+              className="flex-1"
+            >
+              Save & Add
             </Button>
             <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
               Cancel

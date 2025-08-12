@@ -31,7 +31,7 @@ router.get('/oauth2callback', async (req, res) => {
     const tokens = await getTokensFromCode(code);
     
     // Store tokens in database using authenticated user's ID if available
-    const userId = req.user?._id?.toString() || 'default-user';
+    const userId = 'default-user';
     
     await GmailToken.findOneAndUpdate(
       { userId },
@@ -46,12 +46,14 @@ router.get('/oauth2callback', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Redirect to frontend with success message
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // Redirect to frontend with success message (strip trailing slash)
+    const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = rawUrl.replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_connected=true`);
   } catch (error) {
     console.error('OAuth callback error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = rawUrl.replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_error=true`);
   }
 });
@@ -59,7 +61,7 @@ router.get('/oauth2callback', async (req, res) => {
 // Step 3: Fetch job application emails (optionally enqueue background job later)
 router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
-    const userId = req.user?._id?.toString() || 'default-user';
+    const userId = 'default-user';
     
     // Get stored tokens
     const tokenDoc = await GmailToken.findOne({ userId });
@@ -112,7 +114,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
 // Step 4: Check Gmail connection status
 router.get('/status', isAuthenticated, async (req, res) => {
   try {
-    const userId = req.user?._id?.toString() || 'default-user';
+    const userId = 'default-user';
     const tokenDoc = await GmailToken.findOne({ userId });
     
     res.json({

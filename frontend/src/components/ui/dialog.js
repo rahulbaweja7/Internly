@@ -11,8 +11,8 @@ const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref
         className="fixed inset-0 bg-black/20 z-[9998]"
         onClick={onOpenChange}
       />
-      {/* Content wrapper */}
-      <div className="relative z-[9999] w-full max-w-4xl mx-auto my-auto max-h-[90vh] overflow-y-auto">
+      {/* Content wrapper - size to content so modal centers */}
+      <div className="relative z-[9999] w-auto max-w-[95vw] sm:max-w-4xl mx-auto my-auto">
         {children}
       </div>
     </div>
