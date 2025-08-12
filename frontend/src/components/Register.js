@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles, Target } from 'lucide-react';
-import { Navbar } from './Navbar';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import config from '../config/config';
 

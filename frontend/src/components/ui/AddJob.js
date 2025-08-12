@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Textarea } from './textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+import { Select, SelectItem } from './select';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Target } from 'lucide-react';
 import { Navbar } from '../Navbar';
 import axios from 'axios';
 import config from '../../config/config';

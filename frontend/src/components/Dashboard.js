@@ -7,8 +7,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Plus, Search, Calendar, Building, MapPin, ArrowLeft, HelpCircle, Target, RefreshCw, LogOut, User, Trash2, CheckSquare, Square, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { GmailIntegration } from './GmailIntegration';
 import { Navbar } from './Navbar';
@@ -18,7 +18,7 @@ export function InternshipDashboard() {
   const [internships, setInternships] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [urlSearchTerm, setUrlSearchTerm] = useState('');
+  // Removed unused urlSearchTerm state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,6 @@ export function InternshipDashboard() {
     } else if (searchParam) {
       // Handle search from navbar
       setSearchTerm(searchParam);
-      setUrlSearchTerm(searchParam);
       // Clear the search parameter from URL
       navigate('/dashboard', { replace: true });
     }

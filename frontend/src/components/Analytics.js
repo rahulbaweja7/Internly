@@ -6,14 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { ArrowLeft, TrendingUp, Calendar, BarChart3, PieChart, Target } from 'lucide-react';
 import { Navbar } from './Navbar';
-import { useAuth } from '../contexts/AuthContext';
 import { DashboardCharts } from './DashboardCharts';
 
 export function Analytics() {
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   // Fetch jobs from backend
   const fetchJobs = () => {

@@ -15,7 +15,6 @@ import {
   Home,
   BarChart3,
   TrendingUp,
-  Settings,
   Search
 } from 'lucide-react';
 
@@ -25,7 +24,7 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  // Removed unused isSearchFocused state
 
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -181,8 +180,7 @@ export function Navbar() {
               placeholder="Search internships... (⌘K)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              // focus handlers removed (no-op)
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && searchQuery.trim()) {
                   navigate(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);

@@ -262,9 +262,9 @@ export function Login() {
               <div className="text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
                 <p>
                   By signing in, you agree to our{' '}
-                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>
+                  <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</Link>
                   {' '}and{' '}
-                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a>
+                  <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</Link>
                 </p>
                 <p>
                   Don't have an account?{' '}
