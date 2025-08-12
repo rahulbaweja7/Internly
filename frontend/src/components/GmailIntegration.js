@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Mail, CheckCircle, AlertCircle, Loader2, RefreshCw, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
+import config from '../config/config';
 
 export function GmailIntegration({ onApplicationsFound }) {
   const [gmailStatus, setGmailStatus] = useState({ connected: false, lastConnected: null });
@@ -34,7 +35,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 
   const checkGmailStatus = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/gmail/status');
+      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
       setGmailStatus(response.data);
     } catch (error) {
       console.error('Error checking Gmail status:', error);
@@ -45,13 +46,13 @@ export function GmailIntegration({ onApplicationsFound }) {
     setIsLoading(true);
     setError(null);
     // Redirect to backend OAuth endpoint
-    window.location.href = 'http://localhost:3001/api/gmail/auth';
+    window.location.href = `${config.API_BASE_URL}/api/gmail/auth`;
   };
 
   const disconnectGmail = async () => {
     try {
       setIsLoading(true);
-      await axios.delete('http://localhost:3001/api/gmail/disconnect');
+      await axios.delete(`${config.API_BASE_URL}/api/gmail/disconnect`);
       setGmailStatus({ connected: false, lastConnected: null });
       setDetectedApplications([]);
       setError(null);
@@ -72,13 +73,13 @@ export function GmailIntegration({ onApplicationsFound }) {
       
       // Test the connection first
       try {
-        const statusResponse = await axios.get('http://localhost:3001/api/gmail/status');
+        const statusResponse = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
         console.log('Gmail status:', statusResponse.data);
       } catch (statusError) {
         console.error('Error checking Gmail status:', statusError);
       }
       
-      const response = await axios.get('http://localhost:3001/api/gmail/fetch-emails');
+      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/fetch-emails`);
       
       console.log('Response received:', response.data);
       console.log('Response status:', response.status);
@@ -154,7 +155,7 @@ export function GmailIntegration({ onApplicationsFound }) {
         emailId: emailId
       });
       
-      await axios.post('http://localhost:3001/api/jobs', {
+      await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company: jobData.company,
         role: jobData.position,
         location: jobData.location,

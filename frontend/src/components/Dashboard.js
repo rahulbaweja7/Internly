@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import config from '../config/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -56,7 +57,7 @@ export function InternshipDashboard() {
 
   // Fetch jobs from backend
   const fetchJobs = () => {
-    axios.get("http://localhost:3001/api/jobs")
+    axios.get(`${config.API_BASE_URL}/api/jobs`)
       .then((res) => {
         console.log('Fetched jobs from backend:', res.data);
         // Debug: Check if jobs have emailId
@@ -111,7 +112,7 @@ export function InternshipDashboard() {
 
   const handleAddInternship = async (internship) => {
     try {
-      const response = await axios.post("http://localhost:3001/api/jobs", {
+      const response = await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company: internship.company,
         role: internship.position,
         location: internship.location,
@@ -130,7 +131,7 @@ export function InternshipDashboard() {
 
   const handleEditInternship = async (updatedInternship) => {
     try {
-      const response = await axios.put(`http://localhost:3001/api/jobs/${updatedInternship._id}`, {
+      const response = await axios.put(`${config.API_BASE_URL}/api/jobs/${updatedInternship._id}`, {
         company: updatedInternship.company,
         role: updatedInternship.position,
         location: updatedInternship.location,
@@ -152,7 +153,7 @@ export function InternshipDashboard() {
 
   const handleDeleteInternship = async (id) => {
     try {
-      await axios.delete(`http://localhost:3001/api/jobs/${id}`);
+      await axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`);
       setInternships(internships.filter(internship => internship._id !== id));
       // Remove from selected jobs if it was selected
       setSelectedJobs(prev => {
@@ -170,7 +171,7 @@ export function InternshipDashboard() {
   const handleBulkDelete = async () => {
     try {
       const selectedIds = Array.from(selectedJobs);
-      const deletePromises = selectedIds.map(id => axios.delete(`http://localhost:3001/api/jobs/${id}`));
+      const deletePromises = selectedIds.map(id => axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`));
       await Promise.all(deletePromises);
       
       setInternships(internships.filter(internship => !selectedJobs.has(internship._id)));
@@ -187,7 +188,7 @@ export function InternshipDashboard() {
   const handleDeleteAll = async () => {
     try {
       console.log('Attempting to delete all jobs...');
-      const response = await axios.delete('http://localhost:3001/api/jobs/delete-all');
+      const response = await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`);
       console.log('Delete all response:', response.data);
       setInternships([]);
       setSelectedJobs(new Set());
@@ -202,7 +203,7 @@ export function InternshipDashboard() {
 
   const handleDeleteEmail = async (emailId) => {
     try {
-      const response = await axios.delete(`http://localhost:3001/api/gmail/delete-email/${emailId}`);
+      const response = await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
       if (response.data.success) {
         alert('Email deleted successfully from Gmail!');
         // Optionally refresh the jobs list or update the specific job

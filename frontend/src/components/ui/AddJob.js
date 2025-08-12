@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Target } from 'lucide-react';
 import { Navbar } from '../Navbar';
 import axios from 'axios';
+import config from '../../config/config';
 
 function AddJob() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ function AddJob() {
     }
 
     try {
-      await axios.post("http://localhost:3001/api/jobs", {
+      await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company: formData.company,
         role: formData.position,
         location: formData.location,

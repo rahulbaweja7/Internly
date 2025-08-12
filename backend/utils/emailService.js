@@ -6,7 +6,7 @@ const createTransporter = () => {
   // For production, use services like SendGrid, AWS SES, etc.
   
   // Gmail example (you'll need to enable "Less secure app access" or use app passwords)
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'your-email@gmail.com',

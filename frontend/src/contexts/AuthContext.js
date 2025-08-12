@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import config from '../config/config';
 
 const AuthContext = createContext();
 
@@ -38,12 +39,12 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(storedUser));
         
         // Then verify with server
-        const response = await axios.get('http://localhost:3001/api/auth/me');
+        const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
         setUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       } else {
         // Fallback to session-based auth (for Google OAuth)
-        const response = await axios.get('http://localhost:3001/api/auth/me');
+        const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
         setUser(response.data.user);
       }
     } catch (error) {
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       
       // Call logout endpoint (for session-based auth)
-      await axios.get('http://localhost:3001/api/auth/logout');
+      await axios.get(`${config.API_BASE_URL}/api/auth/logout`);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

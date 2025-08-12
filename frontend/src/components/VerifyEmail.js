@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { CheckCircle, XCircle, Mail, ArrowRight } from 'lucide-react';
 import axios from 'axios';
+import config from '../config/config';
 
 export function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -22,7 +23,7 @@ export function VerifyEmail() {
 
     const verifyEmail = async () => {
       try {
-        const response = await axios.post('http://localhost:3001/api/auth/verify-email', {
+        const response = await axios.post(`${config.API_BASE_URL}/api/auth/verify-email`, {
           token: token
         });
         

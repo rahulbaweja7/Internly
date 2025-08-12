@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Target, Building, Users, TrendingUp } from 'lucide-react';
 import axios from 'axios';
+import config from '../config/config';
 
 export function Login() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export function Login() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
+      const response = await axios.post(`${config.API_BASE_URL}/api/auth/login`, {
         email: formData.email.trim().toLowerCase(),
         password: formData.password
       });
@@ -59,7 +60,7 @@ export function Login() {
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    window.location.href = 'http://localhost:3001/api/auth/google';
+    window.location.href = `${config.API_BASE_URL}/api/auth/google`;
   };
 
   return (

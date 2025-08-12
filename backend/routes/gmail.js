@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { isAuthenticated } = require('../middleware/auth');
 const { 
   generateAuthUrl, 
   getTokensFromCode, 
@@ -29,8 +30,8 @@ router.get('/oauth2callback', async (req, res) => {
     // Get tokens from authorization code
     const tokens = await getTokensFromCode(code);
     
-    // Store tokens in database (for demo, using a default userId)
-    const userId = 'default-user'; // In a real app, this would be the authenticated user's ID
+    // Store tokens in database using authenticated user's ID if available
+    const userId = req.user?._id?.toString() || 'default-user';
     
     await GmailToken.findOneAndUpdate(
       { userId },
@@ -46,17 +47,19 @@ router.get('/oauth2callback', async (req, res) => {
     );
 
     // Redirect to frontend with success message
-    res.redirect('http://localhost:3000/dashboard?gmail_connected=true');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/dashboard?gmail_connected=true`);
   } catch (error) {
     console.error('OAuth callback error:', error);
-    res.redirect('http://localhost:3000/dashboard?gmail_error=true');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/dashboard?gmail_error=true`);
   }
 });
 
 // Step 3: Fetch job application emails
-router.get('/fetch-emails', async (req, res) => {
+router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
-    const userId = 'default-user'; // In a real app, this would be the authenticated user's ID
+    const userId = req.user?._id?.toString() || 'default-user';
     
     // Get stored tokens
     const tokenDoc = await GmailToken.findOne({ userId });
@@ -94,9 +97,9 @@ router.get('/fetch-emails', async (req, res) => {
 });
 
 // Step 4: Check Gmail connection status
-router.get('/status', async (req, res) => {
+router.get('/status', isAuthenticated, async (req, res) => {
   try {
-    const userId = 'default-user';
+    const userId = req.user?._id?.toString() || 'default-user';
     const tokenDoc = await GmailToken.findOne({ userId });
     
     res.json({
@@ -110,10 +113,10 @@ router.get('/status', async (req, res) => {
 });
 
 // Step 5: Mark email as processed (so it won't show up in future scans)
-router.post('/mark-processed', async (req, res) => {
+router.post('/mark-processed', isAuthenticated, async (req, res) => {
   try {
     const { emailId } = req.body;
-    const userId = 'default-user';
+    const userId = req.user?._id?.toString() || 'default-user';
     
     if (!emailId) {
       return res.status(400).json({ error: 'emailId is required' });
@@ -148,7 +151,7 @@ router.post('/mark-processed', async (req, res) => {
 });
 
 // Step 5: Delete email from Gmail (keeping this for reference, but not using it)
-router.delete('/delete-email/:emailId', async (req, res) => {
+router.delete('/delete-email/:emailId', isAuthenticated, async (req, res) => {
   try {
     const { emailId } = req.params;
     const userId = 'default-user';
@@ -190,7 +193,7 @@ router.delete('/delete-email/:emailId', async (req, res) => {
 });
 
 // Step 5: Disconnect Gmail
-router.delete('/disconnect', async (req, res) => {
+router.delete('/disconnect', isAuthenticated, async (req, res) => {
   try {
     const userId = 'default-user';
     await GmailToken.findOneAndDelete({ userId });
@@ -203,7 +206,7 @@ router.delete('/disconnect', async (req, res) => {
 });
 
 // Step 6: Clear duplicates and check processed emails
-router.get('/check-processed', async (req, res) => {
+router.get('/check-processed', isAuthenticated, async (req, res) => {
   try {
     const Job = require('../models/Job');
     const existingJobs = await Job.find({}, 'emailId company role dateApplied');
@@ -236,7 +239,7 @@ router.get('/check-processed', async (req, res) => {
 });
 
 // Step 7: Clear duplicates
-router.delete('/clear-duplicates', async (req, res) => {
+router.delete('/clear-duplicates', isAuthenticated, async (req, res) => {
   try {
     const Job = require('../models/Job');
     const existingJobs = await Job.find({}, 'emailId company role _id');
@@ -276,7 +279,7 @@ router.delete('/clear-duplicates', async (req, res) => {
 });
 
 // Step 8: Update existing jobs with email IDs
-router.post('/update-email-ids', async (req, res) => {
+router.post('/update-email-ids', isAuthenticated, async (req, res) => {
   try {
     const Job = require('../models/Job');
     const existingJobs = await Job.find({ emailId: { $exists: false } });
@@ -320,7 +323,7 @@ router.post('/update-email-ids', async (req, res) => {
 });
 
 // Step 9: Clear duplicates based on company and role (fallback method)
-router.delete('/clear-duplicates-by-content', async (req, res) => {
+router.delete('/clear-duplicates-by-content', isAuthenticated, async (req, res) => {
   try {
     const Job = require('../models/Job');
     const existingJobs = await Job.find({});

@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles, Target } from 'lucide-react';
 import { Navbar } from './Navbar';
 import axios from 'axios';
+import config from '../config/config';
 
 export function Register() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export function Register() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/register', {
+      const response = await axios.post(`${config.API_BASE_URL}/api/auth/register`, {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password
@@ -235,7 +236,7 @@ export function Register() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => window.location.href = 'http://localhost:3001/api/auth/google'}
+              onClick={() => window.location.href = `${config.API_BASE_URL}/api/auth/google`}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path

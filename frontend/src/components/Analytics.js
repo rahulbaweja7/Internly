@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import config from '../config/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ArrowLeft, TrendingUp, Calendar, BarChart3, PieChart, Target } from 'lucide-react';
@@ -16,7 +17,7 @@ export function Analytics() {
 
   // Fetch jobs from backend
   const fetchJobs = () => {
-    axios.get("http://localhost:3001/api/jobs")
+    axios.get(`${config.API_BASE_URL}/api/jobs`)
       .then((res) => {
         console.log('Fetched jobs for analytics:', res.data);
         setInternships(res.data);

@@ -3,6 +3,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
+const { authLimiter } = require('../middleware/security');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 
@@ -17,7 +18,8 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     // Successful authentication, redirect to frontend
-    res.redirect('http://localhost:3000/dashboard');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 );
 
@@ -35,7 +37,7 @@ const generateToken = (user) => {
 };
 
 // Register new user
-router.post('/register', isNotAuthenticated, async (req, res) => {
+router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -88,7 +90,7 @@ router.post('/register', isNotAuthenticated, async (req, res) => {
 });
 
 // Login user
-router.post('/login', isNotAuthenticated, async (req, res) => {
+router.post('/login', authLimiter, isNotAuthenticated, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -163,7 +165,7 @@ router.post('/verify-email', async (req, res) => {
 });
 
 // Request password reset
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -197,7 +199,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // Reset password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', authLimiter, async (req, res) => {
   try {
     const { token, password } = req.body;
 
@@ -246,7 +248,8 @@ router.get('/logout', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Error during logout' });
     }
-    res.redirect('http://localhost:3000/');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/`);
   });
 });
 
