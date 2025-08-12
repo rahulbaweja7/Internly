@@ -103,6 +103,12 @@ router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Basic email format validation to prevent obvious bad emails
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
@@ -128,8 +134,10 @@ router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
 
     await user.save();
 
-    // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
+    // Send verification email (skip during automated tests)
+    if (process.env.NODE_ENV !== 'test') {
+      await sendVerificationEmail(email, name, verificationToken);
+    }
 
     // Generate JWT token
     const token = generateToken(user);
