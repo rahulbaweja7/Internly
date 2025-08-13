@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calendar } from 'lucide-react';
 import SankeyChart from './SankeyChart';
+import ContributionHeatmap from './ContributionHeatmap';
 
 
 
@@ -124,6 +125,9 @@ export const DashboardCharts = ({ internships }) => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <SankeyChart data={internships} />
       <ApplicationsOverTime data={internships} />
+      <div className="lg:col-span-2">
+        <ContributionHeatmap internships={internships} />
+      </div>
     </div>
   );
 };
