@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
 function formatYmd(date) {
@@ -23,42 +23,53 @@ function getColorClass(count, maxCount) {
 
 export default function ContributionHeatmap({ internships }) {
   // Count applications per local date (YYYY-MM-DD)
-  const countByDate = new Map();
-  let maxCount = 0;
-  (internships || []).forEach((app) => {
-    if (!app?.dateApplied && !app?.appliedDate) return;
-    const dateObj = new Date(app.dateApplied || app.appliedDate);
-    if (isNaN(dateObj)) return;
-    const key = formatYmd(dateObj);
-    const next = (countByDate.get(key) || 0) + 1;
-    countByDate.set(key, next);
-    if (next > maxCount) maxCount = next;
-  });
+  const { countByDate, maxCount } = useMemo(() => {
+    const map = new Map();
+    let max = 0;
+    (internships || []).forEach((app) => {
+      if (!app?.dateApplied && !app?.appliedDate) return;
+      const dateObj = new Date(app.dateApplied || app.appliedDate);
+      if (isNaN(dateObj)) return;
+      const key = formatYmd(dateObj);
+      const next = (map.get(key) || 0) + 1;
+      map.set(key, next);
+      if (next > max) max = next;
+    });
+    return { countByDate: map, maxCount: max };
+  }, [internships]);
 
   // Build up to 53 weeks of data ending today, start aligned to Sunday like GitHub
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const start = new Date(today);
-  start.setDate(start.getDate() - 7 * 53); // ensure at least 53 weeks
-  // shift start back to previous Sunday
-  start.setDate(start.getDate() - start.getDay());
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
-  const weeks = [];
-  let cursor = new Date(start);
-  // Generate exactly 53 columns (weeks) like GitHub to keep a single horizontal band
-  for (let w = 0; w < 53; w += 1) {
-    const week = [];
-    for (let i = 0; i < 7; i += 1) {
-      const dateStr = formatYmd(cursor);
-      week.push({
-        date: new Date(cursor),
-        dateStr,
-        count: countByDate.get(dateStr) || 0,
-      });
-      cursor.setDate(cursor.getDate() + 1);
+  const start = useMemo(() => {
+    const s = new Date(today);
+    s.setDate(s.getDate() - 7 * 53);
+    s.setDate(s.getDate() - s.getDay());
+    return s;
+  }, [today]);
+
+  const weeks = useMemo(() => {
+    const out = [];
+    let cursor = new Date(start);
+    for (let w = 0; w < 53; w += 1) {
+      const week = [];
+      for (let i = 0; i < 7; i += 1) {
+        const dateStr = formatYmd(cursor);
+        week.push({
+          date: new Date(cursor),
+          dateStr,
+          count: countByDate.get(dateStr) || 0,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      out.push(week);
     }
-    weeks.push(week);
-  }
+    return out;
+  }, [start, countByDate]);
 
   // Month labels for the top (label a week when it begins a new month)
   const monthLabels = [];
@@ -103,11 +114,41 @@ export default function ContributionHeatmap({ internships }) {
 
   const hideTooltip = () => setTooltip({ visible: false, x: 0, y: 0, text: '' });
 
+  // Flatten days to compute streaks (ignore future days)
+  const flatDays = useMemo(() => {
+    const list = [];
+    weeks.forEach((week) => week.forEach((d) => { if (d.date <= today) list.push(d); }));
+    return list;
+  }, [weeks, today]);
+
+  const currentStreak = useMemo(() => {
+    let count = 0;
+    for (let i = flatDays.length - 1; i >= 0; i -= 1) {
+      const day = flatDays[i];
+      if (day.count > 0) {
+        count += 1;
+      } else {
+        break;
+      }
+    }
+    return count;
+  }, [flatDays]);
+
+  // eslint-disable-next-line no-unused-vars
+  const activeDaysTotal = useMemo(() => flatDays.reduce((acc, d) => acc + (d.count > 0 ? 1 : 0), 0), [flatDays]);
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Applications Heatmap</CardTitle>
-        <CardDescription>Daily count of applications over the past year</CardDescription>
+      <CardHeader className="flex items-start justify-between">
+        <div>
+          <CardTitle className="text-lg">Applications Heatmap</CardTitle>
+          <CardDescription>Daily count of applications over the past year</CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200 px-3 py-1 text-xs font-medium whitespace-nowrap">
+            🔥 {currentStreak}-day streak
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

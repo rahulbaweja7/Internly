@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import config from '../config/config';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ui/ThemeToggle';
+import StreakBadge from './ui/StreakBadge';
 import { 
   Target, 
   ArrowRight, 
@@ -25,6 +28,7 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   // Removed unused isSearchFocused state
+  const [streakDays, setStreakDays] = useState(null);
 
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -48,6 +52,63 @@ export function Navbar() {
   const isAnalytics = location.pathname === '/analytics';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';
+
+  // Fetch jobs and compute current streak for navbar badge
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreakDays(null);
+      return;
+    }
+    const formatLocalYmd = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+    const computeStreak = (jobs) => {
+      const dates = new Set();
+      (jobs || []).forEach((j) => {
+        const raw = j.dateApplied || j.appliedDate;
+        if (!raw) return;
+        const d = new Date(raw);
+        if (!isNaN(d)) dates.add(formatLocalYmd(d));
+      });
+      if (dates.size === 0) return 0;
+
+      // Find most recent day with an application (<= today)
+      const probe = new Date();
+      probe.setHours(0, 0, 0, 0);
+      let startFound = false;
+      while (!startFound) {
+        const key = formatLocalYmd(probe);
+        if (dates.has(key)) {
+          startFound = true;
+          break;
+        }
+        // if we haven't found any within 400 days, stop
+        probe.setDate(probe.getDate() - 1);
+        if (probe < new Date(Date.now() - 400 * 24 * 60 * 60 * 1000)) return 0;
+      }
+
+      // Count consecutive days backward from the most recent day with activity
+      let count = 0;
+      while (true) {
+        const key = formatLocalYmd(probe);
+        if (dates.has(key)) {
+          count += 1;
+          probe.setDate(probe.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return count;
+    };
+
+    axios
+      .get(`${config.API_BASE_URL}/api/jobs`)
+      .then((res) => setStreakDays(computeStreak(res.data)))
+      .catch(() => setStreakDays(null));
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
     await logout();
@@ -221,6 +282,14 @@ export function Navbar() {
             Analytics
           </Button>
 
+          {isAuthenticated && streakDays !== null && (
+            <StreakBadge
+              days={streakDays}
+              onClick={() => navigate('/analytics')}
+              className="hidden md:inline-flex"
+            />
+          )}
+
           <Button 
             onClick={() => {
               navigate('/add');
@@ -314,6 +383,11 @@ export function Navbar() {
               
               {isAuthenticated && (
                 <>
+                  {typeof streakDays === 'number' && streakDays !== null && (
+                    <div className="w-full flex justify-start px-3">
+                      <StreakBadge days={streakDays} onClick={() => navigate('/analytics')} />
+                    </div>
+                  )}
                   <Button 
                     variant={isDashboard ? "default" : "ghost"}
                     onClick={() => {
