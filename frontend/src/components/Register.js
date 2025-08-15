@@ -75,7 +75,7 @@ export function Register() {
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create Account</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-300">
-              Join Internly to start tracking your career journey
+              Join Applycation to start tracking your career journey
             </CardDescription>
           </CardHeader>
           

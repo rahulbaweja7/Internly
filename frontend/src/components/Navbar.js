@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Search,
   Settings as SettingsIcon,
-  Clock
+  Clock,
+  Mail
 } from 'lucide-react';
 
 export function Navbar() {
@@ -157,7 +158,7 @@ export function Navbar() {
           >
             <div>
               <span className="font-bold text-xl text-black dark:text-white">
-                Internly.
+                Applycation
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -205,7 +206,7 @@ export function Navbar() {
           >
             <div>
               <span className="font-bold text-xl text-black dark:text-white">
-                Internly.
+                Applycation
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -237,7 +238,7 @@ export function Navbar() {
           >
             <div>
               <span className="font-bold text-xl text-black dark:text-white">
-                Internly.
+                Applycation
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -364,6 +365,17 @@ export function Navbar() {
                   >
                     <Clock className="h-4 w-4" />
                     My Activity
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/contact');
+                    }}
+                    role="menuitem"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Contact
                   </button>
               </div>
               )}

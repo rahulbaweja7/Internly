@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,6 +11,7 @@ import config from '../config/config';
 
 export function Login() {
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -43,11 +45,11 @@ export function Login() {
         password: formData.password
       });
 
-      // Store token in localStorage
+      // Store token and update auth context so ProtectedRoute allows navigation immediately
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // Redirect to dashboard
+      updateUser(response.data.user);
+
       navigate('/dashboard');
 
     } catch (error) {
@@ -74,7 +76,7 @@ export function Login() {
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start gap-3">
               <h1 className="text-3xl font-bold text-black dark:text-white">
-                Internly.
+                Applycation
               </h1>
             </div>
             

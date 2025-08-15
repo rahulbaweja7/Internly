@@ -6,6 +6,7 @@ const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/security');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
+const { createTransport } = require('nodemailer');
 
 const router = express.Router();
 // Export user data (jobs + basic profile)
@@ -341,6 +342,111 @@ router.put('/me', isAuthenticated, async (req, res) => {
 router.get('/logout', (req, res) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/`);
+});
+
+// Set or change password for the current user
+// - If the user already has a password, currentPassword is required and must match
+// - If the account was created via Google (no password yet), currentPassword is optional
+router.put('/password', isAuthenticated, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const user = req.user;
+
+    // If a password exists, verify current password
+    if (user.password) {
+      const matches = await user.comparePassword(currentPassword || '');
+      if (!matches) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+    }
+
+    user.password = newPassword;
+    await user.save();
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('Update password error:', e);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
+// Lightweight contact endpoint – sends message to a fixed inbox
+router.post('/contact', async (req, res) => {
+  try {
+    const { name = 'Anonymous', email = '', message = '' } = req.body || {};
+    if (!message || message.trim().length < 5) {
+      return res.status(400).json({ error: 'Message is too short' });
+    }
+
+    const to = process.env.CONTACT_TO || 'rahulbaweja2004@gmail.com';
+    const subject = `Applycation contact form: ${name}`;
+    const text = `From: ${name}${email ? ` <${email}>` : ''}\n\n${message}`;
+
+    // Prefer Resend HTTP API if configured (no dependency on global fetch)
+    if (process.env.RESEND_API_KEY) {
+      const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
+      const payload = JSON.stringify({ from, to, subject, text, reply_to: email || undefined });
+      const https = require('node:https');
+      const options = {
+        hostname: 'api.resend.com',
+        path: '/emails',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+      const result = await new Promise((resolve, reject) => {
+        const req2 = https.request(options, (resp) => {
+          let data = '';
+          resp.on('data', (d) => (data += d));
+          resp.on('end', () => {
+            if (resp.statusCode && resp.statusCode >= 200 && resp.statusCode < 300) {
+              resolve({ ok: true, status: resp.statusCode, body: data });
+            } else {
+              console.error('Resend error:', resp.statusCode, data);
+              resolve({ ok: false, status: resp.statusCode, body: data });
+            }
+          });
+        });
+        req2.on('error', reject);
+        req2.write(payload);
+        req2.end();
+      });
+      if (!result.ok) return res.status(500).json({ error: 'Failed to send message' });
+      return res.json({ success: true });
+    }
+
+    // Fallback to SMTP (Gmail or other)
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      const transporter = require('nodemailer').createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        text,
+        replyTo: email || undefined,
+      });
+      return res.json({ success: true });
+    }
+
+    console.error('No email transport configured. Set RESEND_API_KEY (preferred) or EMAIL_USER/EMAIL_PASS.');
+    return res.status(500).json({ error: 'Email service not configured' });
+  } catch (e) {
+    console.error('Contact form error:', e);
+    return res.status(500).json({ error: 'Failed to send message' });
+  }
 });
 
 module.exports = router; 

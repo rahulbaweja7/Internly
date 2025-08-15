@@ -11,6 +11,9 @@ import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
 import Settings from './components/Settings';
 import Activity from './components/Activity';
+import Privacy from './components/Privacy';
+import Terms from './components/Terms';
+import Contact from './components/Contact';
 import './App.css';
 
 // Protected Route Component
@@ -59,6 +62,9 @@ function AppRoutes() {
           <Analytics />
         </ProtectedRoute>
       } />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/settings" element={
         <ProtectedRoute>
           <Settings />

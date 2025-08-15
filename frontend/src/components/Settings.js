@@ -4,9 +4,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import config from '../config/config';
 import { User, Shield, Plug, Database, CreditCard } from 'lucide-react';
+import { GmailIntegration } from './GmailIntegration';
 
 export default function Settings() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') || 'profile';
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
@@ -150,17 +151,149 @@ export default function Settings() {
                     <p className="text-xs text-muted-foreground mt-2">Use up to 32 characters.</p>
                   </div>
                 </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await logout();
+                      window.location.href = '/';
+                    }}
+                    className="h-10 rounded-md px-4 text-sm border border-input text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                  >
+                    Log out
+                  </button>
+                </div>
               </section>
             </div>
           )}
 
-          {active !== 'profile' && (
+          {active === 'security' && (
+            <section className="rounded-md border border-input bg-background p-6">
+              <h2 className="text-base font-semibold mb-4">Password</h2>
+              <PasswordSection />
+            </section>
+          )}
+
+          {active === 'integrations' && (
+            <section className="rounded-md border border-input bg-background p-2 md:p-4">
+              <GmailIntegration onApplicationsFound={() => {}} />
+            </section>
+          )}
+
+          {active === 'privacy' && (
+            <section className="grid gap-4 md:grid-cols-2">
+              <a href="/privacy" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
+                <h3 className="text-lg font-semibold mb-1">Privacy Policy</h3>
+                <p className="text-sm text-muted-foreground">Understand how we collect, use, and protect your information.</p>
+                <div className="mt-4 inline-flex items-center text-sm">Privacy →</div>
+              </a>
+              <a href="/terms" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
+                <h3 className="text-lg font-semibold mb-1">Terms of Service</h3>
+                <p className="text-sm text-muted-foreground">Your rights and responsibilities when using the platform.</p>
+                <div className="mt-4 inline-flex items-center text-sm">Terms →</div>
+              </a>
+            </section>
+          )}
+
+          {active !== 'profile' && active !== 'security' && active !== 'integrations' && active !== 'privacy' && (
             <div className="rounded-md border border-input bg-background p-6 text-sm text-muted-foreground">
               {tabs.find((t) => t.id === active)?.label} coming soon.
             </div>
           )}
           </main>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PasswordSection() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const onSave = async () => {
+    setMessage('');
+    if (newPassword.length < 6) {
+      setMessage('New password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage('Passwords do not match');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await fetch(`${config.API_BASE_URL}/api/auth/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined,
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      }).then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || 'Failed to update password');
+      });
+      setMessage('Password updated');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (e) {
+      setMessage(e.message || 'Failed to update password');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {message && (
+        <div className="text-sm text-muted-foreground">{message}</div>
+      )}
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs uppercase text-muted-foreground">Current password</label>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            placeholder="••••••••"
+          />
+        </div>
+        <div>
+          <label className="text-xs uppercase text-muted-foreground">New password</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            placeholder="At least 6 characters"
+          />
+        </div>
+        <div>
+          <label className="text-xs uppercase text-muted-foreground">Confirm password</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            placeholder="Repeat new password"
+          />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="h-10 rounded-md px-4 text-sm bg-black text-white dark:bg-white dark:text-black disabled:opacity-60"
+          disabled={isSaving}
+          onClick={onSave}
+        >
+          {isSaving ? 'Saving…' : 'Save password'}
+        </button>
       </div>
     </div>
   );
