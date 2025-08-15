@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Target, Building, Users, TrendingUp } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Building, Users, TrendingUp } from 'lucide-react';
 import axios from 'axios';
 import config from '../config/config';
 
@@ -77,11 +77,8 @@ export function Login() {
         <div className="text-center lg:text-left space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start gap-3">
-              <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <Target className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Internly
+              <h1 className="text-3xl font-bold text-black dark:text-black">
+                Internly.
               </h1>
             </div>
             

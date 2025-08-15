@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { ArrowRight, BarChart3, Search, Bell, Users, Target, TrendingUp } from 'lucide-react';
+import { ArrowRight, BarChart3, Search, Bell, Users, TrendingUp } from 'lucide-react';
 import { Navbar } from './Navbar';
 
 export function LandingPage() {
@@ -12,7 +11,7 @@ export function LandingPage() {
   const { user } = useAuth();
   const features = [
     {
-      icon: Target,
+      icon: Search,
       title: "Track Applications",
       description: "Keep track of all your internship applications in one organized dashboard"
     },
@@ -57,14 +56,10 @@ export function LandingPage() {
       {/* Hero Section */}
       <section className="py-20 lg:py-32">
         <div className="container mx-auto px-6 text-center">
-          <Badge variant="secondary" className="mb-4">
-            Free Internship Tracking Platform
-          </Badge>
-          <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-6">
-            Track Your Internship
-            <br />
-            <span className="text-primary">Applications</span> with Ease
+          <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-6 text-black">
+            Internly.
           </h1>
+          <p className="mb-8 text-muted-foreground">Free Internship Tracking Platform</p>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Stay organized and increase your chances of landing the perfect internship. 
             Track applications, manage deadlines, and monitor your progress all in one place.
@@ -210,10 +205,7 @@ export function LandingPage() {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
-                <Target className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold">Internly</span>
+              <span className="font-semibold text-black dark:text-black">Internly.</span>
             </div>
             <p className="text-muted-foreground text-sm">
               © 2024 Internly. Built for students, by students.

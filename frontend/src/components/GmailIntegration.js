@@ -38,7 +38,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 
   const checkGmailStatus = async () => {
     try {
-      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
+      const response = await axios.get(`${config.API_BASE_URL}No/api/gmail/status`);
       setGmailStatus(response.data);
     } catch (error) {
       console.error('Error checking Gmail status:', error);

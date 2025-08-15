@@ -7,7 +7,6 @@ import { Button } from './ui/button';
 import { ThemeToggle } from './ui/ThemeToggle';
 import StreakBadge from './ui/StreakBadge';
 import { 
-  Target, 
   ArrowRight, 
   ArrowLeft, 
   User, 
@@ -28,7 +27,14 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   // Removed unused isSearchFocused state
-  const [streakDays, setStreakDays] = useState(null);
+  const [streakDays, setStreakDays] = useState(() => {
+    try {
+      const cached = localStorage.getItem('streakDays');
+      return cached !== null ? Number(cached) : null;
+    } catch (_) {
+      return null;
+    }
+  });
 
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -57,6 +63,7 @@ export function Navbar() {
   useEffect(() => {
     if (!isAuthenticated) {
       setStreakDays(null);
+      try { localStorage.removeItem('streakDays'); } catch (_) {}
       return;
     }
     const formatLocalYmd = (date) => {
@@ -106,8 +113,14 @@ export function Navbar() {
 
     axios
       .get(`${config.API_BASE_URL}/api/jobs`)
-      .then((res) => setStreakDays(computeStreak(res.data)))
-      .catch(() => setStreakDays(null));
+      .then((res) => {
+        const value = computeStreak(res.data);
+        setStreakDays(value);
+        try { localStorage.setItem('streakDays', String(value)); } catch (_) {}
+      })
+      .catch(() => {
+        // Keep previous cached value to avoid UI flicker
+      });
   }, [isAuthenticated]);
 
   const handleLogout = async () => {
@@ -120,16 +133,13 @@ export function Navbar() {
     if (isLanding) {
       return (
         <>
-          <div 
+            <div 
             className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
           >
-            <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Target className="h-6 w-6 text-white" />
-            </div>
             <div>
-              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Internly
+              <span className="font-bold text-xl text-black dark:text-black">
+                Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -171,16 +181,13 @@ export function Navbar() {
     if (isLogin) {
       return (
         <>
-          <div 
+            <div 
             className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
           >
-            <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Target className="h-6 w-6 text-white" />
-            </div>
             <div>
-              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Internly
+              <span className="font-bold text-xl text-black dark:text-black">
+                Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -220,12 +227,9 @@ export function Navbar() {
             className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
           >
-            <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Target className="h-6 w-6 text-white" />
-            </div>
             <div>
-              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Internly
+              <span className="font-bold text-xl text-black dark:text-black">
+                Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
             </div>
@@ -282,12 +286,16 @@ export function Navbar() {
             Analytics
           </Button>
 
-          {isAuthenticated && streakDays !== null && (
-            <StreakBadge
-              days={streakDays}
-              onClick={() => navigate('/analytics')}
-              className="hidden md:inline-flex"
-            />
+          {isAuthenticated && (
+            <div className="hidden md:inline-flex">
+              <div className="min-w-[64px]">
+                <StreakBadge
+                  days={typeof streakDays === 'number' ? streakDays : 0}
+                  className="w-full justify-center"
+                  variant="compact"
+                />
+              </div>
+            </div>
           )}
 
           <Button 
