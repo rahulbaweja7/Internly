@@ -3,13 +3,9 @@ const Job = require('../models/Job');
 const statusRank = {
   'Applied': 1,
   'Online Assessment': 2,
-  'Phone Interview': 3,
-  'Technical Interview': 4,
-  'Final Interview': 5,
-  'Waitlisted': 6,
-  'Accepted': 7,
-  'Rejected': 7,
-  'Withdrawn': 7,
+  'Interview': 3,
+  'Accepted': 4,
+  'Rejected': 4,
 };
 
 const normalize = (v) => (v || '')
@@ -21,7 +17,12 @@ const normalize = (v) => (v || '')
   .replace(/\s+/g, ' ');
 
 async function upsertJobFromParsed(userId, parsed) {
-  const { company, position, status, appliedDate, emailId, subject, location, stipend, notes } = parsed;
+  const { company, position, status, appliedDate, emailId, subject, location, stipend, notes, isLikelyNonApplication } = parsed;
+
+  // Drop items flagged as non-application
+  if (isLikelyNonApplication) {
+    return { skipped: true, reason: 'non_application_signal' };
+  }
 
   const normalizedCompany = normalize(company);
   const normalizedRole = normalize(position);

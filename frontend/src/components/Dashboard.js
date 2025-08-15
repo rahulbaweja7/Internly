@@ -97,13 +97,9 @@ export function InternshipDashboard() {
     switch (status) {
       case 'Applied': return 'bg-blue-100 text-blue-800';
       case 'Online Assessment': return 'bg-purple-100 text-purple-800';
-      case 'Phone Interview': return 'bg-indigo-100 text-indigo-800';
-      case 'Technical Interview': return 'bg-cyan-100 text-cyan-800';
-      case 'Final Interview': return 'bg-teal-100 text-teal-800';
+      case 'Interview': return 'bg-teal-100 text-teal-800';
       case 'Accepted': return 'bg-green-100 text-green-800';
-      case 'Waitlisted': return 'bg-orange-100 text-orange-800';
       case 'Rejected': return 'bg-red-100 text-red-800';
-      case 'Withdrawn': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -366,13 +362,9 @@ export function InternshipDashboard() {
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="Applied">Applied</SelectItem>
               <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-              <SelectItem value="Phone Interview">Phone Interview</SelectItem>
-              <SelectItem value="Technical Interview">Technical Interview</SelectItem>
-              <SelectItem value="Final Interview">Final Interview</SelectItem>
+              <SelectItem value="Interview">Interview</SelectItem>
               <SelectItem value="Accepted">Accepted</SelectItem>
-              <SelectItem value="Waitlisted">Waitlisted</SelectItem>
               <SelectItem value="Rejected">Rejected</SelectItem>
-              <SelectItem value="Withdrawn">Withdrawn</SelectItem>
             </SelectContent>
           </Select>
           

@@ -62,6 +62,8 @@ router.get('/oauth2callback', async (req, res) => {
 router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
     const userId = 'default-user';
+    const full = req.query.full === '1' || req.query.mode === 'full';
+    const limit = Math.min(parseInt(req.query.limit || '200', 10) || 200, 1000);
     
     // Get stored tokens
     const tokenDoc = await GmailToken.findOne({ userId });
@@ -79,23 +81,31 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
       expiry_date: tokenDoc.expiry_date
     });
 
-    // Fetch only new emails (not already processed)
-    const emails = await fetchNewJobApplicationEmails(200); // Get last 200 emails
+    // Fetch emails
+    const emails = full
+      ? await fetchJobApplicationEmails(limit)
+      : await fetchNewJobApplicationEmails(limit);
     
     // Parse job applications from emails
     // De-duplicate by Gmail threadId (group conversation) and message id
-    const seenMessageIds = new Set();
-    const seenThreadIds = new Set();
     const parsed = [];
+    // Prefer latest email per thread to reflect latest status
+    const byThread = new Map();
     for (const email of emails) {
-      if (seenMessageIds.has(email.id)) continue;
-      if (email.threadId && seenThreadIds.has(email.threadId)) continue;
+      const ts = Number(email.internalDate || 0);
+      const key = email.threadId || email.id;
+      const prev = byThread.get(key);
+      if (!prev || ts > prev.ts) byThread.set(key, { email, ts });
+    }
+
+    // Deterministic order: newest first by internalDate
+    const latestEmails = Array.from(byThread.values()).sort((a, b) => b.ts - a.ts);
+    for (const { email } of latestEmails) {
       const app = parseJobApplicationFromEmail(email);
-      if (app) {
-        parsed.push(app);
-        seenMessageIds.add(email.id);
-        if (email.threadId) seenThreadIds.add(email.threadId);
-      }
+      if (!app) continue;
+      if (app.isLikelyNonApplication) continue;
+      if (typeof app.confidence === 'number' && app.confidence < 0.7) continue;
+      parsed.push(app);
     }
 
     const jobApplications = parsed;

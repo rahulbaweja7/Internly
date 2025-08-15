@@ -1,3 +1,6 @@
+const { decodeWords } = require('libmime');
+const he = require('he');
+
 const ATS_DOMAINS = [
   'greenhouse.io',
   'boards.greenhouse.io',
@@ -39,13 +42,17 @@ const NOISE_TERMS = [
 const STATUS_RANK = {
   'Applied': 1,
   'Online Assessment': 2,
-  'Phone Interview': 3,
-  'Technical Interview': 4,
-  'Final Interview': 5,
-  'Waitlisted': 6,
-  'Accepted': 7,
-  'Rejected': 7,
-  'Withdrawn': 7,
+  'Interview': 3,
+  'Accepted': 4,
+  'Rejected': 4,
+};
+
+const decodeHeader = (v = '') => {
+  try {
+    return he.decode(decodeWords(v));
+  } catch {
+    return v;
+  }
 };
 
 const toTitleCasePreserve = (text) => {
@@ -64,11 +71,12 @@ const toTitleCasePreserve = (text) => {
 
 const htmlToText = (html) => {
   return html
-    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\s*br\s*\/?>(?!=)/gi, '\n')
     .replace(/<\s*\/p\s*>/gi, '\n')
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
+    .replace(/&apos;|&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
 };
@@ -135,6 +143,7 @@ const cleanRole = (role) => {
       .replace(/\sat\s+[^,\n]+/gi, '')
       .replace(/\son\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi, '')
       .replace(/\s+apply\s+to\s+similar\s+jobs\?/gi, '')
+      .replace(/\b(full[-\s]?time|college\s+graduates?|new\s+grads?)\b/gi, '')
       .replace(/[^\w\s]/g, '')
       .replace(/\s+/g, ' ')
       .trim()
@@ -144,18 +153,24 @@ const cleanRole = (role) => {
     .replace(/\bTo\b/g, 'to');
 };
 
+const stripCompanyFromRole = (role, company) => {
+  if (!role || !company || company === 'Unknown Company') return role;
+  try {
+    const esc = company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return role.replace(new RegExp(`^${esc}(?:['’]s)?\\s+`, 'i'), '').trim();
+  } catch {
+    return role;
+  }
+};
+
 const inferStatus = (text) => {
   const t = text.toLowerCase();
   // Avoid false positives from marketing "offer"
   const marketing = NOISE_TERMS.some((w) => t.includes(w)) || /(discount|coupon|reward|free|music|sale)/i.test(t);
   if (!marketing && /(offer letter|extend(ed)? an offer|congratulations[^\n]*offer)/i.test(t)) return 'Accepted';
-  if (/(final interview|onsite)/i.test(t)) return 'Final Interview';
-  if (/(technical interview|tech interview)/i.test(t)) return 'Technical Interview';
-  if (/(phone interview|screening call|phone screen)/i.test(t)) return 'Phone Interview';
+  if (/(final interview|onsite|technical interview|tech interview|phone interview|screening call|phone screen)/i.test(t)) return 'Interview';
   if (/(online assessment|assessment|hackerrank|coding challenge|oa)/i.test(t)) return 'Online Assessment';
   if (/(regret to inform|unfortunately|not moving forward|rejected)/i.test(t)) return 'Rejected';
-  if (/(waitlist|waitlisted|on hold)/i.test(t)) return 'Waitlisted';
-  if (/(withdrawn|withdraw)/i.test(t)) return 'Withdrawn';
   if (/(thank you for applying|application received|we received your application|successfully submitted|your application)/i.test(t)) return 'Applied';
   return 'Applied';
 };
@@ -210,9 +225,9 @@ const extractCandidateRoles = (subject, snippet, bodyText) => {
 };
 
 const parseJobEmail = (email) => {
-  const subject = email.payload?.headers?.find((h) => h.name === 'Subject')?.value || '';
-  const from = email.payload?.headers?.find((h) => h.name === 'From')?.value || '';
-  const date = email.payload?.headers?.find((h) => h.name === 'Date')?.value || '';
+  const subject = decodeHeader(email.payload?.headers?.find((h) => h.name === 'Subject')?.value || '');
+  const from = decodeHeader(email.payload?.headers?.find((h) => h.name === 'From')?.value || '');
+  const date = decodeHeader(email.payload?.headers?.find((h) => h.name === 'Date')?.value || '');
   const snippet = email.snippet || '';
   const bodyText = getEmailText(email);
   const combined = `${subject}\n${snippet}\n${bodyText}`;
@@ -226,6 +241,7 @@ const parseJobEmail = (email) => {
     /thank you for your application to ([^!,\n]+)/i,
     /application to ([^!,\n]+)/i,
     /for the [^\n]+ at ([^!,\n]+)/i,
+    /\bto\s+([A-Z][A-Za-z0-9&.\-\s]+?)\b(?:,|!|\.|\n|$)/i,
   ];
   for (const re of subjCompanyPatterns) {
     const m = subject.match(re);
@@ -264,14 +280,15 @@ const parseJobEmail = (email) => {
     if (subjDash) position = subjDash[1].trim();
   }
   if (position !== 'Unknown Position') position = cleanRole(position);
-  if (position && !/intern|internship/i.test(position)) position += ' Intern';
 
   // Fallback: choose best concise role-like phrase instead of Unknown
   if (position === 'Unknown Position') {
     const fallback = extractCandidateRoles(subject, snippet, bodyText);
     if (fallback) position = fallback;
-    if (position && !/intern|internship/i.test(position)) position += ' Intern';
   }
+
+  // Remove leading company name from position if present (e.g., "Old Mission's ...")
+  position = stripCompanyFromRole(position, company);
 
   // Status
   const status = inferStatus(combined);
@@ -286,6 +303,9 @@ const parseJobEmail = (email) => {
   if (position !== 'Unknown Position') confidence += 0.4;
   if (ATS_DOMAINS.some((d) => from.toLowerCase().includes(d))) confidence += 0.2;
 
+  // Filter out likely non-application emails even if matched above
+  const nonApplicationSignals = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations)/i.test(combinedLower);
+
   return {
     company,
     position: position || 'Unknown Position',
@@ -295,6 +315,7 @@ const parseJobEmail = (email) => {
     subject,
     snippet,
     confidence,
+    isLikelyNonApplication: nonApplicationSignals,
   };
 };
 

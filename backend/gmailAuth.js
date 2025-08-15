@@ -11,6 +11,45 @@ const oauth2Client = new google.auth.OAuth2(
 
 const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
+// Lightweight helpers (function declarations so they are hoisted)
+function htmlToTextInline(html) {
+  return (html || '')
+    .replace(/<\s*br\s*\/?>(?!>)/gi, '\n')
+    .replace(/<\s*\/p\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractPlainText(email) {
+  try {
+    const parts = [];
+    (function walk(payload) {
+      if (!payload) return;
+      if (payload.parts && payload.parts.length) {
+        payload.parts.forEach(walk);
+      } else {
+        parts.push(payload);
+      }
+    })(email?.payload);
+    let text = '';
+    for (const part of parts) {
+      const mime = part?.mimeType || '';
+      const data = part?.body?.data || '';
+      if (!data) continue;
+      const buffer = Buffer.from(data.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+      const content = buffer.toString('utf8');
+      if (mime.includes('text/plain')) text += '\n' + content;
+      else if (mime.includes('text/html')) text += '\n' + htmlToTextInline(content);
+    }
+    return text.trim();
+  } catch {
+    return '';
+  }
+}
+
 const generateAuthUrl = () => {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
@@ -44,8 +83,8 @@ const setCredentials = (tokens) => {
 // Function to fetch recent emails with job application keywords
 const fetchJobApplicationEmails = async (maxResults = 200) => {
   try {
-    // Broaden search to capture common application workflows
-    const query = '(application OR applied OR "status update" OR interview OR assessment OR offer OR "thank you for applying" OR "thank you for your application")';
+    // Stricter Gmail search to focus on real applications in Primary inbox within last year
+    const query = 'category:primary -in:chats newer_than:1y ((subject:("application" OR "applied" OR "your application" OR "thank you for applying" OR "we received your application") OR ("applied to" OR "you applied to" OR "thanks for applying"))) -subject:("apply to similar jobs" OR "job matches" OR "recommendations" OR newsletter OR digest OR webinar OR "office hours" OR "hiring event" OR "virtual fair" OR "virtual event")';
     
     console.log('Searching for emails containing "application"...');
     
@@ -78,7 +117,8 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
     const jobApplicationEmails = emails.filter(email => {
       const subject = email.payload?.headers?.find(h => h.name === 'Subject')?.value || '';
       const snippet = email.snippet || '';
-      const fullText = (subject + ' ' + snippet).toLowerCase();
+      const body = extractPlainText(email);
+      const fullText = (subject + ' ' + snippet + ' ' + body).toLowerCase();
       
       // Include emails that are likely job application related
       const isJobApplication = 
@@ -134,11 +174,17 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
         fullText.includes('curated') ||
         fullText.includes('live q&a') ||
         fullText.includes('webinar') ||
+        fullText.includes('office hours') ||
+        fullText.includes('meet the team') ||
+        fullText.includes('virtual event') ||
+        fullText.includes('event reminder') ||
         fullText.includes('ask a recruiter') ||
         fullText.includes('your top job matches') ||
         fullText.includes('job matches') ||
         fullText.includes('matches for you') ||
         fullText.includes('jobs and internship jobs') ||
+        fullText.includes('is hiring') ||
+        fullText.includes('we are hiring') ||
         fullText.includes('meet our new') ||
         fullText.includes('verification code') ||
         fullText.includes('appointment booked') ||
@@ -154,7 +200,6 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
         fullText.includes('delivery') ||
         fullText.includes('coupon') ||
         fullText.includes('sale') ||
-        fullText.includes('is hiring') ||
         fullText.includes('explore new opportunities') ||
         fullText.includes('unsubscribe') ||
         fullText.includes('insurance') ||

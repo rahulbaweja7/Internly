@@ -116,13 +116,9 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                 <SelectContent>
                   <SelectItem value="Applied">Applied</SelectItem>
                   <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-                  <SelectItem value="Phone Interview">Phone Interview</SelectItem>
-                  <SelectItem value="Technical Interview">Technical Interview</SelectItem>
-                  <SelectItem value="Final Interview">Final Interview</SelectItem>
+                  <SelectItem value="Interview">Interview</SelectItem>
                   <SelectItem value="Accepted">Accepted</SelectItem>
-                  <SelectItem value="Waitlisted">Waitlisted</SelectItem>
                   <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Withdrawn">Withdrawn</SelectItem>
                 </SelectContent>
               </Select>
             </div>

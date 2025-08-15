@@ -30,6 +30,13 @@ export function GmailIntegration({ onApplicationsFound }) {
     setDetectedApplications([]);
   }, []);
 
+  // Expand section automatically once connected
+  useEffect(() => {
+    if (gmailStatus.connected) {
+      setIsExpanded(true);
+    }
+  }, [gmailStatus.connected]);
+
   // Debug: Log when detectedApplications changes
   useEffect(() => {
     console.log('detectedApplications state changed:', detectedApplications);
@@ -38,7 +45,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 
   const checkGmailStatus = async () => {
     try {
-      const response = await axios.get(`${config.API_BASE_URL}No/api/gmail/status`);
+      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
       setGmailStatus(response.data);
     } catch (error) {
       console.error('Error checking Gmail status:', error);
@@ -76,80 +83,20 @@ export function GmailIntegration({ onApplicationsFound }) {
     try {
       setIsFetching(true);
       setError(null);
-      
-      console.log('Fetching job applications...');
-      
-      // Test the connection first
-      try {
-        const statusResponse = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
-        console.log('Gmail status:', statusResponse.data);
-      } catch (statusError) {
-        console.error('Error checking Gmail status:', statusError);
-      }
-      
       const response = await axios.get(`${config.API_BASE_URL}/api/gmail/fetch-emails`);
-      
-      console.log('Response received:', response.data);
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
       if (response.data.success) {
-        console.log('Applications found:', response.data.applications.length);
-        console.log('First application:', response.data.applications[0]);
-        
-        // Get deleted email IDs from localStorage
         const deletedEmails = JSON.parse(localStorage.getItem('deletedEmails') || '[]');
-        console.log('Deleted emails from localStorage:', deletedEmails);
-        
-        // Filter out any applications that might already be in the database or were deleted
-        const filteredApplications = response.data.applications.filter(app => {
-          // Check if this email ID is already in the detected applications
-          const isAlreadyDetected = detectedApplications.some(detected => detected.emailId === app.emailId);
-          if (isAlreadyDetected) {
-            console.log('Filtering out already detected application:', app.emailId);
-            return false;
-          }
-          
-          // Check if this email ID was deleted by user
-          const isDeleted = deletedEmails.includes(app.emailId);
-          if (isDeleted) {
-            console.log('Filtering out deleted application:', app.emailId);
-            return false;
-          }
-          
-          return true;
-        });
-        
-        console.log('Filtered applications:', filteredApplications.length);
-        
-        // De-duplicate on company+position to avoid repeated entries
-        const uniqueMap = new Map();
-        for (const app of filteredApplications) {
-          const key = `${(app.company||'').toLowerCase()}::${(app.position||'').toLowerCase()}`;
-          if (!uniqueMap.has(key)) uniqueMap.set(key, app);
-        }
-        const uniqueApplications = Array.from(uniqueMap.values());
-
-        setDetectedApplications(uniqueApplications);
-        setInfo(uniqueApplications.length === 0 ? 'No new job application emails found.' : null);
-        
-        // Force a re-render by updating state
-        setTimeout(() => {
-          console.log('Current detectedApplications state:', detectedApplications);
-        }, 100);
-        
-        if (uniqueApplications.length > 0) {
-          console.log('Calling onApplicationsFound with:', uniqueApplications);
-          onApplicationsFound(uniqueApplications);
-        }
+        // Show exactly what backend returns (deterministic after gating),
+        // only hide items user explicitly deleted in this session
+        const applications = response.data.applications.filter(app => !deletedEmails.includes(app.emailId));
+        setDetectedApplications(applications);
+        setInfo(applications.length === 0 ? 'No new job application emails found.' : null);
+        if (applications.length > 0) onApplicationsFound(applications);
       } else {
-        console.error('Response indicates failure:', response.data);
         setError('Failed to fetch applications');
       }
     } catch (error) {
       console.error('Error fetching job applications:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
       setError(error.response?.data?.error || 'Failed to fetch job applications');
     } finally {
       setIsFetching(false);
@@ -414,7 +361,7 @@ export function GmailIntegration({ onApplicationsFound }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium">{app.position}</span>
-                        <Badge variant="secondary">{app.status}</Badge>
+                        <Badge variant="secondary">{app.status === 'Phone Interview' || app.status === 'Technical Interview' || app.status === 'Final Interview' ? 'Interview' : app.status}</Badge>
                       </div>
                       <p className="text-sm text-gray-600 mb-1">{app.company}</p>
                       <p className="text-xs text-gray-500">
@@ -550,13 +497,9 @@ function EditApplicationModal({ application, onSave, onSaveAndAdd, onCancel }) {
                 <SelectContent>
                   <SelectItem value="Applied">Applied</SelectItem>
                   <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-                  <SelectItem value="Phone Interview">Phone Interview</SelectItem>
-                  <SelectItem value="Technical Interview">Technical Interview</SelectItem>
-                  <SelectItem value="Final Interview">Final Interview</SelectItem>
+                  <SelectItem value="Interview">Interview</SelectItem>
                   <SelectItem value="Accepted">Accepted</SelectItem>
-                  <SelectItem value="Waitlisted">Waitlisted</SelectItem>
                   <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Withdrawn">Withdrawn</SelectItem>
                 </SelectContent>
               </Select>
             </div>
