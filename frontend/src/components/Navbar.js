@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -16,7 +16,9 @@ import {
   Home,
   BarChart3,
   TrendingUp,
-  Search
+  Search,
+  Settings as SettingsIcon,
+  Clock
 } from 'lucide-react';
 
 export function Navbar() {
@@ -25,6 +27,8 @@ export function Navbar() {
   const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   // Removed unused isSearchFocused state
   const [streakDays, setStreakDays] = useState(() => {
     try {
@@ -49,6 +53,24 @@ export function Navbar() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close user menu on outside click or Esc
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setIsUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
   }, []);
 
   const isAuthenticated = !!user;
@@ -275,7 +297,7 @@ export function Navbar() {
           {isAuthenticated && (
             <div className="hidden md:inline-flex">
               <div className="min-w-[64px]">
-                <StreakBadge
+            <StreakBadge
                   days={typeof streakDays === 'number' ? streakDays : 0}
                   className="w-full justify-center"
                   variant="compact"
@@ -295,10 +317,15 @@ export function Navbar() {
           </Button>
 
           {/* User menu */}
-          <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700" ref={userMenuRef}>
             <ThemeToggle />
             
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/profile')}>
+            <div
+              className="flex items-center space-x-2 cursor-pointer relative"
+              onClick={() => setIsUserMenuOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={isUserMenuOpen}
+            >
               {user?.picture ? (
                 <img 
                   src={user.picture} 
@@ -309,6 +336,36 @@ export function Navbar() {
                 <div className="h-8 w-8 bg-gray-900 dark:bg-gray-200 rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
+              )}
+              {isUserMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-10 z-[10000] w-48 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1"
+                >
+                  
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/settings');
+                    }}
+                    role="menuitem"
+                  >
+                    <SettingsIcon className="h-4 w-4" />
+                    Settings
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/activity');
+                    }}
+                    role="menuitem"
+                  >
+                    <Clock className="h-4 w-4" />
+                    My Activity
+                  </button>
+              </div>
               )}
             </div>
 

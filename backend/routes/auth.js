@@ -307,6 +307,36 @@ router.get('/me', isAuthenticated, (req, res) => {
   });
 });
 
+// Update current user's profile (name/picture)
+router.put('/me', isAuthenticated, async (req, res) => {
+  try {
+    const { name, picture } = req.body || {};
+
+    if (typeof name === 'string') {
+      req.user.name = name.trim().slice(0, 64);
+    }
+
+    if (typeof picture === 'string') {
+      // Accept HTTPS URLs or small data URLs (image/*)
+      const isHttpsUrl = /^https:\/\//i.test(picture);
+      const isDataUrl = /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(picture);
+      if (isHttpsUrl || isDataUrl) {
+        // Basic size guard for data URLs (~< 500KB)
+        if (isDataUrl && picture.length > 700000) {
+          return res.status(400).json({ error: 'Avatar is too large' });
+        }
+        req.user.picture = picture;
+      }
+    }
+
+    await req.user.save();
+    return res.json({ user: req.user.toPublicJSON() });
+  } catch (e) {
+    console.error('Update /me error:', e);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 // Logout (JWT: client-side token removal)
 router.get('/logout', (req, res) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

@@ -80,6 +80,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updates) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...(updates || {}) };
+      try {
+        localStorage.setItem('user', JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -88,7 +98,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     logout,
-    checkAuth
+    checkAuth,
+    updateUser
   };
 
   return (

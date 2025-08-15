@@ -10,6 +10,8 @@ import Dashboard from './components/Dashboard';
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
+import Activity from './components/Activity';
 import './App.css';
 
 // Protected Route Component
@@ -46,11 +48,8 @@ function AppRoutes() {
           <Dashboard />
         </ProtectedRoute>
       } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
+      {/* Keep legacy /profile route to redirect to settings profile tab */}
+      <Route path="/profile" element={<Navigate to="/settings?tab=profile" replace />} />
       <Route path="/add" element={
         <ProtectedRoute>
           <AddJob />
@@ -59,6 +58,16 @@ function AppRoutes() {
       <Route path="/analytics" element={
         <ProtectedRoute>
           <Analytics />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/activity" element={
+        <ProtectedRoute>
+          <Activity />
         </ProtectedRoute>
       } />
     </Routes>
