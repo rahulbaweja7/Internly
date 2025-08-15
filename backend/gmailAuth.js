@@ -100,17 +100,37 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
       return [];
     }
 
-    // Get full message details for each email
-    const emailPromises = messages.data.messages.map(async (message) => {
-      const msg = await gmail.users.messages.get({
-        userId: "me",
-        id: message.id,
-        format: 'full'
-      });
-      return msg.data;
-    });
+    // Helper: delay
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    // Helper: fetch a message with retry/backoff on 429
+    const getMessageWithRetry = async (id, attempt = 0) => {
+      try {
+        const msg = await gmail.users.messages.get({ userId: 'me', id, format: 'full' });
+        return msg.data;
+      } catch (err) {
+        const status = err?.code || err?.response?.status;
+        const isRate = status === 429 || err?.response?.data?.error?.status === 'RESOURCE_EXHAUSTED';
+        if (isRate && attempt < 5) {
+          const delay = 250 * Math.pow(2, attempt); // 250ms, 500ms, 1s, 2s, 4s
+          await sleep(delay);
+          return getMessageWithRetry(id, attempt + 1);
+        }
+        console.error('Failed to fetch message', id, 'attempt', attempt, status);
+        return null;
+      }
+    };
 
-    const emails = await Promise.all(emailPromises);
+    // Get full message details with capped concurrency to avoid 429
+    const ids = messages.data.messages.map(m => m.id);
+    const emails = [];
+    const concurrency = 10;
+    for (let i = 0; i < ids.length; i += concurrency) {
+      const chunk = ids.slice(i, i + concurrency);
+      const chunkResults = await Promise.all(chunk.map((id) => getMessageWithRetry(id)));
+      emails.push(...chunkResults.filter(Boolean));
+      // small pacing gap between chunks
+      await sleep(100);
+    }
     console.log('Processed emails:', emails.length);
     
     // Filter emails to only include job application related ones

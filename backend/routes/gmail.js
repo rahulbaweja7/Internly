@@ -63,6 +63,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
     const userId = 'default-user';
     const full = req.query.full === '1' || req.query.mode === 'full';
+    const showAll = req.query.all === '1';
     const limit = Math.min(parseInt(req.query.limit || '200', 10) || 200, 1000);
     
     // Get stored tokens
@@ -82,7 +83,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     });
 
     // Fetch emails
-    const emails = full
+    const emails = showAll || full
       ? await fetchJobApplicationEmails(limit)
       : await fetchNewJobApplicationEmails(limit);
     
@@ -103,8 +104,18 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     for (const { email } of latestEmails) {
       const app = parseJobApplicationFromEmail(email);
       if (!app) continue;
-      if (app.isLikelyNonApplication) continue;
-      if (typeof app.confidence === 'number' && app.confidence < 0.7) continue;
+      // Always honor processed dedupe: if email was added to tracker already, skip it when showAll is OFF
+      if (!showAll) {
+        const ProcessedEmail = require('../models/ProcessedEmail');
+        const Job = require('../models/Job');
+        const emailId = app.emailId || email.id;
+        const userId = 'default-user';
+        const [seenProc, seenJob] = await Promise.all([
+          ProcessedEmail.findOne({ emailId, userId }).lean(),
+          Job.findOne({ emailId }).lean(),
+        ]);
+        if (seenProc || seenJob) continue;
+      }
       parsed.push(app);
     }
 

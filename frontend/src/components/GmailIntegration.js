@@ -22,6 +22,12 @@ export function GmailIntegration({ onApplicationsFound }) {
   const [editingApplication, setEditingApplication] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAll, setShowAll] = useState(() => {
+    try {
+      const v = localStorage.getItem('gmailShowAll');
+      return v ? JSON.parse(v) : false;
+    } catch (_) { return false; }
+  });
 
   // Check Gmail connection status on component mount
   useEffect(() => {
@@ -83,14 +89,12 @@ export function GmailIntegration({ onApplicationsFound }) {
     try {
       setIsFetching(true);
       setError(null);
-      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/fetch-emails`);
+      const response = await axios.get(`${config.API_BASE_URL}/api/gmail/fetch-emails`, { params: { limit: 500, all: showAll ? 1 : 0 } });
       if (response.data.success) {
-        const deletedEmails = JSON.parse(localStorage.getItem('deletedEmails') || '[]');
-        // Show exactly what backend returns (deterministic after gating),
-        // only hide items user explicitly deleted in this session
-        const applications = response.data.applications.filter(app => !deletedEmails.includes(app.emailId));
+        const applications = response.data.applications;
         setDetectedApplications(applications);
-        setInfo(applications.length === 0 ? 'No new job application emails found.' : null);
+        if (!showAll && applications.length === 0) setInfo('No new job application emails found.');
+        else setInfo(null);
         if (applications.length > 0) onApplicationsFound(applications);
       } else {
         setError('Failed to fetch applications');
@@ -283,7 +287,7 @@ export function GmailIntegration({ onApplicationsFound }) {
           </div>
           
           {gmailStatus.connected ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -297,6 +301,14 @@ export function GmailIntegration({ onApplicationsFound }) {
                 )}
                 Scan Emails
               </Button>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground select-none" title="Off shows only new (unadded) items; On shows everything">
+                <input
+                  type="checkbox"
+                  checked={showAll}
+                  onChange={(e) => { setShowAll(e.target.checked); try { localStorage.setItem('gmailShowAll', JSON.stringify(e.target.checked)); } catch(_){} }}
+                />
+                Show all
+              </label>
               <Button
                 variant="outline"
                 size="sm"
