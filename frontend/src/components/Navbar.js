@@ -320,10 +320,6 @@ export function Navbar() {
                   <User className="h-4 w-4 text-white" />
                 </div>
               )}
-              <div className="hidden lg:block text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
-              </div>
             </div>
 
             {/* Logout moved to Profile page */}
@@ -434,10 +430,7 @@ export function Navbar() {
                           <User className="h-4 w-4 text-white" />
                         </div>
                       )}
-                      <div>
-                        <p className="text-sm font-medium dark:text-gray-100">{user?.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
-                      </div>
+                      {/* Name/email moved to Profile page */}
                     </div>
                     {/* Logout moved to Profile page */}
                   </div>
