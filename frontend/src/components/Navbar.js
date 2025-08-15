@@ -134,7 +134,7 @@ export function Navbar() {
             onClick={() => navigate('/')}
           >
             <div>
-              <span className="font-bold text-xl text-black dark:text-black">
+              <span className="font-bold text-xl text-black dark:text-white">
                 Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
@@ -146,13 +146,13 @@ export function Navbar() {
             <Button 
               variant="ghost" 
               onClick={() => navigate('/login')}
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+              className="text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"
             >
               Sign In
             </Button>
             <Button 
               onClick={() => navigate('/register')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90 shadow hover:shadow-md transition-colors"
             >
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -182,7 +182,7 @@ export function Navbar() {
             onClick={() => navigate('/')}
           >
             <div>
-              <span className="font-bold text-xl text-black dark:text-black">
+              <span className="font-bold text-xl text-black dark:text-white">
                 Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
@@ -208,23 +208,13 @@ export function Navbar() {
     return (
       <>
         <div className="flex items-center space-x-4">
-          {isAddJob && (
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          )}
           
           <div 
             className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
           >
             <div>
-              <span className="font-bold text-xl text-black dark:text-black">
+              <span className="font-bold text-xl text-black dark:text-white">
                 Internly.
               </span>
               <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
@@ -267,7 +257,7 @@ export function Navbar() {
           <Button 
             variant={isDashboard ? "default" : "ghost"}
             onClick={() => navigate('/dashboard')}
-            className={isDashboard ? "bg-gradient-to-r from-blue-600 to-purple-600" : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"}
+            className={isDashboard ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Dashboard
@@ -276,7 +266,7 @@ export function Navbar() {
           <Button 
             variant={isAnalytics ? "default" : "ghost"}
             onClick={() => navigate('/analytics')}
-            className={isAnalytics ? "bg-gradient-to-r from-blue-600 to-purple-600" : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"}
+            className={isAnalytics ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
@@ -298,7 +288,7 @@ export function Navbar() {
             onClick={() => {
               navigate('/add');
             }}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Internship
@@ -316,7 +306,7 @@ export function Navbar() {
                   className="h-8 w-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm"
                 />
               ) : (
-                <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="h-8 w-8 bg-gray-900 dark:bg-gray-200 rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
               )}
@@ -342,8 +332,8 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/80 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/80 shadow-sm">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {getNavbarContent()}
           </div>
@@ -361,13 +351,13 @@ export function Navbar() {
                   </div>
                   <Button 
                     onClick={() => navigate('/login')}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                    className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
                     Sign In
                   </Button>
                   <Button 
                     onClick={() => navigate('/register')}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white"
+                    className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
                     Get Started
                   </Button>
@@ -408,7 +398,7 @@ export function Navbar() {
                       navigate('/add');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white"
+                    className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Internship
@@ -426,7 +416,7 @@ export function Navbar() {
                           className="h-8 w-8 rounded-full"
                         />
                       ) : (
-                        <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                        <div className="h-8 w-8 bg-gray-900 dark:bg-gray-200 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-white" />
                         </div>
                       )}
@@ -440,6 +430,8 @@ export function Navbar() {
           </div>
         )}
       </nav>
+      {/* Spacer to offset fixed navbar height */}
+      <div className="h-16" />
     </>
   );
 } 

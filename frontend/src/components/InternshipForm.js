@@ -73,8 +73,8 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="company">Company *</Label>
               <Input
@@ -97,7 +97,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
               <Input
@@ -128,7 +128,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="appliedDate">Application Date</Label>
               <Input
@@ -156,7 +156,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Describe the internship role and responsibilities..."
-              rows={3}
+              rows={2}
             />
           </div>
 
@@ -167,11 +167,11 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
               placeholder="Any additional notes, interview feedback, etc..."
-              rows={3}
+              rows={2}
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 pt-3">
             <Button type="submit" className="flex-1">
               {internship ? 'Update Internship' : 'Add Internship'}
             </Button>

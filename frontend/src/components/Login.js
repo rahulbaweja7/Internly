@@ -64,20 +64,16 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
+      {/* Background decoration (neutral) */}
+      <div className="absolute inset-0 overflow-hidden" />
 
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Welcome content */}
         <div className="text-center lg:text-left space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start gap-3">
-              <h1 className="text-3xl font-bold text-black dark:text-black">
+              <h1 className="text-3xl font-bold text-black dark:text-white">
                 Internly.
               </h1>
             </div>
@@ -85,9 +81,7 @@ export function Login() {
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
               Track Your Career
               <br />
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Journey
-              </span>
+              <span className="text-gray-900 dark:text-gray-100">Journey</span>
             </h2>
             
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto lg:mx-0">
@@ -97,16 +91,16 @@ export function Login() {
 
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8">
-            <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/20">
-              <Building className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
+              <Building className="h-5 w-5 text-gray-900 dark:text-gray-100" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Track Applications</span>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/20">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
+              <TrendingUp className="h-5 w-5 text-gray-900 dark:text-gray-100" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Monitor Progress</span>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/20">
-              <Users className="h-5 w-5 text-pink-600" />
+            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
+              <Users className="h-5 w-5 text-gray-900 dark:text-gray-100" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Smart Insights</span>
             </div>
           </div>
@@ -130,10 +124,10 @@ export function Login() {
 
         {/* Right side - Login form */}
         <div className="flex justify-center">
-          <Card className="w-full max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-2xl">
+          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
             <CardHeader className="text-center space-y-2">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600">
-                <Sparkles className="h-8 w-8 text-white" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black dark:bg-white">
+                <Sparkles className="h-8 w-8 text-white dark:text-black" />
               </div>
               <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-300">
@@ -146,7 +140,7 @@ export function Login() {
               <Button 
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full h-12 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                className="w-full h-12 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                 size="lg"
               >
                 {isLoading ? (
@@ -238,7 +232,7 @@ export function Login() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -259,13 +253,13 @@ export function Login() {
               <div className="text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
                 <p>
                   By signing in, you agree to our{' '}
-                  <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</Link>
+                  <Link to="/terms" className="text-gray-900 dark:text-gray-100 hover:underline">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</Link>
+                  <Link to="/privacy" className="text-gray-900 dark:text-gray-100 hover:underline">Privacy Policy</Link>
                 </p>
                 <p>
                   Don't have an account?{' '}
-                  <Link to="/register" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                  <Link to="/register" className="text-gray-900 dark:text-gray-100 hover:underline font-medium">
                     Sign up
                   </Link>
                 </p>
@@ -275,31 +269,17 @@ export function Login() {
         </div>
       </div>
 
-      {/* CSS for animations */}
+      {/* CSS for animations (kept for potential blobs - currently unused) */}
       <style jsx>{`
         @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
       `}</style>
     </div>
   );

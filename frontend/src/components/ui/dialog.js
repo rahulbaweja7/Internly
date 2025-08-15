@@ -5,14 +5,14 @@ const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-x-0 top-16 bottom-0 z-[9999] flex items-start justify-center px-4 py-6">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/20 z-[9998]"
+        className="fixed inset-x-0 top-16 bottom-0 bg-black/20 z-[9998]"
         onClick={onOpenChange}
       />
       {/* Content wrapper - size to content so modal centers */}
-      <div className="relative z-[9999] w-auto max-w-[95vw] sm:max-w-4xl mx-auto my-auto">
+      <div className="relative z-[9999] w-full max-w-[700px] sm:max-w-[720px] mx-auto">
         {children}
       </div>
     </div>
@@ -32,8 +32,9 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
   <div
     ref={ref}
     className={cn(
-      "relative bg-white rounded-lg shadow-lg border p-6 z-[10000]",
-      "max-h-[90vh] overflow-y-auto",
+      "relative rounded-md shadow-lg border p-4 sm:p-5 z-[10000] bg-white text-gray-900 border-gray-200",
+      "dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700",
+      "max-h-[calc(100vh-7rem)] overflow-y-auto",
       className
     )}
     {...props}

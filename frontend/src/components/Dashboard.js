@@ -489,7 +489,7 @@ export function InternshipDashboard() {
             </div>
           ) : (
             filteredInternships.map((internship) => (
-              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative">
+              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative h-full min-h-[260px] max-h-[260px] flex flex-col">
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
                   <div className="absolute top-3 left-3 z-10">
@@ -506,11 +506,11 @@ export function InternshipDashboard() {
                   </div>
                 )}
                 
-                <CardHeader>
+                <CardHeader className="pt-6 pb-2">
                   <div className="flex justify-between items-start">
                     <div className={isSelectionMode ? "pr-8" : ""}>
-                      <CardTitle className="text-lg">{internship.role}</CardTitle>
-                      <CardDescription className="flex items-center mt-1">
+                      <CardTitle className="text-lg clamp-1">{internship.role}</CardTitle>
+                      <CardDescription className="flex items-center mt-1 clamp-1">
                         <Building className="h-4 w-4 mr-1" />
                         {internship.company}
                       </CardDescription>
@@ -520,11 +520,11 @@ export function InternshipDashboard() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col flex-1 pt-0">
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {internship.location}
+                      <span className="clamp-1">{internship.location}</span>
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4 mr-1" />
@@ -536,12 +536,12 @@ export function InternshipDashboard() {
                       </div>
                     )}
                     {internship.notes && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground clamp-2">
                         {internship.notes}
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2 mt-auto pt-3">
                     <Button
                       variant="outline"
                       size="sm"

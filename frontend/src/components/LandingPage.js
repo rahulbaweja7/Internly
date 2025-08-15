@@ -56,7 +56,7 @@ export function LandingPage() {
       {/* Hero Section */}
       <section className="py-20 lg:py-32">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-6 text-black">
+          <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-6 text-black dark:text-white">
             Internly.
           </h1>
           <p className="mb-8 text-muted-foreground">Free Internship Tracking Platform</p>
@@ -205,7 +205,7 @@ export function LandingPage() {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="font-semibold text-black dark:text-black">Internly.</span>
+              <span className="font-semibold text-black dark:text-white">Internly.</span>
             </div>
             <p className="text-muted-foreground text-sm">
               © 2024 Internly. Built for students, by students.

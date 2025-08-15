@@ -8,10 +8,10 @@ export default function StreakBadge({ days = 0, className, variant = 'default' }
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full font-medium shadow-md text-white select-none',
+        'inline-flex items-center rounded-full font-medium select-none',
         variant === 'compact'
-          ? 'gap-1.5 px-3 py-1 text-[11px] bg-gradient-to-r from-orange-500 to-red-500'
-          : 'gap-2 px-3.5 py-1.5 text-xs md:text-sm bg-gradient-to-r from-orange-500 to-red-500',
+          ? 'gap-1.5 px-3 py-1 text-[11px] bg-black text-white dark:bg-white dark:text-black'
+          : 'gap-2 px-3.5 py-1.5 text-xs md:text-sm bg-black text-white dark:bg-white dark:text-black',
         className
       )}
       title={`Current streak: ${days} day${days === 1 ? '' : 's'}`}

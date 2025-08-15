@@ -22,7 +22,17 @@ export const ThemeProvider = ({ children }) => {
   });
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
+    const next = !isDarkMode;
+    try {
+      const root = document.documentElement;
+      if (next) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      localStorage.setItem('darkMode', JSON.stringify(next));
+    } catch (_) {}
+    setIsDarkMode(next);
   };
 
   useEffect(() => {
