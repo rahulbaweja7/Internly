@@ -10,7 +10,6 @@ import {
   ArrowRight, 
   ArrowLeft, 
   User, 
-  LogOut, 
   Plus, 
   Menu, 
   X, 
@@ -23,7 +22,7 @@ import {
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   // Removed unused isSearchFocused state
@@ -123,10 +122,7 @@ export function Navbar() {
       });
   }, [isAuthenticated]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
+  // logout moved to Profile page
 
   const getNavbarContent = () => {
     // Landing page navbar
@@ -330,14 +326,7 @@ export function Navbar() {
               </div>
             </div>
 
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            {/* Logout moved to Profile page */}
           </div>
         </div>
 
@@ -450,17 +439,7 @@ export function Navbar() {
                         <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => {
-                        handleLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full justify-start text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
+                    {/* Logout moved to Profile page */}
                   </div>
                 </>
               )}

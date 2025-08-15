@@ -7,7 +7,7 @@ import axios from 'axios';
 import { Navbar } from './Navbar';
 
 export function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
@@ -34,6 +34,18 @@ export function Profile() {
                 <p className="text-lg font-semibold">{user?.name}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{user?.email}</p>
               </div>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await logout();
+                  window.location.href = '/';
+                }}
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              >
+                Logout
+              </Button>
             </div>
           </CardContent>
         </Card>
