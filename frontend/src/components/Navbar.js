@@ -8,7 +8,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import StreakBadge from './ui/StreakBadge';
 import { 
   ArrowRight, 
-  ArrowLeft, 
+  
   User, 
   Plus, 
   Menu, 
@@ -75,7 +75,7 @@ export function Navbar() {
 
   const isAuthenticated = !!user;
   const isDashboard = location.pathname === '/dashboard';
-  const isAddJob = location.pathname === '/add';
+  
   const isAnalytics = location.pathname === '/analytics';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';

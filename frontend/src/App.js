@@ -9,7 +9,6 @@ import { VerifyEmail } from './components/VerifyEmail';
 import Dashboard from './components/Dashboard'; 
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
-import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Activity from './components/Activity';
 import './App.css';
