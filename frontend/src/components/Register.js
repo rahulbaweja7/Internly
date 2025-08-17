@@ -49,9 +49,8 @@ export function Register() {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password
-      });
+      }, { withCredentials: true });
       setSuccess(response.data.message);
-      localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       setTimeout(() => { navigate('/dashboard'); }, 2000);
     } catch (error) {

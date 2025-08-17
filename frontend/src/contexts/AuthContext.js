@@ -16,48 +16,32 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios to include credentials and JWT token
+  // Configure axios to include credentials; stop using Authorization header
   axios.defaults.withCredentials = true;
 
-  // Add JWT token to requests if available
+  // Add CSRF header from cookie for state-changing requests
   axios.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const method = (config.method || 'get').toLowerCase();
+    if (['post', 'put', 'patch', 'delete'].includes(method)) {
+      const match = document.cookie.match(/(?:^|; )csrf=([^;]+)/);
+      const token = match ? decodeURIComponent(match[1]) : '';
+      if (token) {
+        config.headers['X-CSRF-Token'] = token;
+      }
     }
     return config;
   });
 
   const checkAuth = async () => {
     try {
-      // First check if we have a token in localStorage
-      const token = localStorage.getItem('token');
+      // Server will read auth from HttpOnly cookie; no local token handling
       const storedUser = localStorage.getItem('user');
-      
-      if (token && storedUser) {
-        // Set user from localStorage immediately for better UX
-        setUser(JSON.parse(storedUser));
-        
-        // Then verify with server
-        const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
-        setUser(response.data.user);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      } else {
-        // If Google OAuth redirected with a token in hash, capture it once
-        const hash = window.location.hash;
-        if (hash && hash.includes('token=')) {
-          const t = new URLSearchParams(hash.substring(1)).get('token');
-          if (t) {
-            localStorage.setItem('token', t);
-            window.location.hash = '';
-          }
-        }
-        const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
-        setUser(response.data.user);
-      }
+      if (storedUser) setUser(JSON.parse(storedUser));
+      const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
+      setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     } catch (error) {
-      // Clear invalid tokens
-      localStorage.removeItem('token');
+      // Clear invalid local user cache
       localStorage.removeItem('user');
       setUser(null);
     } finally {
@@ -67,15 +51,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Clear localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      // Call logout endpoint (for session-based auth)
+      // Call logout endpoint to clear cookie
       await axios.get(`${config.API_BASE_URL}/api/auth/logout`);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('user');
       setUser(null);
     }
   };

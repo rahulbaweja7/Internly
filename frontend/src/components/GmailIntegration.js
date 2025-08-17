@@ -22,11 +22,8 @@ export function GmailIntegration({ onApplicationsFound }) {
   useEffect(() => { refreshStatus(); }, []);
 
   const connect = () => {
-    const token = localStorage.getItem('token');
-    const url = token
-      ? `${config.API_BASE_URL}/api/gmail/auth?t=${encodeURIComponent(token)}`
-      : `${config.API_BASE_URL}/api/gmail/auth`;
-    window.location.href = url;
+    // Auth is via HttpOnly cookie; no token in URL
+    window.location.href = `${config.API_BASE_URL}/api/gmail/auth`;
   };
 
   const disconnect = async () => {

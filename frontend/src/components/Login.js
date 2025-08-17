@@ -43,10 +43,9 @@ export function Login() {
       const response = await axios.post(`${config.API_BASE_URL}/api/auth/login`, {
         email: formData.email.trim().toLowerCase(),
         password: formData.password
-      });
+      }, { withCredentials: true });
 
-      // Store token and update auth context so ProtectedRoute allows navigation immediately
-      localStorage.setItem('token', response.data.token);
+      // Server sets HttpOnly cookie; cache user locally for UX
       localStorage.setItem('user', JSON.stringify(response.data.user));
       updateUser(response.data.user);
 

@@ -1,8 +1,11 @@
 const express = require('express');
 const session = require('express-session');
+const RedisStoreLib = require('connect-redis').default;
+const { Redis } = require('ioredis');
 const passport = require('passport');
 const { setupSecurity } = require('./middleware/security');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -17,18 +20,30 @@ if (process.env.NODE_ENV === 'production') {
 setupSecurity(app);
 app.use(express.json());
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-  },
-}));
+// Session configuration (kept for passport compatibility); no auth data stored here
+(() => {
+  const base = {
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  };
+  if (process.env.REDIS_URL) {
+    const client = new Redis(process.env.REDIS_URL);
+    const RedisStore = RedisStoreLib;
+    app.use(session({
+      ...base,
+      store: new RedisStore({ client, prefix: 'sess:' }),
+    }));
+  } else {
+    app.use(session(base));
+  }
+})();
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -42,7 +57,7 @@ const User = require('./models/User');
 passport.use(new (require('passport-google-oauth20').Strategy)({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: '/api/auth/google/callback',
+  callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL || `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/google/callback`,
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = (profile.emails && profile.emails[0] && profile.emails[0].value || '').toLowerCase();
@@ -118,6 +133,15 @@ passport.use(new (require('passport-google-oauth20').Strategy)({
   }
 }));
 
+// Log which OAuth client and callback URL are configured (for diagnosing redirect_uri_mismatch)
+try {
+  const cbUrl = process.env.GOOGLE_AUTH_CALLBACK_URL || `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/google/callback`;
+  const cid = process.env.GOOGLE_CLIENT_ID || '';
+  const cidSuffix = cid.length > 8 ? cid.slice(-8) : cid;
+  // eslint-disable-next-line no-console
+  console.log('[OAUTH] Google client ID (suffix) =', cidSuffix, 'callbackURL =', cbUrl);
+} catch (_) {}
+
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -138,6 +162,49 @@ const { isAuthenticated } = require('./middleware/auth');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/gmail', gmailRoutes);
+
+// Lightweight CSRF protection (double-submit cookie):
+// - Server issues a non-HttpOnly `csrf` cookie with a random token
+// - Client mirrors it in `X-CSRF-Token` header for state-changing requests
+const CSRF_COOKIE_NAME = 'csrf';
+const regenerateCsrfIfMissing = (req, res, next) => {
+  const cookieHeader = req.headers.cookie || '';
+  const parts = cookieHeader.split(';').map((p) => p.trim());
+  const csrfPart = parts.find((p) => p.startsWith(`${CSRF_COOKIE_NAME}=`));
+  if (!csrfPart) {
+    const token = crypto.randomBytes(24).toString('hex');
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieParts = [
+      `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}`,
+      'Path=/',
+      // Not HttpOnly so client can read and echo in header
+      isProd ? 'Secure' : '',
+      'SameSite=Lax',
+      'Max-Age=1209600', // 14 days
+    ].filter(Boolean);
+    res.setHeader('Set-Cookie', [...(res.getHeader('Set-Cookie') || []), cookieParts.join('; ')]);
+  }
+  next();
+};
+
+const verifyCsrf = (req, res, next) => {
+  // Skip safe methods
+  const method = (req.method || 'GET').toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
+
+  const cookieHeader = req.headers.cookie || '';
+  const parts = cookieHeader.split(';').map((p) => p.trim());
+  const csrfPart = parts.find((p) => p.startsWith(`${CSRF_COOKIE_NAME}=`));
+  const cookieToken = csrfPart ? decodeURIComponent(csrfPart.split('=').slice(1).join('=')) : '';
+  const headerToken = req.get('X-CSRF-Token') || req.get('x-csrf-token') || '';
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    return res.status(403).json({ error: 'CSRF validation failed' });
+  }
+  return next();
+};
+
+app.use(regenerateCsrfIfMissing);
+app.use(verifyCsrf);
 
 // Health check
 app.get('/healthz', (req, res) => {
@@ -169,7 +236,7 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 
 app.post('/api/jobs', isAuthenticated, async (req, res) => {
   try {
-    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend } = req.body;
+    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend } = req.body || {};
 
     const normalize = (v) => (v || '').toString().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
     const normalizedCompany = normalize(company);
@@ -245,9 +312,20 @@ app.post('/api/jobs', isAuthenticated, async (req, res) => {
 
 app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
   try {
+    // Whitelist updatable fields
+    const { company, role, status, dateApplied, notes, location, stipend } = req.body || {};
+    const update = {};
+    if (typeof company === 'string') update.company = company;
+    if (typeof role === 'string') update.role = role;
+    if (typeof status === 'string') update.status = status;
+    if (location !== undefined) update.location = location;
+    if (stipend !== undefined) update.stipend = stipend;
+    if (dateApplied !== undefined) update.dateApplied = dateApplied;
+    if (typeof notes === 'string') update.notes = notes;
+
     const job = await Job.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      req.body,
+      update,
       { new: true },
     );
     if (!job) return res.status(404).json({ message: 'Job not found' });

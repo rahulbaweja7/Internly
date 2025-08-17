@@ -109,16 +109,13 @@ export function Profile() {
                 onClick={async () => {
                   if (!window.confirm('This will permanently delete your account and all data. Continue?')) return;
                   try {
-                    const token = localStorage.getItem('token');
                     const res = await fetch(`${config.API_BASE_URL}/api/auth/delete`, {
                       method: 'DELETE',
-                      headers: {
-                        'Authorization': token ? `Bearer ${token}` : undefined,
-                      },
+                      headers: {},
+                      credentials: 'include',
                     });
                     if (!res.ok) throw new Error('Delete failed');
                     // Clear client state
-                    localStorage.removeItem('token');
                     localStorage.removeItem('user');
                     window.location.href = '/';
                   } catch (e) {

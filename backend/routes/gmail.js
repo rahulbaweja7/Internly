@@ -14,13 +14,18 @@ const GmailToken = require('../models/GmailToken');
 
 const router = express.Router();
 
-// Step 1: Start OAuth – accept JWT via Authorization header or ?t= token (since redirects don't carry headers)
+// Step 1: Start OAuth – use JWT from Authorization header or HttpOnly cookie; do not accept query token
 router.get('/auth', async (req, res) => {
   try {
     let token = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.substring(7);
-    if (!token && req.query && req.query.t) token = String(req.query.t);
+    if (!token) {
+      const cookieHeader = req.headers.cookie || '';
+      const parts = cookieHeader.split(';').map((p) => p.trim());
+      const tokenPart = parts.find((p) => p.startsWith('token='));
+      token = tokenPart ? decodeURIComponent(tokenPart.split('=').slice(1).join('=')) : null;
+    }
     if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
     let userId = null;

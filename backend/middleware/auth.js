@@ -3,21 +3,39 @@ const User = require('../models/User');
 
 const isAuthenticated = async (req, res, next) => {
   try {
-    // Check for JWT token in Authorization header
+    // 1) Authorization: Bearer <token>
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         const user = await User.findById(decoded.id);
-        
         if (user && user.isActive) {
           req.user = user;
           return next();
         }
-      } catch (jwtError) {
-        // JWT verification failed
+      } catch (_) {
+        // fall through to cookie check
+      }
+    }
+
+    // 2) HttpOnly cookie: token=<jwt>
+    const cookieHeader = req.headers.cookie || '';
+    if (cookieHeader) {
+      const parts = cookieHeader.split(';').map((p) => p.trim());
+      const tokenPart = parts.find((p) => p.startsWith('token='));
+      const token = tokenPart ? decodeURIComponent(tokenPart.split('=').slice(1).join('=')) : null;
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+          const user = await User.findById(decoded.id);
+          if (user && user.isActive) {
+            req.user = user;
+            return next();
+          }
+        } catch (_) {
+          // invalid cookie token
+        }
       }
     }
 

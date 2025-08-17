@@ -123,8 +123,8 @@ export default function Settings() {
                             method: 'PUT',
                             headers: {
                               'Content-Type': 'application/json',
-                              'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined,
                             },
+                            credentials: 'include',
                             body: JSON.stringify({ picture: small })
                           }).catch(() => {});
                         } catch (_) { /* noop */ }
@@ -230,8 +230,8 @@ function PasswordSection() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined,
         },
+        credentials: 'include',
         body: JSON.stringify({ currentPassword, newPassword })
       }).then(async (r) => {
         const data = await r.json().catch(() => ({}));

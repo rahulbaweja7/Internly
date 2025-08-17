@@ -1,4 +1,6 @@
 const rateLimit = require('express-rate-limit');
+const { Redis } = require('ioredis');
+const { RedisStore: RateLimitRedisStore } = require('rate-limit-redis');
 const helmet = require('helmet');
 const cors = require('cors');
 
@@ -8,13 +10,25 @@ const createRateLimiter = (windowMs, max, message) => {
   if (process.env.NODE_ENV === 'development' || process.env.RATE_LIMIT_DISABLED === 'true') {
     return (req, res, next) => next();
   }
-  return rateLimit({
+  const common = {
     windowMs: windowMs || 15 * 60 * 1000, // 15 minutes default
     max: max || 100, // limit each IP to 100 requests per windowMs
     message: message || 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-  });
+  };
+
+  // Use Redis store if available
+  if (process.env.REDIS_URL) {
+    const client = new Redis(process.env.REDIS_URL);
+    return rateLimit({
+      ...common,
+      store: new RateLimitRedisStore({
+        sendCommand: (...args) => client.call(...args),
+      }),
+    });
+  }
+  return rateLimit(common);
 };
 
 // General API rate limiter
@@ -93,6 +107,30 @@ const setupSecurity = (app) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  // Basic NoSQL injection protection – remove prohibited keys from req bodies, queries and params
+  const sanitizeObject = (value) => {
+    if (!value || typeof value !== 'object') return value;
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i += 1) sanitizeObject(value[i]);
+      return value;
+    }
+    for (const key of Object.keys(value)) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete value[key];
+        continue;
+      }
+      sanitizeObject(value[key]);
+    }
+    return value;
+  };
+
+  app.use((req, _res, next) => {
+    try { if (req.body && typeof req.body === 'object') sanitizeObject(req.body); } catch (_) {}
+    try { if (req.params && typeof req.params === 'object') sanitizeObject(req.params); } catch (_) {}
+    try { if (req.query && typeof req.query === 'object') sanitizeObject(req.query); } catch (_) {}
     next();
   });
 };

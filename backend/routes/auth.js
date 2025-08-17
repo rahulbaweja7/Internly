@@ -9,30 +9,13 @@ const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, v
 const { createTransport } = require('nodemailer');
 
 const router = express.Router();
-// Export user data (jobs + basic profile)
-router.get('/export', async (req, res) => {
+// Export user data (jobs + basic profile) – authenticated via cookie or Authorization header
+router.get('/export', isAuthenticated, async (req, res) => {
   try {
-    // Allow token via Authorization or query ?token=...
-    let user = req.user;
-    if (!user) {
-      const authHeader = req.headers.authorization;
-      let token = null;
-      if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.substring(7);
-      if (!token && req.query.token) token = req.query.token;
-      if (!token) return res.status(401).json({ error: 'Not authenticated' });
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        user = await User.findById(decoded.id);
-        if (!user || !user.isActive) return res.status(401).json({ error: 'Not authenticated' });
-      } catch (e) {
-        return res.status(401).json({ error: 'Invalid token' });
-      }
-    }
-
     const Job = require('../models/Job');
-    const jobs = await Job.find({ userId: user._id }).lean();
+    const jobs = await Job.find({ userId: req.user._id }).lean();
     const data = {
-      user: user.toPublicJSON(),
+      user: req.user.toPublicJSON(),
       jobs,
       exportedAt: new Date().toISOString(),
       version: 1,
@@ -76,11 +59,21 @@ router.get(
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: (process.env.FRONTEND_URL || 'http://localhost:3000') + '/login?oauth=failed' }),
   (req, res) => {
-    // Issue JWT and redirect with token in hash fragment
+    // Issue JWT in HttpOnly, Secure, SameSite=Lax cookie; no token in URL
     const token = generateToken(req.user);
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieParts = [
+      `token=${encodeURIComponent(token)}`,
+      `Path=/`,
+      `HttpOnly`,
+      isProd ? `Secure` : '',
+      `SameSite=Lax`,
+      `Max-Age=${7 * 24 * 60 * 60}`,
+    ].filter(Boolean);
+    res.setHeader('Set-Cookie', cookieParts.join('; '));
     const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const frontendUrl = rawUrl.replace(/\/$/, ''); // strip trailing slash
-    res.redirect(`${frontendUrl}/dashboard#token=${token}`);
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 );
 
@@ -143,12 +136,21 @@ router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
       await sendVerificationEmail(email, name, verificationToken);
     }
 
-    // Generate JWT token
+    // Set JWT cookie
     const token = generateToken(user);
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieParts = [
+      `token=${encodeURIComponent(token)}`,
+      `Path=/`,
+      `HttpOnly`,
+      isProd ? `Secure` : '',
+      `SameSite=Lax`,
+      `Max-Age=${7 * 24 * 60 * 60}`,
+    ].filter(Boolean);
+    res.setHeader('Set-Cookie', cookieParts.join('; '));
 
     res.status(201).json({
       message: 'User registered successfully. Please check your email to verify your account.',
-      token,
       user: user.toPublicJSON()
     });
 
@@ -185,12 +187,21 @@ router.post('/login', authLimiter, isNotAuthenticated, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Generate JWT token
+    // Set JWT cookie
     const token = generateToken(user);
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieParts = [
+      `token=${encodeURIComponent(token)}`,
+      `Path=/`,
+      `HttpOnly`,
+      isProd ? `Secure` : '',
+      `SameSite=Lax`,
+      `Max-Age=${7 * 24 * 60 * 60}`,
+    ].filter(Boolean);
+    res.setHeader('Set-Cookie', cookieParts.join('; '));
 
     res.json({
       message: 'Login successful',
-      token,
       user: user.toPublicJSON()
     });
 
@@ -343,6 +354,17 @@ router.put('/me', isAuthenticated, async (req, res) => {
 
 // Logout (JWT: client-side token removal)
 router.get('/logout', (req, res) => {
+  // Clear auth cookie
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieParts = [
+    'token=;',
+    'Path=/',
+    'HttpOnly',
+    isProd ? 'Secure' : '',
+    'SameSite=Lax',
+    'Max-Age=0'
+  ].filter(Boolean);
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/`);
 });
