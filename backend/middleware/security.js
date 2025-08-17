@@ -1,6 +1,4 @@
 const rateLimit = require('express-rate-limit');
-const { Redis } = require('ioredis');
-const { RedisStore: RateLimitRedisStore } = require('rate-limit-redis');
 const helmet = require('helmet');
 const cors = require('cors');
 
@@ -18,16 +16,6 @@ const createRateLimiter = (windowMs, max, message) => {
     legacyHeaders: false,
   };
 
-  // Use Redis store if available
-  if (process.env.REDIS_URL) {
-    const client = new Redis(process.env.REDIS_URL);
-    return rateLimit({
-      ...common,
-      store: new RateLimitRedisStore({
-        sendCommand: (...args) => client.call(...args),
-      }),
-    });
-  }
   return rateLimit(common);
 };
 
