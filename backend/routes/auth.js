@@ -50,12 +50,10 @@ router.get('/export', async (req, res) => {
 router.delete('/delete', isAuthenticated, async (req, res) => {
   try {
     const Job = require('../models/Job');
-    const GmailToken = require('../models/GmailToken');
     const User = require('../models/User');
 
     await Promise.all([
       Job.deleteMany({ userId: req.user._id }),
-      GmailToken.deleteMany({ userId: req.user._id.toString() }),
     ]);
     await User.deleteOne({ _id: req.user._id });
     res.json({ success: true });
@@ -66,12 +64,17 @@ router.delete('/delete', isAuthenticated, async (req, res) => {
 });
 
 // Google OAuth routes
-router.get('/google', isNotAuthenticated, passport.authenticate('google', { 
-  scope: ['profile', 'email'] 
-}));
+router.get(
+  '/google',
+  isNotAuthenticated,
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  })
+);
 
 router.get('/google/callback', 
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  passport.authenticate('google', { session: false, failureRedirect: (process.env.FRONTEND_URL || 'http://localhost:3000') + '/login?oauth=failed' }),
   (req, res) => {
     // Issue JWT and redirect with token in hash fragment
     const token = generateToken(req.user);

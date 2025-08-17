@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
-import { GmailIntegration } from './GmailIntegration';
 import { Navbar } from './Navbar';
 
 export function InternshipDashboard() {
@@ -30,22 +29,11 @@ export function InternshipDashboard() {
   const location = useLocation();
   // Removed unused auth destructuring to satisfy CI
 
-  // Handle OAuth callback response and search parameters
+  // Handle search parameter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const gmailConnected = params.get('gmail_connected');
-    const gmailError = params.get('gmail_error');
     const searchParam = params.get('search');
-    
-    if (gmailConnected === 'true') {
-      setOauthMessage({ type: 'success', text: 'Gmail connected successfully! You can now scan for job applications.' });
-      // Clear the URL parameters
-      navigate('/dashboard', { replace: true });
-    } else if (gmailError === 'true') {
-      setOauthMessage({ type: 'error', text: 'Failed to connect Gmail. Please try again.' });
-      // Clear the URL parameters
-      navigate('/dashboard', { replace: true });
-    } else if (searchParam) {
+    if (searchParam) {
       // Handle search from navbar
       setSearchTerm(searchParam);
       // Clear the search parameter from URL
@@ -200,7 +188,6 @@ export function InternshipDashboard() {
       const response = await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
       if (response.data.success) {
         alert('Email deleted successfully from Gmail!');
-        // Optionally refresh the jobs list or update the specific job
         fetchJobs();
       }
     } catch (error) {
@@ -256,28 +243,7 @@ export function InternshipDashboard() {
           </p>
         </div>
 
-        {/* OAuth Message */}
-        {oauthMessage && (
-          <div className={`mb-6 p-4 rounded-md ${
-            oauthMessage.type === 'success' 
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' 
-              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
-          }`}>
-            <p className="text-sm">{oauthMessage.text}</p>
-          </div>
-        )}
-
-        {/* Gmail Integration */}
-        <GmailIntegration onApplicationsFound={(applications) => {
-          // Refresh the internships list when new applications are found or added
-          console.log('Applications found in Dashboard:', applications);
-          
-          // If applications is an array with 'refresh' signal, or if there are actual applications
-          if (applications.length > 0) {
-            // Fetch the updated list from the backend
-            fetchJobs();
-          }
-        }} />
+        {/* Gmail integration removed */}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">

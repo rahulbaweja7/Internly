@@ -30,7 +30,7 @@ const authLimiter = createRateLimiter(
   process.env.AUTH_RATE_LIMIT_MESSAGE || 'Too many authentication attempts, please try again later.'
 );
 
-// Gmail API rate limiter
+// Gmail API rate limiter (re-enabled)
 const gmailLimiter = createRateLimiter(
   parseInt(process.env.GMAIL_RATE_LIMIT_WINDOW_MS, 10) || 60 * 1000,
   parseInt(process.env.GMAIL_RATE_LIMIT_MAX_REQUESTS, 10) || 60,

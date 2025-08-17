@@ -45,17 +45,74 @@ passport.use(new (require('passport-google-oauth20').Strategy)({
   callbackURL: '/api/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    const email = (profile.emails && profile.emails[0] && profile.emails[0].value || '').toLowerCase();
+
+    // 1) Prefer existing link by googleId
     let user = await User.findOne({ googleId: profile.id });
     if (user) return done(null, user);
 
-    user = new User({
-      googleId: profile.id,
-      email: profile.emails[0].value,
-      name: profile.displayName,
-      picture: profile.photos[0]?.value,
-    });
-    await user.save();
-    return done(null, user);
+    // 2) Link to existing account with same email (user registered with email/password earlier)
+    if (email) {
+      const existingByEmail = await User.findOne({ email });
+      if (existingByEmail) {
+        existingByEmail.googleId = profile.id;
+        if (!existingByEmail.picture && profile.photos && profile.photos[0] && profile.photos[0].value) {
+          existingByEmail.picture = profile.photos[0].value;
+        }
+        if (!existingByEmail.name && profile.displayName) {
+          existingByEmail.name = profile.displayName;
+        }
+        // Consider email verified when coming from Google
+        existingByEmail.isEmailVerified = true;
+        await existingByEmail.save();
+        return done(null, existingByEmail);
+      }
+    }
+
+    // 3) Single atomic upsert by either googleId or email
+    const upsertEmail = email || `user-${profile.id}@google.local`;
+    const pictureUrl = (profile.photos && profile.photos[0] && profile.photos[0].value) || undefined;
+    const filter = email
+      ? { $or: [{ googleId: profile.id }, { email: upsertEmail }] }
+      : { googleId: profile.id };
+    try {
+      const doc = await User.findOneAndUpdate(
+        filter,
+        {
+          $setOnInsert: {
+            email: upsertEmail,
+            name: profile.displayName || 'User',
+            createdAt: new Date(),
+            isActive: true,
+          },
+          $set: {
+            googleId: profile.id,
+            isEmailVerified: true,
+            ...(pictureUrl ? { picture: pictureUrl } : {}),
+          },
+        },
+        { new: true, upsert: true }
+      );
+      return done(null, doc);
+    } catch (e) {
+      // If duplicate by email raced, link explicitly by email
+      const isDup = e && (e.code === 11000 || /E11000/.test(String(e && e.message)));
+      if (isDup && email) {
+        const doc = await User.findOneAndUpdate(
+          { email: upsertEmail },
+          {
+            $set: {
+              googleId: profile.id,
+              isEmailVerified: true,
+              ...(pictureUrl ? { picture: pictureUrl } : {}),
+            },
+          },
+          { new: true }
+        );
+        if (doc) return done(null, doc);
+      }
+      return done(e, null);
+    }
   } catch (error) {
     return done(error, null);
   }
@@ -81,7 +138,6 @@ const { isAuthenticated } = require('./middleware/auth');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/gmail', gmailRoutes);
-app.use('/', gmailRoutes); // OAuth callback root-level route
 
 // Health check
 app.get('/healthz', (req, res) => {
