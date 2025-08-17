@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import config from '../config/config';
 import { Navbar } from './Navbar';
-import { Clock, Building, Calendar, BarChart3 } from 'lucide-react';
+import { Clock, Building, Calendar } from 'lucide-react';
 import { getUsageMetrics, formatDuration } from '../lib/usageTracker';
 
 export default function Activity() {

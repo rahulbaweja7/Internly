@@ -242,7 +242,7 @@ export default function ImportGmail() {
                         <div>
                           <div className="font-medium">{a.position}</div>
                           <div className="text-sm text-muted-foreground">{a.company}</div>
-                          <div className="text-xs text-muted-foreground">Applied: {new Date(a.appliedDate).toLocaleDateString()}</div>
+                          <div className="text-xs text-muted-foreground">Applied: {new Date(a.appliedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}</div>
                           {a.subject && <div className="text-xs text-muted-foreground mt-1 line-clamp-1">Subject: {a.subject}</div>}
                         </div>
                         <div className="shrink-0 flex items-center gap-2">

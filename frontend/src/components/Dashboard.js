@@ -21,7 +21,7 @@ export function InternshipDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [oauthMessage, setOauthMessage] = useState(null);
+  // Removed unused oauthMessage state
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
@@ -69,8 +69,7 @@ export function InternshipDashboard() {
     fetchJobs();
   }, []);
 
-  // Refresh helper kept for future integrations
-  const handleApplicationsFound = () => {};
+  // Removed unused handleApplicationsFound
 
   const filteredInternships = internships
     .filter(internship => {
@@ -504,7 +503,7 @@ export function InternshipDashboard() {
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4 mr-1" />
-                      Applied {new Date(internship.dateApplied).toLocaleDateString()}
+                      Applied {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                     </div>
                     {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 0 && (() => {
                       const hist = internship.statusHistory;
