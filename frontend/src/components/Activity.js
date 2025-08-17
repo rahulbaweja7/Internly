@@ -16,31 +16,29 @@ export default function Activity() {
         setLoading(true);
         const res = await axios.get(`${config.API_BASE_URL}/api/jobs`);
         const jobs = res.data || [];
-        // Flatten statusHistory into timeline events
+        // Flatten statusHistory into timeline events, but only for actual status changes
         const timeline = [];
         for (const j of jobs) {
           const hist = Array.isArray(j.statusHistory) ? j.statusHistory : [];
+          // Iterate in chronological order and only record changes
+          let previousStatus = null;
           for (const h of hist) {
-            timeline.push({
-              jobId: j._id,
-              company: j.company,
-              role: j.role,
-              status: h.status || j.status,
-              at: h.at || j.updatedAt || j.createdAt,
-              source: h.source || 'manual',
-              subject: h.subject,
-            });
-          }
-          // Also include job creation as an event if no history
-          if (!hist.length && j.createdAt) {
-            timeline.push({
-              jobId: j._id,
-              company: j.company,
-              role: j.role,
-              status: 'Created',
-              at: j.createdAt,
-              source: 'app',
-            });
+            const currentStatus = h.status || j.status;
+            const isFirst = previousStatus === null;
+            const isChange = previousStatus !== null && currentStatus !== previousStatus;
+            // Skip initial 'Applied' noise; include first if it's not 'Applied' or any real change
+            if ((isFirst && currentStatus !== 'Applied') || isChange) {
+              timeline.push({
+                jobId: j._id,
+                company: j.company,
+                role: j.role,
+                status: currentStatus,
+                at: h.at || j.updatedAt || j.createdAt,
+                source: h.source || 'manual',
+                subject: h.subject,
+              });
+            }
+            previousStatus = currentStatus;
           }
         }
         timeline.sort((a, b) => new Date(b.at) - new Date(a.at));

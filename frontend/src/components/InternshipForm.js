@@ -168,12 +168,6 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
           </div>
 
           <div className="flex gap-2 pt-3">
-            <Button type="submit" className="flex-1">
-              {internship ? 'Update Internship' : 'Add Internship'}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-              Cancel
-            </Button>
             {internship && onDelete && (
               <Button 
                 type="button" 
@@ -185,6 +179,12 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                 Delete
               </Button>
             )}
+            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1">
+              {internship ? 'Update Internship' : 'Add Internship'}
+            </Button>
             {internship && internship.emailId && onDeleteEmail && (
               <Button 
                 type="button" 

@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
 import Settings from './components/Settings';
+import ImportGmail from './components/ImportGmail';
 import Activity from './components/Activity';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
@@ -68,6 +69,11 @@ function AppRoutes() {
       <Route path="/settings" element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/import/gmail" element={
+        <ProtectedRoute>
+          <ImportGmail />
         </ProtectedRoute>
       } />
       <Route path="/activity" element={

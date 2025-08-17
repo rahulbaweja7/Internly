@@ -173,7 +173,11 @@ app.post('/api/jobs', isAuthenticated, async (req, res) => {
 
     const normalize = (v) => (v || '').toString().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
     const normalizedCompany = normalize(company);
-    const normalizedRole = normalize(role);
+    const normalizedRole = normalize(role)
+      .replace(/software\s+engineer/gi, 'swe')
+      .replace(/full\s*stack/gi, 'fullstack')
+      .replace(/internship/gi, 'intern')
+      .trim();
 
     // Find existing job for same user + company + role
     let job = await Job.findOne({ userId: req.user._id, normalizedCompany, normalizedRole });
@@ -215,9 +219,13 @@ app.post('/api/jobs', isAuthenticated, async (req, res) => {
 
     const hasEmailInHistory = emailId && (job.emailId === emailId || (job.statusHistory || []).some(h => h.emailId === emailId));
     if (emailId && !hasEmailInHistory) {
-      if (!job.emailId) job.emailId = emailId;
-      job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
-      updated = true;
+      if (!job.emailId) { job.emailId = emailId; updated = true; }
+      // Only record a history entry if status meaningfully changed
+      const willChangeStatus = (incomingRank > currentRank) || (status && status !== job.status);
+      if (willChangeStatus) {
+        job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+        updated = true;
+      }
     } else if (incomingRank > currentRank) {
       // Record status change without duplicating emailId
       job.statusHistory.push({ status: status, at: new Date(), source: 'gmail', subject });

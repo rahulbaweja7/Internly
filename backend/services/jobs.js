@@ -3,9 +3,11 @@ const Job = require('../models/Job');
 const statusRank = {
   'Applied': 1,
   'Online Assessment': 2,
-  'Interview': 3,
-  'Accepted': 4,
-  'Rejected': 4,
+  'Phone Interview': 3,
+  'Technical Interview': 4,
+  'Final Interview': 5,
+  'Accepted': 6,
+  'Rejected': 6,
 };
 
 const normalize = (v) => (v || '')
@@ -25,7 +27,11 @@ async function upsertJobFromParsed(userId, parsed) {
   }
 
   const normalizedCompany = normalize(company);
-  const normalizedRole = normalize(position);
+  const normalizedRole = normalize(position)
+    .replace(/software\s+engineer/gi, 'swe')
+    .replace(/full\s*stack/gi, 'fullstack')
+    .replace(/internship/gi, 'intern')
+    .trim();
 
   let job = await Job.findOne({ userId, normalizedCompany, normalizedRole });
   if (!job) {
@@ -64,9 +70,12 @@ async function upsertJobFromParsed(userId, parsed) {
 
   const hasEmailInHistory = emailId && (job.emailId === emailId || (job.statusHistory || []).some(h => h.emailId === emailId));
   if (emailId && !hasEmailInHistory) {
-    if (!job.emailId) job.emailId = emailId;
-    job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
-    updated = true;
+    if (!job.emailId) { job.emailId = emailId; updated = true; }
+    const willChangeStatus = (incomingRank > currentRank) || (status && status !== job.status);
+    if (willChangeStatus) {
+      job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+      updated = true;
+    }
   } else if (incomingRank > currentRank) {
     // Record status change without duplicating emailId
     job.statusHistory.push({ status: status, at: new Date(), source: 'gmail', subject });

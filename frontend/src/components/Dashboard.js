@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
+// GmailIntegration moved to dedicated import page
 
 export function InternshipDashboard() {
   const [internships, setInternships] = useState([]);
@@ -67,6 +68,9 @@ export function InternshipDashboard() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  // Refresh helper kept for future integrations
+  const handleApplicationsFound = () => {};
 
   const filteredInternships = internships
     .filter(internship => {
@@ -243,7 +247,20 @@ export function InternshipDashboard() {
           </p>
         </div>
 
-        {/* Gmail integration removed */}
+        {/* Gmail Import Widget */}
+        <div className="mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Gmail Import</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">Scan email and add applications</div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate('/import/gmail')}>Open Import Page</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
@@ -448,7 +465,7 @@ export function InternshipDashboard() {
             </div>
           ) : (
             filteredInternships.map((internship) => (
-              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative h-full min-h-[260px] max-h-[260px] flex flex-col">
+              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative h-full min-h-[320px] max-h-[320px] flex flex-col">
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
                   <div className="absolute top-3 left-3 z-10">
@@ -489,6 +506,22 @@ export function InternshipDashboard() {
                       <Calendar className="h-4 w-4 mr-1" />
                       Applied {new Date(internship.dateApplied).toLocaleDateString()}
                     </div>
+                    {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 0 && (() => {
+                      const hist = internship.statusHistory;
+                      const last = hist[hist.length - 1];
+                      const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
+                      // Show only when there is a real change, or when single-entry is a non-Applied status
+                      const isChange = prev && last && last.status !== prev.status;
+                      const isSingleNonApplied = !prev && last && last.status !== 'Applied';
+                      if (!isChange && !isSingleNonApplied) return null;
+                      const when = last.at ? new Date(last.at).toLocaleDateString() : '';
+                      const src = last.source ? ` via ${last.source}` : '';
+                      return (
+                        <div className="text-xs text-muted-foreground">
+                          {`Updated to ${last.status}${when ? ` on ${when}` : ''}${src}`}
+                        </div>
+                      );
+                    })()}
                     {internship.stipend && (
                       <div className="text-sm font-medium text-green-600">
                         {internship.stipend}
@@ -500,7 +533,7 @@ export function InternshipDashboard() {
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2 mt-auto pt-3">
+                  <div className="flex gap-2 mt-auto pt-3 justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -520,6 +553,7 @@ export function InternshipDashboard() {
                     >
                       Edit
                     </Button>
+                    {/* History modal trigger TODO: implement full timeline modal if desired */}
                   </div>
                 </CardContent>
               </Card>
