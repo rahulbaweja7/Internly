@@ -32,6 +32,7 @@ function AddJob() {
     }
 
     try {
+      const csrf = (document.cookie.match(/(?:^|; )csrf=([^;]+)/) || [])[1] || '';
       await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company: formData.company,
         role: formData.position,
@@ -40,6 +41,9 @@ function AddJob() {
         stipend: formData.salary,
         dateApplied: formData.appliedDate,
         notes: formData.notes
+      }, {
+        withCredentials: true,
+        headers: csrf ? { 'X-CSRF-Token': csrf } : {}
       });
       alert("Internship added successfully!");
       navigate("/dashboard");

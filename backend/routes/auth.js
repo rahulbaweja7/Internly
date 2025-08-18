@@ -62,9 +62,11 @@ router.get('/google/callback',
     // Issue JWT in HttpOnly, Secure, SameSite=Lax cookie; no token in URL
     const token = generateToken(req.user);
     const isProd = process.env.NODE_ENV === 'production';
+    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
     const cookieParts = [
       `token=${encodeURIComponent(token)}`,
       `Path=/`,
+      domainPart,
       `HttpOnly`,
       isProd ? `Secure` : '',
       `SameSite=Lax`,
@@ -139,9 +141,11 @@ router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
     // Set JWT cookie
     const token = generateToken(user);
     const isProd = process.env.NODE_ENV === 'production';
+    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
     const cookieParts = [
       `token=${encodeURIComponent(token)}`,
       `Path=/`,
+      domainPart,
       `HttpOnly`,
       isProd ? `Secure` : '',
       `SameSite=Lax`,
@@ -356,9 +360,11 @@ router.put('/me', isAuthenticated, async (req, res) => {
 router.get('/logout', (req, res) => {
   // Clear auth cookie
   const isProd = process.env.NODE_ENV === 'production';
+  const domainPart = process.env.COOKIE_DOMAIN ? 'Domain=' + process.env.COOKIE_DOMAIN : '';
   const cookieParts = [
     'token=;',
     'Path=/',
+    domainPart,
     'HttpOnly',
     isProd ? 'Secure' : '',
     'SameSite=Lax',

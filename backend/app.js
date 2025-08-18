@@ -174,9 +174,11 @@ const regenerateCsrfIfMissing = (req, res, next) => {
   if (!csrfPart) {
     const token = crypto.randomBytes(24).toString('hex');
     const isProd = process.env.NODE_ENV === 'production';
+    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
     const cookieParts = [
       `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}`,
       'Path=/',
+      domainPart,
       // Not HttpOnly so client can read and echo in header
       isProd ? 'Secure' : '',
       'SameSite=Lax',
