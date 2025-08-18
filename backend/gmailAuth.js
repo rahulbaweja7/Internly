@@ -24,7 +24,6 @@ const generateAuthUrl = (state) => {
     include_granted_scopes: true,
     scope: [
       'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.modify',
     ],
     response_type: 'code',
     state,
