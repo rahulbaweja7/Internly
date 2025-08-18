@@ -4,7 +4,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Textarea } from './textarea';
-import { Select, SelectItem } from './select';
+import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from './select';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Navbar } from '../Navbar';
 import axios from 'axios';
@@ -125,11 +125,17 @@ function AddJob() {
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                    <SelectItem value="Applied">Applied</SelectItem>
-                    <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-                    <SelectItem value="Accepted">Accepted</SelectItem>
-                    <SelectItem value="Waitlisted">Waitlisted</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Applied">Applied</SelectItem>
+                      <SelectItem value="Online Assessment">Online Assessment</SelectItem>
+                      <SelectItem value="Interview">Interview</SelectItem>
+                      <SelectItem value="Accepted">Accepted</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                      <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
