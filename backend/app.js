@@ -171,22 +171,26 @@ const regenerateCsrfIfMissing = (req, res, next) => {
   const cookieHeader = req.headers.cookie || '';
   const parts = cookieHeader.split(';').map((p) => p.trim());
   const csrfPart = parts.find((p) => p.startsWith(`${CSRF_COOKIE_NAME}=`));
-  if (!csrfPart) {
-    const token = crypto.randomBytes(24).toString('hex');
-    const isProd = process.env.NODE_ENV === 'production';
-    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
-    const cookieParts = [
-      `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}`,
-      'Path=/',
-      domainPart,
-      // Not HttpOnly so client can read and echo in header
-      isProd ? 'Secure' : '',
-      'SameSite=Lax',
-      'Max-Age=1209600', // 14 days
-    ].filter(Boolean);
-    res.setHeader('Set-Cookie', [...(res.getHeader('Set-Cookie') || []), cookieParts.join('; ')]);
-  }
-  next();
+  const isProd = process.env.NODE_ENV === 'production';
+  const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
+
+  // Reuse existing token if present on the request; otherwise, create a new one
+  const existingToken = csrfPart ? decodeURIComponent(csrfPart.split('=').slice(1).join('=')) : '';
+  const token = existingToken || crypto.randomBytes(24).toString('hex');
+
+  // Always set the CSRF cookie for the configured parent domain so the frontend can read it
+  const cookieParts = [
+    `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}`,
+    'Path=/',
+    domainPart,
+    // Not HttpOnly so client can read and echo in header
+    isProd ? 'Secure' : '',
+    'SameSite=Lax',
+    'Max-Age=1209600', // 14 days
+  ].filter(Boolean);
+  res.setHeader('Set-Cookie', [...(res.getHeader('Set-Cookie') || []), cookieParts.join('; ')]);
+
+  return next();
 };
 
 const verifyCsrf = (req, res, next) => {
