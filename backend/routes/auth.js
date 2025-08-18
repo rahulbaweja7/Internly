@@ -358,19 +358,27 @@ router.put('/me', isAuthenticated, async (req, res) => {
 
 // Logout (JWT: client-side token removal)
 router.get('/logout', (req, res) => {
-  // Clear auth cookie
+  // Clear auth cookies for both host-only and domain-wide scopes
   const isProd = process.env.NODE_ENV === 'production';
-  const domainPart = process.env.COOKIE_DOMAIN ? 'Domain=' + process.env.COOKIE_DOMAIN : '';
-  const cookieParts = [
-    'token=;',
-    'Path=/',
-    domainPart,
-    'HttpOnly',
-    isProd ? 'Secure' : '',
-    'SameSite=Lax',
-    'Max-Age=0'
-  ].filter(Boolean);
-  res.setHeader('Set-Cookie', cookieParts.join('; '));
+  const domainConfigured = process.env.COOKIE_DOMAIN || '';
+
+  const baseAttrs = ['Path=/', 'HttpOnly', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
+
+  const cookiesToSet = [];
+  // 1) Host-only cookie (no Domain attr): clears tokens set without Domain or with host-only scope
+  cookiesToSet.push(['token=;', ...baseAttrs].join('; '));
+  // 2) Domain-wide cookie (Domain=.applycation.net) if configured
+  if (domainConfigured) {
+    cookiesToSet.push(['token=;', `Domain=${domainConfigured}`, ...baseAttrs].join('; '));
+  }
+  // Optionally clear CSRF cookie as well so the client starts fresh
+  const csrfBase = ['Path=/', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
+  cookiesToSet.push(['csrf=;', ...csrfBase].join('; '));
+  if (domainConfigured) {
+    cookiesToSet.push(['csrf=;', `Domain=${domainConfigured}`, ...csrfBase].join('; '));
+  }
+
+  res.setHeader('Set-Cookie', cookiesToSet);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/`);
 });
