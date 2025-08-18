@@ -16,7 +16,6 @@ import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import Contact from './components/Contact';
 import './App.css';
-import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -92,7 +91,6 @@ function App() {
       <AuthProvider>
         <Router>
           <AppRoutes />
-          <VercelAnalytics />
         </Router>
       </AuthProvider>
     </ThemeProvider>
