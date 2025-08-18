@@ -32,6 +32,16 @@ function AddJob() {
     }
 
     try {
+      // Ensure CSRF cookie exists; if missing, perform a safe GET to prime it
+      const hasCsrf = /(?:^|; )csrf=([^;]+)/.test(document.cookie || '');
+      if (!hasCsrf) {
+        try {
+          await axios.get(`${config.API_BASE_URL}/healthz`, { withCredentials: true });
+        } catch (_) {
+          // ignore health check failures; verifyCsrf will still guard POST
+        }
+      }
+
       const csrf = (document.cookie.match(/(?:^|; )csrf=([^;]+)/) || [])[1] || '';
       await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company: formData.company,
