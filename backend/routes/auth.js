@@ -326,6 +326,20 @@ router.get('/me', isAuthenticated, (req, res) => {
   });
 });
 
+// Quick user counts (protected)
+router.get('/stats/users', isAuthenticated, async (req, res) => {
+  try {
+    const total = await User.estimatedDocumentCount();
+    const since = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const last24h = await User.countDocuments({ createdAt: { $gte: since(1) } });
+    const last7d = await User.countDocuments({ createdAt: { $gte: since(7) } });
+    res.json({ total, last24h, last7d });
+  } catch (e) {
+    console.error('User stats error:', e);
+    res.status(500).json({ error: 'Failed to fetch user stats' });
+  }
+});
+
 // Update current user's profile (name/picture)
 router.put('/me', isAuthenticated, async (req, res) => {
   try {

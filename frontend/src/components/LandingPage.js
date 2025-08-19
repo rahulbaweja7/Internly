@@ -164,6 +164,49 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Data Use & Permissions Section (Transparency for OAuth scopes) */}
+      <section className="py-16">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">
+              How Applycation uses your data
+            </h2>
+            <p className="text-muted-foreground">
+              We believe in clear, simple explanations of what we access and why.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+            <div className="p-6 border border-border rounded-lg bg-background/50">
+              <h3 className="font-semibold mb-2">Account information</h3>
+              <p className="text-muted-foreground">
+                We use your name and email to create an account and personalize your experience. You can delete your
+                account at any time in Settings.
+              </p>
+            </div>
+            <div className="p-6 border border-border rounded-lg bg-background/50">
+              <h3 className="font-semibold mb-2">Gmail integration (optional)</h3>
+              <p className="text-muted-foreground">
+                If you choose to connect Gmail, we request read-only access to identify application-related emails and
+                extract metadata like company, role, and dates. We <span className="font-medium text-foreground">do not send email on your behalf</span>, and we don’t store raw email bodies.
+              </p>
+            </div>
+            <div className="p-6 border border-border rounded-lg bg-background/50">
+              <h3 className="font-semibold mb-2">Security</h3>
+              <p className="text-muted-foreground">
+                OAuth tokens are stored securely and can be revoked at any time. All data is encrypted in transit.
+              </p>
+            </div>
+            <div className="p-6 border border-border rounded-lg bg-background/50">
+              <h3 className="font-semibold mb-2">Your control</h3>
+              <p className="text-muted-foreground">
+                Disconnect Gmail or delete your data whenever you like. Learn more in our
+                {' '}<a href="/privacy" className="underline">Privacy Policy</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-6 text-center">
@@ -184,12 +227,17 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-12 bg-muted/30">
         <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <span className="font-semibold text-black dark:text-white">Applycation</span>
             </div>
+            <nav className="flex items-center gap-6 text-sm">
+              <a href="/privacy" className="text-muted-foreground hover:underline">Privacy</a>
+              <a href="/terms" className="text-muted-foreground hover:underline">Terms</a>
+              <a href="/contact" className="text-muted-foreground hover:underline">Contact</a>
+            </nav>
             <p className="text-muted-foreground text-sm">
-              © 2024 Applycation. Built for students, by students.
+              © 2024 Applycation. We use data solely to provide and improve this service.
             </p>
           </div>
         </div>
