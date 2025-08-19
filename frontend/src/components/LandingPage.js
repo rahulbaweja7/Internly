@@ -10,6 +10,13 @@ export function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Mount flag to trigger entrance animations on first paint
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    const r = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+
   // Sections that control the right-side preview
   const sections = [
     {
@@ -54,22 +61,22 @@ export function LandingPage() {
       <Navbar />
 
       {/* Split hero with sticky preview (inspired by [leetr.io](https://www.leetr.io/)) */}
-      <section className="py-1.5 lg:py-4">
+      <section className={`py-1.5 lg:py-4 ${mounted ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
         <div className="container mx-auto px-3 lg:px-6 grid md:grid-cols-[1.15fr_1fr] gap-4 lg:gap-8 items-start">
           {/* Left: headline + CTA */}
-          <div>
+          <div className={`transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground mb-4">
               Your internship companion
             </div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight">
+            <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               Master Your Search,
               <br />
               <GradientText>Land Top Internships</GradientText>
             </h1>
-            <p className="mt-3 text-[15px] text-muted-foreground max-w-lg">
+            <p className={`mt-3 text-[15px] text-muted-foreground max-w-lg ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[360ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               A smarter way to track applications with Gmail import, clean dashboards, and actionable analytics.
             </p>
-            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <div className={`mt-4 flex flex-col sm:flex-row gap-2 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[520ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               {user ? (
                 <>
                   <Button size="lg" onClick={() => navigate('/dashboard')} className="px-5 py-3 text-sm">
@@ -93,14 +100,15 @@ export function LandingPage() {
 
             {/* Scroll story: each section reveals and drives preview state */}
             <div className="mt-4 space-y-3">
-              {sections.map((s) => (
+              {sections.map((s, i) => (
                 <div
                   key={s.id}
                   data-id={s.id}
                   ref={(el) => (refs.current[s.id] = el)}
-                  className={`transition-all duration-500 ${
+                  style={{ transitionDelay: `${520 + i * 170}ms` }}
+                  className={`transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
                     active === s.id ? 'opacity-100 translate-y-0' : 'opacity-60 translate-y-1'
-                  }`}
+                  } ${mounted ? '' : 'opacity-0 translate-y-4'}`}
                 >
                   <div className="flex items-start gap-3">
                     <s.icon className="h-4 w-4 mt-1 text-primary" />
@@ -114,7 +122,7 @@ export function LandingPage() {
             </div>
 
             {/* Trust row directly under the last feature like on leetr */}
-            <div className="mt-4">
+            <div className={`mt-4 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               <div className="my-2 border-top-0 border-t border-border" />
               <div className="mb-2 text-xs text-muted-foreground">Trusted by students and job seekers</div>
               <div className="flex flex-wrap gap-2">
@@ -130,7 +138,7 @@ export function LandingPage() {
           {/* Right: sticky preview – scaled down to fit */}
           <div className="relative hidden md:block">
             <div className="xl:sticky xl:top-3">
-              <div className="md:scale-[0.8] xl:scale-[0.85] origin-top-right drop-shadow-2xl">
+              <div className={`md:scale-[0.8] xl:scale-[0.85] origin-top-right drop-shadow-2xl transition-all duration-[2200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-5 blur-[3px]'} delay-[900ms]`}>
                 <DashboardPreview active={active} />
               </div>
             </div>
@@ -156,15 +164,6 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Stat({ label, value, muted }) {
-  return (
-    <div className="rounded-md border border-border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-xl font-semibold ${muted ? 'text-muted-foreground' : ''}`}>{value}</div>
     </div>
   );
 }
@@ -275,74 +274,6 @@ function MockWindow({ title = '', tag, height, children }) {
       </div>
       <div className="p-3 lg:p-4">{children}</div>
     </div>
-  );
-}
-
-// Very small SVG mock of a Sankey to avoid heavy libs on landing
-function SankeyMini() {
-  // Proportional sankey (clean, minimal)
-  const total = 100;
-  const targets = [
-    { key: 'Applied', value: 60, color: '#60a5fa' },
-    { key: 'Interview', value: 10, color: '#22c55e' },
-    { key: 'Rejected', value: 27, color: '#ef4444' },
-    { key: 'Accepted', value: 3, color: '#f59e0b' },
-  ];
-  const height = 140;
-  const leftX = 18; const rightX = 250;
-  const leftBarW = 14;
-  const pad = 14;
-
-  // Evenly spaced lanes from left, proportional widths
-  const laneY = (i) => pad + (i + 1) * ((height - pad * 2) / (targets.length + 1));
-
-  return (
-    <svg viewBox={`0 0 300 ${height}`} className="w-full h-32">
-      <defs>
-        <filter id="glowSoft" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="0.9" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Left bar & label */}
-      <text x={leftX} y={10} fontSize="10" className="fill-current">Total</text>
-      <rect x={leftX} y={pad} width={leftBarW} height={height - pad * 2} rx="6" fill="#3b82f6" />
-
-      {/* Flows */}
-      <g filter="url(#glowSoft)">
-        {targets.map((t, i) => {
-          const width = 4 + (t.value / total) * 16; // 4..20px
-          const yL = laneY(i);
-          const yR = pad + i * 26 + 18; // stack right labels evenly
-          return (
-            <path
-              key={`f-${t.key}`}
-              d={`M${leftX + leftBarW},${yL} C ${leftX + 110},${yL} ${rightX - 50},${yR} ${rightX - 6},${yR}`}
-              stroke={t.color}
-              strokeWidth={width}
-              strokeLinecap="round"
-              fill="none"
-              opacity="0.9"
-            />
-          );
-        })}
-      </g>
-
-      {/* Right labels with color dots */}
-      {targets.map((t, i) => {
-        const yR = pad + i * 26 + 18;
-        return (
-          <g key={`n-${t.key}`}>
-            <circle cx={rightX} cy={yR} r="4" fill={t.color} />
-            <text x={rightX + 8} y={yR + 3} fontSize="10" className="fill-current">{t.key} ({t.value})</text>
-          </g>
-        );
-      })}
-    </svg>
   );
 }
 
