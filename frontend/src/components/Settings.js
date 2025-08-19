@@ -3,7 +3,7 @@ import { Navbar } from './Navbar';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import config from '../config/config';
-import { User, Shield, Plug, Database, CreditCard } from 'lucide-react';
+import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2 } from 'lucide-react';
 import { GmailIntegration } from './GmailIntegration';
 
 export default function Settings() {
@@ -149,6 +149,23 @@ export default function Settings() {
                       </button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">Use up to 32 characters.</p>
+
+                    <div className="mt-5">
+                      <label className="text-xs uppercase text-muted-foreground">Connected email</label>
+                      <div className="mt-1 flex items-center gap-3">
+                        <input
+                          value={user?.email || ''}
+                          readOnly
+                          className="flex-1 h-10 rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground"
+                        />
+                        {user?.isEmailVerified ? (
+                          <span className="text-xs text-green-600">Verified</span>
+                        ) : (
+                          <span className="text-xs text-yellow-600">Unverified</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">This is the email linked to your account.</p>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">
@@ -181,17 +198,63 @@ export default function Settings() {
           )}
 
           {active === 'privacy' && (
-            <section className="grid gap-4 md:grid-cols-2">
-              <a href="/privacy" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
-                <h3 className="text-lg font-semibold mb-1">Privacy Policy</h3>
-                <p className="text-sm text-muted-foreground">Understand how we collect, use, and protect your information.</p>
-                <div className="mt-4 inline-flex items-center text-sm">Privacy →</div>
-              </a>
-              <a href="/terms" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
-                <h3 className="text-lg font-semibold mb-1">Terms of Service</h3>
-                <p className="text-sm text-muted-foreground">Your rights and responsibilities when using the platform.</p>
-                <div className="mt-4 inline-flex items-center text-sm">Terms →</div>
-              </a>
+            <section className="grid gap-4">
+              <div className="rounded-md border border-input bg-background p-6">
+                <h3 className="text-lg font-semibold mb-1">Export applications</h3>
+                <p className="text-sm text-muted-foreground mb-3">Download your data as JSON.</p>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 h-10 rounded-md px-4 text-sm bg-black text-white dark:bg-white dark:text-black"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${config.API_BASE_URL}/api/auth/export`, { credentials: 'include' });
+                      if (!res.ok) throw new Error('Export failed');
+                      const text = await res.text();
+                      const blob = new Blob([text], { type: 'application/json' });
+                      const href = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = href; a.download = 'internly-export.json';
+                      document.body.appendChild(a); a.click(); a.remove();
+                      window.URL.revokeObjectURL(href);
+                    } catch (_) { /* noop */ }
+                  }}
+                >
+                  <FileDown className="h-4 w-4" /> Export JSON
+                </button>
+              </div>
+
+              <div className="rounded-md border border-input bg-background p-6">
+                <h3 className="text-lg font-semibold mb-1 text-red-600">Delete account</h3>
+                <p className="text-sm text-muted-foreground mb-3">Permanently remove your account and data.</p>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 h-10 rounded-md px-4 text-sm border border-input text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                  onClick={async () => {
+                    if (!window.confirm('This will permanently delete your account and all data. Continue?')) return;
+                    try {
+                      const res = await fetch(`${config.API_BASE_URL}/api/auth/delete`, { method: 'DELETE', credentials: 'include' });
+                      if (!res.ok) throw new Error('Delete failed');
+                      localStorage.removeItem('user');
+                      window.location.href = '/';
+                    } catch (_) { /* noop */ }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete Account
+                </button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <a href="/privacy" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
+                  <h3 className="text-lg font-semibold mb-1">Privacy Policy</h3>
+                  <p className="text-sm text-muted-foreground">Understand how we collect, use, and protect your information.</p>
+                  <div className="mt-4 inline-flex items-center text-sm">Privacy →</div>
+                </a>
+                <a href="/terms" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
+                  <h3 className="text-lg font-semibold mb-1">Terms of Service</h3>
+                  <p className="text-sm text-muted-foreground">Your rights and responsibilities when using the platform.</p>
+                  <div className="mt-4 inline-flex items-center text-sm">Terms →</div>
+                </a>
+              </div>
             </section>
           )}
 

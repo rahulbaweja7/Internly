@@ -158,10 +158,13 @@ passport.deserializeUser(async (id, done) => {
 // Routes
 const authRoutes = require('./routes/auth');
 const gmailRoutes = require('./routes/gmail');
+// Friends/Leaderboard temporarily disabled
 const { isAuthenticated } = require('./middleware/auth');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/gmail', gmailRoutes);
+// app.use('/api/friends', friendsRoutes);
+// app.use('/api/leaderboard', leaderboardRoutes);
 
 // Lightweight CSRF protection (double-submit cookie):
 // - Server issues a non-HttpOnly `csrf` cookie with a random token

@@ -17,8 +17,14 @@ export const ThemeProvider = ({ children }) => {
     if (saved !== null) {
       return JSON.parse(saved);
     }
-    // Check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Check system preference (guard for non-browser/test envs)
+    try {
+      const hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+      const mql = hasMatchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      return !!(mql && typeof mql.matches === 'boolean' ? mql.matches : false);
+    } catch (_) {
+      return false;
+    }
   });
 
   const toggleDarkMode = () => {
@@ -49,6 +55,8 @@ export const ThemeProvider = ({ children }) => {
 
   // Listen for system theme changes
   useEffect(() => {
+    const hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+    if (!hasMatchMedia) return undefined;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
       // Only update if user hasn't manually set a preference
@@ -57,8 +65,16 @@ export const ThemeProvider = ({ children }) => {
       }
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+    // Fallback for older browsers
+    if (mediaQuery && typeof mediaQuery.addListener === 'function') {
+      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
+    }
+    return undefined;
   }, []);
 
   const value = {

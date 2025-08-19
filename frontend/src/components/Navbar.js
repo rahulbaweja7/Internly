@@ -17,7 +17,6 @@ import {
   BarChart3,
   TrendingUp,
   Search,
-  Settings as SettingsIcon,
   Clock,
   Mail
 } from 'lucide-react';
@@ -295,6 +294,8 @@ export function Navbar() {
             Analytics
           </Button>
 
+          {/* Friends and Leaderboards removed */}
+
           {isAuthenticated && (
             <div className="hidden md:inline-flex">
               <div className="min-w-[64px]">
@@ -344,15 +345,11 @@ export function Navbar() {
                   className="absolute right-0 top-10 z-[10000] w-48 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1"
                 >
                   
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate('/settings');
-                    }}
-                    role="menuitem"
-                  >
-                    <SettingsIcon className="h-4 w-4" />
+                  <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => { setIsUserMenuOpen(false); navigate('/profile'); }} role="menuitem">
+                    <User className="h-4 w-4" /> Profile
+                  </button>
+                  <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => { setIsUserMenuOpen(false); navigate('/settings'); }} role="menuitem">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.26 1.3.73 1.77.47.47 1.11.73 1.77.73h.09a2 2 0 1 1 0 4h-.09c-.66 0-1.3.26-1.77.73-.47.47-.73 1.11-.73 1.77Z"/></svg>
                     Settings
                   </button>
                   <button
