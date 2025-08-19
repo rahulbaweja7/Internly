@@ -1,4 +1,3 @@
-import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -11,8 +10,10 @@ import Dashboard from './components/Dashboard';
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
 import Settings from './components/Settings';
+import Profile from './components/Profile';
 import ImportGmail from './components/ImportGmail';
 import Activity from './components/Activity';
+// Friends/Leaderboards removed
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import Contact from './components/Contact';
@@ -52,8 +53,11 @@ function AppRoutes() {
           <Dashboard />
         </ProtectedRoute>
       } />
-      {/* Keep legacy /profile route to redirect to settings profile tab */}
-      <Route path="/profile" element={<Navigate to="/settings?tab=profile" replace />} />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
       <Route path="/add" element={
         <ProtectedRoute>
           <AddJob />
@@ -72,6 +76,7 @@ function AppRoutes() {
           <Settings />
         </ProtectedRoute>
       } />
+      {/* Friends and Leaderboards routes removed */}
       <Route path="/import/gmail" element={
         <ProtectedRoute>
           <ImportGmail />
@@ -92,7 +97,7 @@ function App() {
       <AuthProvider>
         <Router>
           <AppRoutes />
-          <VercelAnalytics />
+          <AnalyticsOptIn />
         </Router>
       </AuthProvider>
     </ThemeProvider>
@@ -100,3 +105,18 @@ function App() {
 }
 
 export default App;
+
+// Dynamically load Vercel Analytics only in production so tests/dev do not fail if entrypoint changes
+const AnalyticsOptIn = React.memo(() => {
+  const [Component, setComponent] = React.useState(null);
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      import('@vercel/analytics/react')
+        .then((mod) => setComponent(() => mod.Analytics))
+        .catch(() => setComponent(null));
+    }
+  }, []);
+
+  return Component ? <Component /> : null;
+});

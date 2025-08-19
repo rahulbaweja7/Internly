@@ -21,7 +21,7 @@ function getColorClass(count, maxCount) {
   return 'bg-green-700 dark:bg-green-600';
 }
 
-export default function ContributionHeatmap({ internships }) {
+export default function ContributionHeatmap({ internships, weeksToShow = 53 }) {
   // Count applications per local date (YYYY-MM-DD)
   const { countByDate, maxCount } = useMemo(() => {
     const map = new Map();
@@ -38,7 +38,7 @@ export default function ContributionHeatmap({ internships }) {
     return { countByDate: map, maxCount: max };
   }, [internships]);
 
-  // Build up to 53 weeks of data ending today, start aligned to Sunday like GitHub
+  // Build a limited number of weeks ending today, start aligned to Sunday like GitHub
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -47,15 +47,16 @@ export default function ContributionHeatmap({ internships }) {
 
   const start = useMemo(() => {
     const s = new Date(today);
-    s.setDate(s.getDate() - 7 * 53);
+    s.setDate(s.getDate() - 7 * Math.max(1, Math.min(53, weeksToShow)));
     s.setDate(s.getDate() - s.getDay());
     return s;
-  }, [today]);
+  }, [today, weeksToShow]);
 
   const weeks = useMemo(() => {
     const out = [];
     let cursor = new Date(start);
-    for (let w = 0; w < 53; w += 1) {
+    const count = Math.max(1, Math.min(53, weeksToShow));
+    for (let w = 0; w < count; w += 1) {
       const week = [];
       for (let i = 0; i < 7; i += 1) {
         const dateStr = formatYmd(cursor);
@@ -69,7 +70,7 @@ export default function ContributionHeatmap({ internships }) {
       out.push(week);
     }
     return out;
-  }, [start, countByDate]);
+  }, [start, countByDate, weeksToShow]);
 
   // Month labels for the top (label a week when it begins a new month)
   const monthLabels = [];
