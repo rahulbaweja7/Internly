@@ -86,7 +86,7 @@ export function Login() {
             </h2>
             
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto lg:mx-0">
-              Manage your internship applications, track your progress, and land your dream job with our intelligent career tracker.
+              Manage your internship applications, track your progress, and land your dream job with our intelligent application tracker.
             </p>
           </div>
 

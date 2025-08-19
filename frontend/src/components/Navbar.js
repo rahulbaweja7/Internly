@@ -159,7 +159,7 @@ export function Navbar() {
               <span className="font-bold text-xl text-black dark:text-white">
                 Applycation
               </span>
-              <p className="text-xs text-gray-500 -mt-1">Career Tracker</p>
+              <p className="text-xs text-gray-500 -mt-1">Application Tracker</p>
             </div>
           </div>
           

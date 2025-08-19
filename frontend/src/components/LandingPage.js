@@ -2,232 +2,148 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowRight, BarChart3, Search, Bell, Users, TrendingUp } from 'lucide-react';
+import { ArrowRight, Search, Bell, TrendingUp, Users as UsersIcon, ShieldCheck, MailCheck, Lock, Github } from 'lucide-react';
+import SankeyMiniChart from './SankeyMiniChart';
 import { Navbar } from './Navbar';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const features = [
+
+  // Sections that control the right-side preview
+  const sections = [
     {
-      icon: Search,
-      title: "Track Applications",
-      description: "Keep track of all your internship applications in one organized dashboard"
-    },
-    {
-      icon: BarChart3,
-      title: "Visual Analytics",
-      description: "Get insights on your application success rate and interview progress"
-    },
-    {
-      icon: Search,
-      title: "Smart Search",
-      description: "Quickly find applications by company, position, or location"
-    },
-    {
+      id: 'import',
+      title: 'Import from Gmail in 30 seconds',
+      description: 'Connect once. We scan subject lines to auto-create applications with dates and companies.',
       icon: Bell,
-      title: "Status Updates",
-      description: "Track application status from applied to offer with visual indicators"
     },
     {
-      icon: Users,
-      title: "Company Insights",
-      description: "Store notes and track communication with potential employers"
+      id: 'organize',
+      title: 'Organize everything in one dashboard',
+      description: 'Statuses, notes, and dates at a glance. Search and update without losing context.',
+      icon: Search,
     },
     {
+      id: 'insights',
+      title: 'See trends and act faster',
+      description: 'Week-over-week charts and streaks keep you moving. Spot bottlenecks instantly.',
       icon: TrendingUp,
-      title: "Progress Tracking",
-      description: "Monitor your internship search progress over time"
-    }
+    },
   ];
 
-  // Stats section removed; no stats displayed on landing page
+  const [active, setActive] = React.useState(sections[0].id);
+  const refs = React.useRef({});
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.getAttribute('data-id'));
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: [0.25, 0.5, 0.75] }
+    );
+    Object.values(refs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="py-20 lg:py-32">
-        <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-6 text-black dark:text-white">
-            Applycation
-          </h1>
-          <p className="mb-8 text-muted-foreground">Free Internship Tracking Platform</p>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Stay organized and increase your chances of landing the perfect internship. 
-            Track applications, manage deadlines, and monitor your progress all in one place.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {user ? (
-              <>
-                <Button size="lg" onClick={() => navigate('/dashboard')} className="text-lg px-8 py-6">
-                  Go to Dashboard
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('/add')} className="text-lg px-8 py-6">
-                  Add New Application
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button size="lg" onClick={() => navigate('/register')} className="text-lg px-8 py-6">
-                  Start Tracking Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="text-lg px-8 py-6">
-                  Sign In
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section removed as requested */}
-
-      {/* Features Section */}
-      <section className="pt-8 pb-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Everything You Need to Land Your Dream Internship
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our comprehensive platform provides all the tools you need to organize, 
-              track, and optimize your internship search process.
+      {/* Split hero with sticky preview (inspired by [leetr.io](https://www.leetr.io/)) */}
+      <section className="py-1.5 lg:py-4">
+        <div className="container mx-auto px-3 lg:px-6 grid md:grid-cols-[1.15fr_1fr] gap-4 lg:gap-8 items-start">
+          {/* Left: headline + CTA */}
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground mb-4">
+              Your internship companion
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight">
+              Master Your Search,
+              <br />
+              <GradientText>Land Top Internships</GradientText>
+            </h1>
+            <p className="mt-3 text-[15px] text-muted-foreground max-w-lg">
+              A smarter way to track applications with Gmail import, clean dashboards, and actionable analytics.
             </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-border hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
+            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+              {user ? (
+                <>
+                  <Button size="lg" onClick={() => navigate('/dashboard')} className="px-5 py-3 text-sm">
+                    Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button size="lg" variant="outline" onClick={() => navigate('/add')} className="px-5 py-3 text-sm">
+                    Add Application
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="lg" onClick={() => navigate('/register')} className="px-5 py-3 text-sm">
+                    Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="px-5 py-3 text-sm">
+                    Sign In
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Scroll story: each section reveals and drives preview state */}
+            <div className="mt-4 space-y-3">
+              {sections.map((s) => (
+                <div
+                  key={s.id}
+                  data-id={s.id}
+                  ref={(el) => (refs.current[s.id] = el)}
+                  className={`transition-all duration-500 ${
+                    active === s.id ? 'opacity-100 translate-y-0' : 'opacity-60 translate-y-1'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <s.icon className="h-4 w-4 mt-1 text-primary" />
+                    <div>
+                      <h3 className="text-lg font-semibold">{s.title}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground max-w-prose">{s.description}</p>
+                    </div>
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  <CardDescription className="text-base">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                </div>
+              ))}
+            </div>
 
-      {/* How It Works Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Simple Steps to Success
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Get started in minutes and transform your internship search
-            </p>
+            {/* Trust row directly under the last feature like on leetr */}
+            <div className="mt-4">
+              <div className="my-2 border-top-0 border-t border-border" />
+              <div className="mb-2 text-xs text-muted-foreground">Trusted by students and job seekers</div>
+              <div className="flex flex-wrap gap-2">
+                <TrustPill icon={<UsersIcon className="h-4 w-4" />} text="1,000+ users" />
+                <TrustPill icon={<ShieldCheck className="h-4 w-4" />} text="Privacy‑first" />
+                <TrustPill icon={<MailCheck className="h-4 w-4" />} text="Read‑only Gmail access" />
+                <TrustPill icon={<Lock className="h-4 w-4" />} text="Secure by design" />
+                <TrustPill icon={<Github className="h-4 w-4" />} text="Open‑source core" />
+              </div>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl mx-auto mb-6">
-                1
+
+          {/* Right: sticky preview – scaled down to fit */}
+          <div className="relative hidden md:block">
+            <div className="xl:sticky xl:top-3">
+              <div className="md:scale-[0.8] xl:scale-[0.85] origin-top-right drop-shadow-2xl">
+                <DashboardPreview active={active} />
               </div>
-              <h3 className="text-xl font-semibold mb-4">Add Applications</h3>
-              <p className="text-muted-foreground">
-                Input your internship applications with company details, positions, and deadlines
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl mx-auto mb-6">
-                2
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Track Progress</h3>
-              <p className="text-muted-foreground">
-                Update application status and add notes as you progress through the process
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl mx-auto mb-6">
-                3
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Land Your Dream Job</h3>
-              <p className="text-muted-foreground">
-                Stay organized and increase your chances of securing the perfect internship
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Data Use & Permissions Section (Transparency for OAuth scopes) */}
-      <section className="py-16">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-3">
-              How Applycation uses your data
-            </h2>
-            <p className="text-muted-foreground">
-              We believe in clear, simple explanations of what we access and why.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <div className="p-6 border border-border rounded-lg bg-background/50">
-              <h3 className="font-semibold mb-2">Account information</h3>
-              <p className="text-muted-foreground">
-                We use your name and email to create an account and personalize your experience. You can delete your
-                account at any time in Settings.
-              </p>
-            </div>
-            <div className="p-6 border border-border rounded-lg bg-background/50">
-              <h3 className="font-semibold mb-2">Gmail integration (optional)</h3>
-              <p className="text-muted-foreground">
-                If you choose to connect Gmail, we request read-only access to identify application-related emails and
-                extract metadata like company, role, and dates. We <span className="font-medium text-foreground">do not send email on your behalf</span>, and we don’t store raw email bodies.
-              </p>
-            </div>
-            <div className="p-6 border border-border rounded-lg bg-background/50">
-              <h3 className="font-semibold mb-2">Security</h3>
-              <p className="text-muted-foreground">
-                OAuth tokens are stored securely and can be revoked at any time. All data is encrypted in transit.
-              </p>
-            </div>
-            <div className="p-6 border border-border rounded-lg bg-background/50">
-              <h3 className="font-semibold mb-2">Your control</h3>
-              <p className="text-muted-foreground">
-                Disconnect Gmail or delete your data whenever you like. Learn more in our
-                {' '}<a href="/privacy" className="underline">Privacy Policy</a>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-            Ready to Organize Your Internship Search?
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of students who have successfully tracked their applications 
-            and landed amazing internships.
-          </p>
-          <Button size="lg" onClick={() => navigate('/dashboard')} className="text-lg px-8 py-6">
-            Get Started for Free
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </div>
-      </section>
+      {/* Trust row moved inside hero (above). Keeping section removed to avoid duplication */}
 
       {/* Footer */}
-      <footer className="border-t border-border py-12 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <footer className="border-t border-border py-8 bg-muted/30">
+        <div className="container mx-auto px-5">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center space-x-2">
               <span className="font-semibold text-black dark:text-white">Applycation</span>
             </div>
@@ -236,12 +152,239 @@ export function LandingPage() {
               <a href="/terms" className="text-muted-foreground hover:underline">Terms</a>
               <a href="/contact" className="text-muted-foreground hover:underline">Contact</a>
             </nav>
-            <p className="text-muted-foreground text-sm">
-              © 2024 Applycation. We use data solely to provide and improve this service.
-            </p>
+            <p className="text-muted-foreground text-xs">© 2024 Applycation.</p>
           </div>
         </div>
       </footer>
     </div>
   );
-} 
+}
+
+function Stat({ label, value, muted }) {
+  return (
+    <div className="rounded-md border border-border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={`text-xl font-semibold ${muted ? 'text-muted-foreground' : ''}`}>{value}</div>
+    </div>
+  );
+}
+
+function DashboardPreview({ active }) {
+  return (
+    <div className="space-y-6">
+      {/* Unified: Dashboard + Connect Gmail */}
+      <MockWindow title="Dashboard" tag="Preview">
+        <div className="space-y-4">
+          {/* Gmail connected & scan – first */}
+          <div className="rounded-lg border border-dashed p-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <span className="text-sm text-emerald-400">Gmail connected</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-md border p-3">
+                <div className="text-xs text-muted-foreground">Gmail scanned</div>
+                <button className="mt-2 text-xs px-3 py-1 rounded-md border border-border hover:bg-muted/30">Scan mail</button>
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="text-xs text-muted-foreground">Detected applications</div>
+                <div className="text-2xl font-semibold">23</div>
+              </div>
+            </div>
+          </div>
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg border border-border bg-emerald-500/10 p-3">
+              <div className="text-xs text-emerald-300">Applied</div>
+              <div className="text-2xl font-semibold text-emerald-200">42</div>
+            </div>
+            <div className="rounded-lg border border-border bg-amber-500/10 p-3">
+              <div className="text-xs text-amber-300">Interview</div>
+              <div className="text-2xl font-semibold text-amber-200">7</div>
+            </div>
+            <div className="rounded-lg border border-border bg-rose-500/10 p-3">
+              <div className="text-xs text-rose-300">Rejected</div>
+              <div className="text-2xl font-semibold text-rose-200">27</div>
+            </div>
+          </div>
+          {/* Application row with Add button */}
+          <div className="rounded-md border p-3">
+            <div className="flex items-center justify-between text-sm">
+              <div className="font-medium truncate">Software Engineer Intern – Google</div>
+              <div className="flex items-center gap-2">
+                <button className="text-xs px-3 py-1 rounded-md border border-border hover:bg-muted/30">Add</button>
+                <span className="text-xs rounded-full bg-emerald-600/15 text-emerald-500 px-2 py-0.5">Applied</span>
+              </div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">Applied 2d ago • SF, CA</div>
+          </div>
+        </div>
+      </MockWindow>
+
+      {/* Mini Analytics */}
+      <MockWindow title="Analytics" tag="Preview">
+        <div className="space-y-2">
+          <div className="rounded-md border p-2">
+            <SankeyMiniChart />
+            <div className="mt-2 text-xs text-muted-foreground">Application status flow</div>
+          </div>
+          <div className="rounded-md border p-2">
+            <HeatmapMini fullWidth={true} compact={true} />
+            <div className="mt-1 text-[10px] text-muted-foreground">Daily activity (last months)</div>
+          </div>
+        </div>
+      </MockWindow>
+
+      {/* Import preview merged into Dashboard */}
+    </div>
+  );
+}
+
+function TrustPill({ icon, text }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full bg-muted/30 px-4 py-2 text-sm text-foreground border border-border">
+      {icon}
+      <span>{text}</span>
+    </div>
+  );
+}
+
+// Gradient helper used in headline
+function GradientText({ children }) {
+  return (
+    <span className="bg-gradient-to-r from-[#8ab4ff] via-[#c084fc] to-[#a78bfa] bg-clip-text text-transparent">
+      {children}
+    </span>
+  );
+}
+
+// Mock window chromes like the leetr card (rounded frame + dots and title)
+function MockWindow({ title = '', tag, height, children }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/20">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+          <span className="ml-3 text-xs text-muted-foreground">{title}</span>
+        </div>
+        {tag && (
+          <span className="text-xs bg-muted/40 px-2 py-0.5 rounded-full">{tag}</span>
+        )}
+      </div>
+      <div className="p-3 lg:p-4">{children}</div>
+    </div>
+  );
+}
+
+// Very small SVG mock of a Sankey to avoid heavy libs on landing
+function SankeyMini() {
+  // Proportional sankey (clean, minimal)
+  const total = 100;
+  const targets = [
+    { key: 'Applied', value: 60, color: '#60a5fa' },
+    { key: 'Interview', value: 10, color: '#22c55e' },
+    { key: 'Rejected', value: 27, color: '#ef4444' },
+    { key: 'Accepted', value: 3, color: '#f59e0b' },
+  ];
+  const height = 140;
+  const leftX = 18; const rightX = 250;
+  const leftBarW = 14;
+  const pad = 14;
+
+  // Evenly spaced lanes from left, proportional widths
+  const laneY = (i) => pad + (i + 1) * ((height - pad * 2) / (targets.length + 1));
+
+  return (
+    <svg viewBox={`0 0 300 ${height}`} className="w-full h-32">
+      <defs>
+        <filter id="glowSoft" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="0.9" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* Left bar & label */}
+      <text x={leftX} y={10} fontSize="10" className="fill-current">Total</text>
+      <rect x={leftX} y={pad} width={leftBarW} height={height - pad * 2} rx="6" fill="#3b82f6" />
+
+      {/* Flows */}
+      <g filter="url(#glowSoft)">
+        {targets.map((t, i) => {
+          const width = 4 + (t.value / total) * 16; // 4..20px
+          const yL = laneY(i);
+          const yR = pad + i * 26 + 18; // stack right labels evenly
+          return (
+            <path
+              key={`f-${t.key}`}
+              d={`M${leftX + leftBarW},${yL} C ${leftX + 110},${yL} ${rightX - 50},${yR} ${rightX - 6},${yR}`}
+              stroke={t.color}
+              strokeWidth={width}
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.9"
+            />
+          );
+        })}
+      </g>
+
+      {/* Right labels with color dots */}
+      {targets.map((t, i) => {
+        const yR = pad + i * 26 + 18;
+        return (
+          <g key={`n-${t.key}`}>
+            <circle cx={rightX} cy={yR} r="4" fill={t.color} />
+            <text x={rightX + 8} y={yR + 3} fontSize="10" className="fill-current">{t.key} ({t.value})</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// Minimal heatmap grid preview
+function HeatmapMini({ fullWidth = false, compact = false }) {
+  const cols = 28; const rows = 7;
+  const cells = Array.from({ length: rows * cols });
+  const monthAbbr = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'];
+  return (
+    <div className={fullWidth ? 'w-full' : ''}>
+      {/* Month labels (approx every 4 cols) */}
+      <div className={`flex text-muted-foreground mb-1 ml-6 ${compact ? '' : ''}`} style={{ fontSize: compact ? '8px' : '9px', gap: compact ? 12 : 14 }}>
+        {monthAbbr.map((m, i) => (
+          <span key={m+i} style={{ width: compact ? 26 : 28 }}>{m}</span>
+        ))}
+      </div>
+      <div className="flex">
+        {/* Day labels */}
+        <div className="flex flex-col justify-between mr-2 text-muted-foreground" style={{ fontSize: compact ? '8px' : '9px' }}>
+          <span>Mon</span>
+          <span>Wed</span>
+          <span>Fri</span>
+        </div>
+        <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(${compact ? 7 : 8}px, 1fr))`, gap: `${compact ? 3 : 4}px` }}>
+          {cells.map((_, i) => {
+            const intensity = (i * 37) % 5; // pseudo-random
+            const shades = ['#1f2937', '#10b98122', '#10b98155', '#10b98188', '#10b981cc'];
+            return <div key={i} className={compact ? 'h-[7px] rounded-[2px]' : 'h-[8px] rounded-[2px]'} style={{ background: shades[intensity] }} />;
+          })}
+        </div>
+      </div>
+      <div className="flex items-center justify-between mt-2 px-1 text-muted-foreground" style={{ fontSize: compact ? '9px' : '10px' }}>
+        <span>Less</span>
+        <div className="flex gap-1">
+          <span className="h-2 w-2 rounded-sm bg-[#1f2937]" />
+          <span className="h-2 w-2 rounded-sm bg-[#10b98122]" />
+          <span className="h-2 w-2 rounded-sm bg-[#10b98155]" />
+          <span className="h-2 w-2 rounded-sm bg-[#10b98188]" />
+          <span className="h-2 w-2 rounded-sm bg-[#10b981cc]" />
+        </div>
+        <span>More</span>
+      </div>
+    </div>
+  );
+}
