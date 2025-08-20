@@ -11,6 +11,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export default function ImportGmail() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function ImportGmail() {
   const page = Math.max(1, parseInt(params.get('page') || '1', 10));
   const [editing, setEditing] = useState(null);
   const [layout, setLayout] = useState(() => (params.get('layout') === 'grid' ? 'grid' : 'list'));
+  const [jumpPage, setJumpPage] = useState('');
 
   const storageKey = (suffix) => {
     const uid = (user?.id || user?._id || 'default').toString();
@@ -183,8 +185,8 @@ export default function ImportGmail() {
   }, [showAll, query, layout]);
 
   const SkeletonCard = () => (
-    <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/70 to-background/30 backdrop-blur animate-pulse">
-      <CardContent className="p-4">
+    <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/70 to-background/30 backdrop-blur animate-pulse h-full">
+      <CardContent className="p-4 min-h-[140px]">
         <div className="h-4 w-40 bg-muted/40 rounded mb-2" />
         <div className="h-3 w-28 bg-muted/30 rounded mb-1" />
         <div className="h-3 w-32 bg-muted/20 rounded" />
@@ -266,14 +268,14 @@ export default function ImportGmail() {
               {!loading && pageItems.map((a) => {
                 const already = jobsEmailIds.has(a.emailId);
                 return (
-                  <Card key={a.emailId} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
+                  <Card key={a.emailId} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur h-full">
+                    <CardContent className="p-4 min-h-[140px] h-full flex flex-col">
+                      <div className="flex items-start justify-between gap-3 flex-1">
                         <div>
-                          <div className="font-medium">{a.position || 'Unknown Position'}</div>
-                          <div className="text-sm text-muted-foreground">{a.company || 'Unknown Company'}</div>
+                          <div className="font-medium clamp-1">{a.position || 'Unknown Position'}</div>
+                          <div className="text-sm text-muted-foreground clamp-1">{a.company || 'Unknown Company'}</div>
                           <div className="text-xs text-muted-foreground">Applied: {new Date(a.appliedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}</div>
-                          {a.subject && <div className="text-xs text-muted-foreground mt-1 line-clamp-1">Subject: {a.subject}</div>}
+                          {a.subject && <div className="text-xs text-muted-foreground mt-1 clamp-1">Subject: {a.subject}</div>}
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
                           <Button size="sm" variant="outline" onClick={() => setEditing(a)}>
@@ -286,22 +288,39 @@ export default function ImportGmail() {
                           )}
                         </div>
                       </div>
+                      {/* Spacer to ensure consistent bottom padding */}
+                      <div className="mt-2" />
                     </CardContent>
                   </Card>
                 );
               })}
 
               {/* Pagination */}
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {start + 1}-{Math.min(start + pageSize, filtered.length)} of {filtered.length}
+                  Showing <span className="text-foreground font-medium">{start + 1}-{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1}>First</Button>
-                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1}>Prev</Button>
-                  <div className="text-sm px-2">Page {currentPage} / {totalPages}</div>
-                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages}>Next</Button>
-                  <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={currentPage >= totalPages}>Last</Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronsLeft className="h-4 w-4"/></Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronLeft className="h-4 w-4"/></Button>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>Page</span>
+                    <input
+                      className="w-12 h-8 rounded-md border border-input bg-background px-2 text-center text-sm"
+                      value={jumpPage}
+                      onChange={(e) => setJumpPage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const n = parseInt(jumpPage, 10);
+                          if (!isNaN(n)) setPage(n);
+                        }
+                      }}
+                      placeholder={String(currentPage)}
+                    />
+                    <span>/ {totalPages}</span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronRight className="h-4 w-4"/></Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronsRight className="h-4 w-4"/></Button>
                 </div>
               </div>
             </div>
