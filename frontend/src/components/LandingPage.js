@@ -69,9 +69,9 @@ export function LandingPage() {
               Your internship companion
             </div>
             <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
-              Master Your Search,
+              From Apply to Accepted,
               <br />
-              <GradientText>Land Top Internships</GradientText>
+              <GradientText>Track Your Job</GradientText>
             </h1>
             <p className={`mt-3 text-[15px] text-muted-foreground max-w-lg ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[360ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               A smarter way to track applications with Gmail import, clean dashboards, and actionable analytics.
@@ -99,7 +99,7 @@ export function LandingPage() {
             </div>
 
             {/* Scroll story: each section reveals and drives preview state */}
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 space-y-4">
               {sections.map((s, i) => (
                 <div
                   key={s.id}
@@ -122,9 +122,9 @@ export function LandingPage() {
             </div>
 
             {/* Trust row directly under the last feature like on leetr */}
-            <div className={`mt-4 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
-              <div className="my-2 border-top-0 border-t border-border" />
-              <div className="mb-2 text-xs text-muted-foreground">Trusted by students and job seekers</div>
+            <div className={`mt-6 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
+              <div className="my-3 border-top-0 border-t border-border" />
+              <div className="mb-3 text-xs text-muted-foreground">Trusted by students and job seekers</div>
               <div className="flex flex-wrap gap-2">
                 <TrustPill icon={<UsersIcon className="h-4 w-4" />} text="1,000+ users" />
                 <TrustPill icon={<ShieldCheck className="h-4 w-4" />} text="Privacy‑first" />

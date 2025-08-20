@@ -26,6 +26,7 @@ export default function ImportGmail() {
   const pageSize = 25;
   const page = Math.max(1, parseInt(params.get('page') || '1', 10));
   const [editing, setEditing] = useState(null);
+  const [layout, setLayout] = useState(() => (params.get('layout') === 'grid' ? 'grid' : 'list'));
 
   const storageKey = (suffix) => {
     const uid = (user?.id || user?._id || 'default').toString();
@@ -117,6 +118,7 @@ export default function ImportGmail() {
       old.set('page', String(next));
       if (showAll) old.set('all', '1'); else old.delete('all');
       if (query) old.set('q', query); else old.delete('q');
+      if (layout === 'grid') old.set('layout', 'grid'); else old.delete('layout');
       return old;
     });
   };
@@ -174,10 +176,21 @@ export default function ImportGmail() {
       if (showAll) old.set('all', '1'); else old.delete('all');
       if (query) old.set('q', query); else old.delete('q');
       if (!old.get('page')) old.set('page', '1');
+      if (layout === 'grid') old.set('layout', 'grid'); else old.delete('layout');
       return old;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAll, query]);
+  }, [showAll, query, layout]);
+
+  const SkeletonCard = () => (
+    <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/70 to-background/30 backdrop-blur animate-pulse">
+      <CardContent className="p-4">
+        <div className="h-4 w-40 bg-muted/40 rounded mb-2" />
+        <div className="h-3 w-28 bg-muted/30 rounded mb-1" />
+        <div className="h-3 w-32 bg-muted/20 rounded" />
+      </CardContent>
+    </Card>
+  );
 
   return (
     <>
@@ -185,18 +198,34 @@ export default function ImportGmail() {
       <Navbar />
       <div className="h-16" />
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold">Import from Gmail</h1>
-          <Button variant="outline" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border" />
+            <div>
+              <h1 className="text-3xl font-bold">Import from Gmail</h1>
+              <p className="text-muted-foreground">Scan your mailbox to add jobs in seconds</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="inline-flex rounded-md border border-border overflow-hidden">
+              <button
+                className={`px-3 py-1.5 text-xs ${layout === 'list' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+                onClick={() => setLayout('list')}
+              >List</button>
+              <button
+                className={`px-3 py-1.5 text-xs ${layout === 'grid' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+                onClick={() => setLayout('grid')}
+              >Grid</button>
+            </div>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+          </div>
         </div>
 
-        <Card className="sticky top-16 z-10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Gmail Connection {status.connected && <Badge variant="secondary">Connected</Badge>}
-            </CardTitle>
+        <Card className="rounded-2xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur sticky top-16 z-10">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">Gmail Connection {status.connected && <Badge variant="secondary">Connected</Badge>}</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-3 items-center">
+          <CardContent className="flex flex-wrap gap-3 items-center pb-4">
             {!status.connected ? (
               <Button onClick={connect}>Connect Gmail</Button>
             ) : (
@@ -210,7 +239,7 @@ export default function ImportGmail() {
                   placeholder="Search detected applications…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-64"
+                  className="w-72"
                 />
                 <Button onClick={addAll} disabled={adding || filtered.length === 0}>
                   Add All ({filtered.length})
@@ -223,22 +252,26 @@ export default function ImportGmail() {
 
         <div className="mt-4">
           {filtered.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
+            <Card className="rounded-2xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
+              <CardContent className="py-10 text-center text-muted-foreground">
                 {loading ? 'Scanning…' : 'No detected applications yet. Click Scan Emails to begin.'}
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {pageItems.map((a) => {
+            <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3' : 'space-y-3'}>
+              {loading && (layout === 'grid' ?
+                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`s-${i}`} />) :
+                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`s-${i}`} />)
+              )}
+              {!loading && pageItems.map((a) => {
                 const already = jobsEmailIds.has(a.emailId);
                 return (
-                  <Card key={a.emailId}>
+                  <Card key={a.emailId} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="font-medium">{a.position}</div>
-                          <div className="text-sm text-muted-foreground">{a.company}</div>
+                          <div className="font-medium">{a.position || 'Unknown Position'}</div>
+                          <div className="text-sm text-muted-foreground">{a.company || 'Unknown Company'}</div>
                           <div className="text-xs text-muted-foreground">Applied: {new Date(a.appliedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}</div>
                           {a.subject && <div className="text-xs text-muted-foreground mt-1 line-clamp-1">Subject: {a.subject}</div>}
                         </div>
