@@ -23,7 +23,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
   });
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const requiredKeys = ['company', 'position', 'location', 'status', 'appliedDate', 'description'];
+  const requiredKeys = useMemo(() => ['company', 'position', 'location', 'status', 'appliedDate', 'description'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {

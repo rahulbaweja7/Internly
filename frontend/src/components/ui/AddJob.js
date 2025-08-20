@@ -29,7 +29,7 @@ function AddJob() {
   });
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const requiredKeys = ['company', 'position', 'location', 'appliedDate', 'status', 'description'];
+  const requiredKeys = useMemo(() => ['company', 'position', 'location', 'appliedDate', 'status', 'description'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {
