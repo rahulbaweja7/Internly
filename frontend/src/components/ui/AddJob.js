@@ -30,7 +30,7 @@ function AddJob() {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const requiredKeys = ['company', 'position', 'location', 'appliedDate', 'status', 'description'];
-  const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData]);
+  const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -103,7 +103,7 @@ function AddJob() {
       const u = new URL(formData.jobUrl);
       const domain = u.hostname.replace('www.', '');
       if (!formData.company) handleChange('company', domain.split('.')[0].replace(/^./, m => m.toUpperCase()));
-      const path = decodeURIComponent(u.pathname.replace(/[\/-]+/g, ' ')).trim();
+      const path = decodeURIComponent(u.pathname.replace(/[-/]+/g, ' ')).trim();
       if (path && !formData.position) handleChange('position', path.replace(/\d+/g, '').trim());
     } catch (_) {}
   };

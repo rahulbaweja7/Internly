@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Trash2, Briefcase, MapPin, Calendar as CalendarIcon, DollarSign, Building, Globe, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { Trash2, Briefcase, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 
 export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDeleteEmail }) {
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
   const [showConfetti, setShowConfetti] = useState(false);
 
   const requiredKeys = ['company', 'position', 'location', 'status', 'appliedDate', 'description'];
-  const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData]);
+  const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -125,7 +125,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
       const u = new URL(formData.jobUrl);
       const domain = u.hostname.replace('www.', '');
       if (!formData.company) handleChange('company', domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1));
-      const path = decodeURIComponent(u.pathname.replace(/[\/-]+/g, ' ')).trim();
+      const path = decodeURIComponent(u.pathname.replace(/[-/]+/g, ' ')).trim();
       if (path && !formData.position) handleChange('position', path.replace(/\d+/g, '').trim());
     } catch (_) {
       // ignore
@@ -251,6 +251,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                 <Select value={formData.period} onValueChange={(v) => handleChange('period', v)}>
                   <SelectTrigger className="col-span-2"><SelectValue/></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="hour">/ hour</SelectItem>
                     <SelectItem value="month">/ month</SelectItem>
                     <SelectItem value="year">/ year</SelectItem>
                   </SelectContent>
