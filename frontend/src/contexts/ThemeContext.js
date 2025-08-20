@@ -27,6 +27,15 @@ export const ThemeProvider = ({ children }) => {
     }
   });
 
+  // High-level user-facing mode: 'light' | 'dark' | 'custom'
+  const [mode, setMode] = useState(() => {
+    try {
+      return localStorage.getItem('themeMode') || (JSON.parse(localStorage.getItem('darkMode') || 'false') ? 'dark' : 'light');
+    } catch (_) {
+      return 'light';
+    }
+  });
+
   const toggleDarkMode = () => {
     const next = !isDarkMode;
     try {
@@ -39,11 +48,13 @@ export const ThemeProvider = ({ children }) => {
       localStorage.setItem('darkMode', JSON.stringify(next));
     } catch (_) {}
     setIsDarkMode(next);
+    setMode(next ? 'dark' : 'light');
   };
 
   useEffect(() => {
     // Save to localStorage
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    localStorage.setItem('themeMode', mode);
     
     // Apply to document
     if (isDarkMode) {
@@ -51,7 +62,7 @@ export const ThemeProvider = ({ children }) => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, mode]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -80,6 +91,26 @@ export const ThemeProvider = ({ children }) => {
   const value = {
     isDarkMode,
     toggleDarkMode,
+    mode,
+    setMode: (nextMode) => {
+      try {
+        if (nextMode === 'dark') {
+          document.documentElement.classList.add('dark');
+          setIsDarkMode(true);
+        } else {
+          document.documentElement.classList.remove('dark');
+          setIsDarkMode(false);
+        }
+        localStorage.setItem('themeMode', nextMode);
+      } catch (_) {}
+      setMode(nextMode);
+    },
+    // Optional: expose a way to set custom light background via CSS var
+    setLightBackground: (hslString) => {
+      try {
+        document.documentElement.style.setProperty('--background', hslString);
+      } catch (_) {}
+    }
   };
 
   return (

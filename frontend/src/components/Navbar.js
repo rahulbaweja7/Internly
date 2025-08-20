@@ -296,17 +296,7 @@ export function Navbar() {
 
           {/* Friends and Leaderboards removed */}
 
-          {isAuthenticated && (
-            <div className="hidden md:inline-flex">
-              <div className="min-w-[64px]">
-            <StreakBadge
-                  days={typeof streakDays === 'number' ? streakDays : 0}
-                  className="w-full justify-center"
-                  variant="compact"
-                />
-              </div>
-            </div>
-          )}
+          {/* moved streak badge next to theme toggle in user group below */}
 
           <Button 
             onClick={() => {
@@ -320,6 +310,15 @@ export function Navbar() {
 
           {/* User menu */}
           <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700" ref={userMenuRef}>
+            {isAuthenticated && (
+              <div className="hidden md:inline-flex">
+                <StreakBadge
+                  days={typeof streakDays === 'number' ? streakDays : 0}
+                  className="justify-center"
+                  variant="compact"
+                />
+              </div>
+            )}
             <ThemeToggle />
             
             <div

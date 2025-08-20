@@ -3,11 +3,13 @@ import { Navbar } from './Navbar';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import config from '../config/config';
-import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2 } from 'lucide-react';
+import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2, Palette } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 import { GmailIntegration } from './GmailIntegration';
 
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
+  const { mode, setMode, setLightBackground } = useTheme();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') || 'profile';
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
@@ -46,6 +48,7 @@ export default function Settings() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'integrations', label: 'Integrations', icon: Plug },
     { id: 'privacy', label: 'Data & privacy', icon: Database },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
 
@@ -255,6 +258,37 @@ export default function Settings() {
                   <div className="mt-4 inline-flex items-center text-sm">Terms →</div>
                 </a>
               </div>
+            </section>
+          )}
+
+          {active === 'appearance' && (
+            <section className="rounded-md border border-input bg-background p-6 space-y-6">
+              <h2 className="text-base font-semibold">Appearance</h2>
+              <div className="flex items-center gap-3">
+                <button className={`px-3 py-1.5 rounded-md border ${mode==='light'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('light')}>Light</button>
+                <button className={`px-3 py-1.5 rounded-md border ${mode==='dark'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('dark')}>Dark</button>
+                <button className={`px-3 py-1.5 rounded-md border ${mode==='custom'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('custom')}>Custom</button>
+              </div>
+              {mode === 'custom' && (
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground">Background presets</div>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { name: 'Soft Gray', hsl: '210 40% 98%' },
+                      { name: 'Warm', hsl: '48 100% 97%' },
+                      { name: 'Cool', hsl: '200 50% 97%' },
+                      { name: 'Off‑white', hsl: '0 0% 98%' },
+                    ].map((p) => (
+                      <button key={p.name} className="px-3 py-1.5 rounded-md border hover:bg-muted/30" onClick={() => setLightBackground(p.hsl)}>{p.name}</button>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Custom background (HSL)</div>
+                    <input type="text" placeholder="e.g., 210 40% 98%" className="w-full border rounded px-3 py-2 bg-background" onBlur={(e) => setLightBackground(e.target.value)} />
+                    <div className="text-xs text-muted-foreground mt-1">Tip: try 210 40% 98% (soft gray) or 48 100% 97% (warm).</div>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
