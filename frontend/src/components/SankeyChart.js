@@ -72,7 +72,7 @@ const SankeyChart = ({ data }) => {
   }
 
   return (
-    <Card>
+    <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
@@ -131,7 +131,7 @@ const SankeyChart = ({ data }) => {
                 text: 'Your Application Journey',
                 font: { 
                   size: 16, 
-                  color: '#1f2937',
+                  color: 'currentColor',
                   family: 'Inter, system-ui, sans-serif',
                   weight: '600'
                 },
@@ -142,16 +142,15 @@ const SankeyChart = ({ data }) => {
                 size: 11,
                 family: 'Inter, system-ui, sans-serif'
               },
-              width: 500,
-              height: 350,
+              height: 300,
               margin: { t: 60, b: 30, l: 30, r: 30 },
-              paper_bgcolor: '#f8fafc',
-              plot_bgcolor: '#f8fafc',
+              paper_bgcolor: 'rgba(0,0,0,0)',
+              plot_bgcolor: 'rgba(0,0,0,0)',
               hovermode: 'closest',
               hoverlabel: {
-                bgcolor: '#ffffff',
-                bordercolor: '#e5e7eb',
-                font: { size: 12, color: '#374151' }
+                bgcolor: 'rgba(17,24,39,0.85)',
+                bordercolor: 'rgba(148,163,184,0.2)',
+                font: { size: 12, color: '#e5e7eb' }
               }
             }}
             config={{
@@ -160,7 +159,7 @@ const SankeyChart = ({ data }) => {
             }}
             style={{
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '100%',
               borderRadius: '12px'
             }}
           />

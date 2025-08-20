@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X } from 'lucide-react';
+import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 // GmailIntegration moved to dedicated import page
@@ -26,6 +26,8 @@ export function InternshipDashboard() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  // Gentle entrance animation flag
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   // Removed unused auth destructuring to satisfy CI
@@ -69,6 +71,12 @@ export function InternshipDashboard() {
     fetchJobs();
   }, []);
 
+  // Trigger entrance animations after first paint
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+
   // Removed unused handleApplicationsFound
 
   const filteredInternships = internships
@@ -85,14 +93,14 @@ export function InternshipDashboard() {
     .sort((a, b) => new Date(b.dateApplied) - new Date(a.dateApplied)); // Sort by date, newest first
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Applied': return 'bg-blue-100 text-blue-800';
-      case 'Online Assessment': return 'bg-purple-100 text-purple-800';
-      case 'Interview': return 'bg-teal-100 text-teal-800';
-      case 'Accepted': return 'bg-green-100 text-green-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    const styles = {
+      Applied: 'bg-blue-500/10 text-blue-300 ring-1 ring-blue-300/20',
+      'Online Assessment': 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-300/20',
+      Interview: 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-300/20',
+      Accepted: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-300/20',
+      Rejected: 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-300/20',
+    };
+    return styles[status] || 'bg-muted text-foreground/70 ring-1 ring-border/50';
   };
 
   const handleAddInternship = async (internship) => {
@@ -237,9 +245,9 @@ export function InternshipDashboard() {
       <div className="min-h-screen bg-background dark:bg-gray-900">
         <Navbar />
 
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className={`container mx-auto p-6 max-w-7xl transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header */}
-        <div className="mb-8">
+        <div className={`mb-8 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
           <h1 className="text-3xl font-bold mb-2">Internship Tracker</h1>
           <p className="text-muted-foreground">
             Track your internship applications and stay organized
@@ -247,8 +255,8 @@ export function InternshipDashboard() {
         </div>
 
         {/* Gmail Import Widget */}
-        <div className="mb-6">
-          <Card>
+        <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
+          <Card className="rounded-xl border border-border/80 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Gmail Import</CardTitle>
             </CardHeader>
@@ -263,63 +271,54 @@ export function InternshipDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{internships.length}</div>
-            </CardContent>
-          </Card>
-                  <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Online Assessments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusCounts['Online Assessment'] || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Interview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusCounts['Interview'] || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusCounts.Accepted || 0}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusCounts.Rejected || 0}</div>
-          </CardContent>
-        </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-                          <div className="text-2xl font-bold">
-              {internships.length > 0 
-                ? Math.round(((statusCounts['Online Assessment'] || 0) + (statusCounts.Accepted || 0)) / internships.length * 100)
-                : 0}%
-            </div>
-            </CardContent>
-          </Card>
+          {[{
+            label: 'Total Applications',
+            icon: Briefcase,
+            value: internships.length,
+            color: 'from-blue-500/20 to-blue-500/5 text-blue-300'
+          },{
+            label: 'Online Assessments',
+            icon: ClipboardList,
+            value: statusCounts['Online Assessment'] || 0,
+            color: 'from-violet-500/20 to-violet-500/5 text-violet-300'
+          },{
+            label: 'Interview',
+            icon: TrendingUp,
+            value: statusCounts['Interview'] || 0,
+            color: 'from-amber-500/20 to-amber-500/5 text-amber-300'
+          },{
+            label: 'Accepted',
+            icon: CheckCircle2,
+            value: statusCounts.Accepted || 0,
+            color: 'from-emerald-500/20 to-emerald-500/5 text-emerald-300'
+          },{
+            label: 'Rejected',
+            icon: XCircle,
+            value: statusCounts.Rejected || 0,
+            color: 'from-rose-500/20 to-rose-500/5 text-rose-300'
+          },{
+            label: 'Response Rate',
+            icon: TrendingUp,
+            value: internships.length > 0
+              ? Math.round(((statusCounts['Online Assessment'] || 0) + (statusCounts.Accepted || 0)) / internships.length * 100) + '%'
+              : '0%'
+          }].map((stat, i) => (
+            <Card key={stat.label} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500">
+              <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 leading-tight">
+                  <stat.icon className={`h-4 w-4 ${stat.color?.split(' ').pop() || 'text-muted-foreground'}`} />
+                  {stat.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-1">
+                <div className="text-2xl leading-none font-bold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Filters and Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 relative">
+        <div className={`flex flex-col sm:flex-row gap-4 mb-6 relative z-50 transition-all duration-[1200ms] delay-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -341,7 +340,7 @@ export function InternshipDashboard() {
             <SelectTrigger>
               <SelectValue>Filters</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[1000]">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="Applied">Applied</SelectItem>
               <SelectItem value="Online Assessment">Online Assessment</SelectItem>
@@ -366,7 +365,7 @@ export function InternshipDashboard() {
 
         {/* Selection Mode Header */}
         {isSelectionMode && (
-          <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+          <div className={`mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-orange-800 dark:text-orange-200">
@@ -459,12 +458,16 @@ export function InternshipDashboard() {
         {/* Internship Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">Loading internships...</p>
-            </div>
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse h-[320px]" />
+            ))
           ) : (
-            filteredInternships.map((internship) => (
-              <Card key={internship._id} className="hover:shadow-lg transition-shadow relative h-full min-h-[320px] max-h-[320px] flex flex-col">
+            filteredInternships.map((internship, i) => (
+              <Card
+                key={internship._id}
+                style={{ transitionDelay: `${i * 70}ms` }}
+                className="relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500"
+              >
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
                   <div className="absolute top-3 left-3 z-10">
@@ -490,7 +493,7 @@ export function InternshipDashboard() {
                         {internship.company}
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(internship.status)}>
+                    <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs` }>
                       {internship.status}
                     </Badge>
                   </div>

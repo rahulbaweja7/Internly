@@ -4,13 +4,14 @@ import axios from 'axios';
 import config from '../config/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { ArrowLeft, TrendingUp, Calendar, BarChart3, PieChart, Target } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
 import { Navbar } from './Navbar';
 import { DashboardCharts } from './DashboardCharts';
 
 export function Analytics() {
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 
   // Fetch jobs from backend
@@ -31,6 +32,11 @@ export function Analytics() {
     fetchJobs();
   }, []);
 
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+
   const statusCounts = internships.reduce((acc, internship) => {
     acc[internship.status] = (acc[internship.status] || 0) + 1;
     return acc;
@@ -48,7 +54,7 @@ export function Analytics() {
       <div className="min-h-screen bg-background dark:bg-gray-900">
         <Navbar />
 
-      <div className="container mx-auto p-6 max-w-7xl relative z-10">
+      <div className={`container mx-auto p-6 max-w-7xl relative z-10 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -70,47 +76,47 @@ export function Analytics() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">Total Applications</CardTitle>
-              <Target className="h-4 w-4 text-blue-600" />
+          <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
+              <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+              <Briefcase className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-800">{totalApplications}</div>
-              <p className="text-xs text-blue-600 mt-1">All time applications</p>
+              <div className="text-2xl font-bold">{totalApplications}</div>
+              <p className="text-xs text-muted-foreground mt-1">All time applications</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Accepted</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
+          <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
+              <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+              <CheckCircle2 className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-800">{acceptedCount}</div>
-              <p className="text-xs text-green-600 mt-1">Successful applications</p>
+              <div className="text-2xl font-bold">{acceptedCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Successful applications</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">Interviewing</CardTitle>
-              <BarChart3 className="h-4 w-4 text-orange-600" />
+          <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
+              <CardTitle className="text-sm font-medium">Interviewing</CardTitle>
+              <TrendingUp className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-800">{interviewingCount}</div>
-              <p className="text-xs text-orange-600 mt-1">In interview process</p>
+              <div className="text-2xl font-bold">{interviewingCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">In interview process</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">Rejected</CardTitle>
-              <PieChart className="h-4 w-4 text-red-600" />
+          <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
+              <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+              <XCircle className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-800">{rejectedCount}</div>
-              <p className="text-xs text-red-600 mt-1">Not selected</p>
+              <div className="text-2xl font-bold">{rejectedCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Not selected</p>
             </CardContent>
           </Card>
         </div>
@@ -124,7 +130,7 @@ export function Analytics() {
             </div>
           </div>
         ) : internships.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-12 rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
             <CardContent>
               <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-8 w-8 text-blue-400" />
@@ -147,10 +153,10 @@ export function Analytics() {
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-6">Key Insights</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+              <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
+                    <CheckCircle2 className="h-5 w-5" />
                     Application Success Rate
                   </CardTitle>
                   <CardDescription>
@@ -167,7 +173,7 @@ export function Analytics() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
