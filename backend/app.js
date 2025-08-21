@@ -245,7 +245,7 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 
 app.post('/api/jobs', isAuthenticated, async (req, res) => {
   try {
-    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend } = req.body || {};
+    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend, onlyUpdateStatusIfExists } = req.body || {};
 
     const normalize = (v) => (v || '').toString().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
     const normalizedCompany = normalize(company);
@@ -277,35 +277,45 @@ app.post('/api/jobs', isAuthenticated, async (req, res) => {
       return res.status(201).json(job);
     }
 
-    // Merge into existing: promote status by precedence
+    // Existing job found
     const currentRank = statusRank[job.status] || 0;
     const incomingRank = statusRank[status] || 0;
     let updated = false;
-    if (incomingRank > currentRank) {
-      job.status = status;
-      updated = true;
-    }
-    if (location && !job.location) { job.location = location; updated = true; }
-    if (stipend && !job.stipend) { job.stipend = stipend; updated = true; }
-    if (dateApplied && (!job.dateApplied || new Date(dateApplied) < job.dateApplied)) {
-      job.dateApplied = dateApplied; // keep earliest application date
-      updated = true;
-    }
-    if (notes) { job.notes = job.notes ? `${job.notes}\n${notes}` : notes; updated = true; }
-
-    const hasEmailInHistory = emailId && (job.emailId === emailId || (job.statusHistory || []).some(h => h.emailId === emailId));
-    if (emailId && !hasEmailInHistory) {
-      if (!job.emailId) { job.emailId = emailId; updated = true; }
-      // Only record a history entry if status meaningfully changed
-      const willChangeStatus = (incomingRank > currentRank) || (status && status !== job.status);
-      if (willChangeStatus) {
-        job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+    if (onlyUpdateStatusIfExists) {
+      // Only update status (and history) for existing job; do not touch other fields
+      if (incomingRank > currentRank) {
+        job.status = status;
+        job.statusHistory.push({ status, at: new Date(), source: 'gmail', ...(emailId ? { emailId } : {}), ...(subject ? { subject } : {}) });
         updated = true;
       }
-    } else if (incomingRank > currentRank) {
-      // Record status change without duplicating emailId
-      job.statusHistory.push({ status: status, at: new Date(), source: 'gmail', subject });
-      updated = true;
+    } else {
+      // Merge into existing: promote status by precedence and enrich missing fields
+      if (incomingRank > currentRank) {
+        job.status = status;
+        updated = true;
+      }
+      if (location && !job.location) { job.location = location; updated = true; }
+      if (stipend && !job.stipend) { job.stipend = stipend; updated = true; }
+      if (dateApplied && (!job.dateApplied || new Date(dateApplied) < job.dateApplied)) {
+        job.dateApplied = dateApplied; // keep earliest application date
+        updated = true;
+      }
+      if (notes) { job.notes = job.notes ? `${job.notes}\n${notes}` : notes; updated = true; }
+
+      const hasEmailInHistory = emailId && (job.emailId === emailId || (job.statusHistory || []).some(h => h.emailId === emailId));
+      if (emailId && !hasEmailInHistory) {
+        if (!job.emailId) { job.emailId = emailId; updated = true; }
+        // Only record a history entry if status meaningfully changed
+        const willChangeStatus = (incomingRank > currentRank) || (status && status !== job.status);
+        if (willChangeStatus) {
+          job.statusHistory.push({ status: status || job.status, at: new Date(), source: 'gmail', emailId, subject });
+          updated = true;
+        }
+      } else if (incomingRank > currentRank) {
+        // Record status change without duplicating emailId
+        job.statusHistory.push({ status: status, at: new Date(), source: 'gmail', subject });
+        updated = true;
+      }
     }
 
     if (!updated) {

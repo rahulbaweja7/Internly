@@ -34,17 +34,24 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // Server will read auth from HttpOnly cookie; no local token handling
+      // 1) Hydrate from cache immediately so Protected routes can render without blocking
       const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedUser) {
+        try { setUser(JSON.parse(storedUser)); } catch (_) { /* ignore */ }
+        // Do not block UI if we already have a cached user; refresh in background
+        setLoading(false);
+      }
+
+      // 2) Refresh user from server (cookie-auth) in the background
       const response = await axios.get(`${config.API_BASE_URL}/api/auth/me`);
       setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      try { localStorage.setItem('user', JSON.stringify(response.data.user)); } catch (_) {}
     } catch (error) {
-      // Clear invalid local user cache
+      // Clear invalid local user cache if server says unauthenticated
       localStorage.removeItem('user');
       setUser(null);
     } finally {
+      // If there was no cached user, we were blocking; release now
       setLoading(false);
     }
   };

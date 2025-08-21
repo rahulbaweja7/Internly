@@ -129,6 +129,7 @@ export default function ImportGmail() {
     try {
       setAdding(true);
       const { emailId, subject, snippet, company, position, status: s, appliedDate, location } = a;
+      const already = jobsEmailIds.has(emailId);
       await axios.post(`${config.API_BASE_URL}/api/jobs`, {
         company,
         role: position,
@@ -139,6 +140,7 @@ export default function ImportGmail() {
         notes: `Imported from Gmail\nSubject: ${subject || ''}\nSnippet: ${snippet || ''}`,
         emailId,
         subject,
+        ...(already ? { onlyUpdateStatusIfExists: true } : {}),
       });
       setApps((prev) => {
         const next = prev.filter((x) => x.emailId !== emailId);

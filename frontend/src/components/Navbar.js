@@ -103,24 +103,16 @@ export function Navbar() {
       });
       if (dates.size === 0) return 0;
 
-      // Find most recent day with an application (<= today)
-      const probe = new Date();
-      probe.setHours(0, 0, 0, 0);
-      let startFound = false;
-      while (!startFound) {
-        const key = formatLocalYmd(probe);
-        if (dates.has(key)) {
-          startFound = true;
-          break;
-        }
-        // if we haven't found any within 400 days, stop
-        probe.setDate(probe.getDate() - 1);
-        if (probe < new Date(Date.now() - 400 * 24 * 60 * 60 * 1000)) return 0;
-      }
+      // Align with heatmap: streak only counts if there's activity today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (!dates.has(formatLocalYmd(today))) return 0;
 
-      // Count consecutive days backward from the most recent day with activity
+      // Count consecutive days backward starting from today
       let count = 0;
-      while (true) {
+      const probe = new Date(today);
+      // Cap loop to a reasonable window to avoid infinite loops
+      for (let i = 0; i < 400; i += 1) {
         const key = formatLocalYmd(probe);
         if (dates.has(key)) {
           count += 1;
