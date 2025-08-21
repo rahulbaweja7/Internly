@@ -92,8 +92,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     } else {
       onSubmit(payload);
     }
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 1800);
+    // Confetti removed for cleaner UX on update
   };
 
   const handleChange = (field, value) => {
@@ -328,25 +327,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             )}
           </div>
         </form>
-      {/* Sticky action bar */}
-      <div className="fixed bottom-4 inset-x-0 px-6 pointer-events-none">
-        <div className="mx-auto max-w-3xl rounded-full border border-border/80 bg-background/70 backdrop-blur shadow-lg flex items-center justify-between p-2 pointer-events-auto">
-          <span className="text-xs text-muted-foreground ml-3">Cmd/Ctrl + Enter to {internship ? 'update' : 'add'} • Stored privately</span>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button onClick={() => { const f=document.getElementById('add-internship-form'); if (f) f.requestSubmit(); }}>{internship ? 'Update Internship' : 'Add Internship'}</Button>
-          </div>
-        </div>
-      </div>
-
-      {showConfetti && (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <span key={i} className="absolute animate-[fall_1.6s_ease-in_forwards]" style={{ left: `${Math.random()*100}%`, top: '-10px', color: ['#60a5fa','#34d399','#f472b6','#fbbf24'][i%4] }}>•</span>
-          ))}
-          <style>{`@keyframes fall {to {transform: translateY(120vh) rotate(360deg); opacity: 0;}}`}</style>
-        </div>
-      )}
+      {/* Removed confetti and sticky hint bar */}
     </>
   );
 } 
