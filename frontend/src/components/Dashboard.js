@@ -90,7 +90,30 @@ export function InternshipDashboard() {
       const matchesStatus = statusFilter === 'all' || internship.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
-    .sort((a, b) => new Date(b.dateApplied) - new Date(a.dateApplied)); // Sort by date, newest first
+    .sort((a, b) => {
+      // Primary: by application day (YYYY-MM-DD UTC) descending
+      const toDayKey = (v) => {
+        const d = new Date(v || 0);
+        if (isNaN(d)) return '';
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const da = String(d.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${da}`;
+      };
+      const dayA = toDayKey(a.dateApplied || a.appliedDate || a.createdAt);
+      const dayB = toDayKey(b.dateApplied || b.appliedDate || b.createdAt);
+      if (dayA !== dayB) return dayB.localeCompare(dayA);
+
+      // Secondary: within the same day, newest created first
+      const createdA = new Date(a.createdAt || 0).getTime();
+      const createdB = new Date(b.createdAt || 0).getTime();
+      if (createdA !== createdB) return createdB - createdA;
+
+      // Tertiary: fallback to raw dateApplied time if present
+      const tA = new Date(a.dateApplied || a.appliedDate || 0).getTime();
+      const tB = new Date(b.dateApplied || b.appliedDate || 0).getTime();
+      return tB - tA;
+    }); // Sort by day, then createdAt so newest-added for that day appears first
 
   const getStatusColor = (status) => {
     const styles = {
