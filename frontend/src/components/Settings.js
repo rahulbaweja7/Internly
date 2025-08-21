@@ -171,7 +171,23 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="h-10 rounded-md px-4 text-sm border border-input text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 inline-flex items-center gap-2"
+                    onClick={async () => {
+                      if (!window.confirm('This will permanently delete your account and all data. Continue?')) return;
+                      try {
+                        const res = await fetch(`${config.API_BASE_URL}/api/auth/delete`, { method: 'DELETE', credentials: 'include' });
+                        if (!res.ok) throw new Error('Delete failed');
+                        localStorage.removeItem('user');
+                        try { await logout(); } catch (_) {}
+                        window.location.href = '/';
+                      } catch (_) { /* noop */ }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete Account
+                  </button>
                   <button
                     type="button"
                     onClick={async () => {
@@ -223,26 +239,6 @@ export default function Settings() {
                   }}
                 >
                   <FileDown className="h-4 w-4" /> Export JSON
-                </button>
-              </div>
-
-              <div className="rounded-md border border-input bg-background p-6">
-                <h3 className="text-lg font-semibold mb-1 text-red-600">Delete account</h3>
-                <p className="text-sm text-muted-foreground mb-3">Permanently remove your account and data.</p>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 h-10 rounded-md px-4 text-sm border border-input text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
-                  onClick={async () => {
-                    if (!window.confirm('This will permanently delete your account and all data. Continue?')) return;
-                    try {
-                      const res = await fetch(`${config.API_BASE_URL}/api/auth/delete`, { method: 'DELETE', credentials: 'include' });
-                      if (!res.ok) throw new Error('Delete failed');
-                      localStorage.removeItem('user');
-                      window.location.href = '/';
-                    } catch (_) { /* noop */ }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" /> Delete Account
                 </button>
               </div>
 

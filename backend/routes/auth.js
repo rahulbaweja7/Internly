@@ -35,10 +35,29 @@ router.delete('/delete', isAuthenticated, async (req, res) => {
     const Job = require('../models/Job');
     const User = require('../models/User');
 
+    const ProcessedEmail = require('../models/ProcessedEmail');
+    const GmailToken = require('../models/GmailToken');
     await Promise.all([
       Job.deleteMany({ userId: req.user._id }),
+      ProcessedEmail.deleteMany({ userId: req.user._id }).catch(() => {}),
+      GmailToken.deleteMany({ userId: req.user._id }).catch(() => {}),
     ]);
     await User.deleteOne({ _id: req.user._id });
+    // Also clear auth cookies just like /logout so the browser session is gone
+    const isProd = process.env.NODE_ENV === 'production';
+    const domainConfigured = process.env.COOKIE_DOMAIN || '';
+    const baseAttrs = ['Path=/', 'HttpOnly', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
+    const cookiesToSet = [];
+    cookiesToSet.push(['token=;', ...baseAttrs].join('; '));
+    if (domainConfigured) {
+      cookiesToSet.push(['token=;', `Domain=${domainConfigured}`, ...baseAttrs].join('; '));
+    }
+    const csrfBase = ['Path=/', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
+    cookiesToSet.push(['csrf=;', ...csrfBase].join('; '));
+    if (domainConfigured) {
+      cookiesToSet.push(['csrf=;', `Domain=${domainConfigured}`, ...csrfBase].join('; '));
+    }
+    res.setHeader('Set-Cookie', cookiesToSet);
     res.json({ success: true });
   } catch (e) {
     console.error('Delete account error:', e);

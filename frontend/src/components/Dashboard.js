@@ -582,11 +582,11 @@ export function InternshipDashboard() {
       {/* Add/Edit Internship Modal */}
       {isFormOpen && (
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[840px]">
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle>
-                  {editingInternship ? 'Edit Internship' : 'Add New Internship'}
+                  {editingInternship ? 'Edit Job' : 'Add New Job'}
                 </DialogTitle>
                 <Button
                   variant="outline"

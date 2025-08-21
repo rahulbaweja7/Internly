@@ -331,12 +331,12 @@ export default function ImportGmail() {
     {/* Edit Modal */}
     {editing && (
       <Dialog open={true} onOpenChange={() => setEditing(null)}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-[840px]">
           <DialogHeader>
             <DialogTitle>Edit Application</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Company</Label>
                 <Input value={editing.company}
@@ -348,7 +348,7 @@ export default function ImportGmail() {
                   onChange={(e) => setEditing((p) => ({ ...p, position: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={editing.status} onValueChange={(v) => setEditing((p) => ({ ...p, status: v }))}>
@@ -370,10 +370,16 @@ export default function ImportGmail() {
                   onChange={(e) => setEditing((p) => ({ ...p, appliedDate: e.target.value }))} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Location</Label>
-              <Input value={editing.location || ''}
-                onChange={(e) => setEditing((p) => ({ ...p, location: e.target.value }))} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input value={editing.location || ''}
+                  onChange={(e) => setEditing((p) => ({ ...p, location: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input placeholder="Optional" value={editing.notes || ''} onChange={(e) => setEditing((p) => ({ ...p, notes: e.target.value }))} />
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => {

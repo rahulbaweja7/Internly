@@ -21,7 +21,6 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     period: 'month',
     amount: ''
   });
-  const [showConfetti, setShowConfetti] = useState(false);
 
   const requiredKeys = useMemo(() => ['company', 'position', 'location', 'status', 'appliedDate', 'description'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
@@ -118,16 +117,26 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     handleChange('appliedDate', d.toISOString().split('T')[0]);
   };
 
-  const handleUrlBlur = () => {
-    if (!formData.jobUrl) return;
+  const handleUrlBlur = async () => {
+    let value = (formData.jobUrl || '').trim();
+    if (!value) {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (/^https?:\/\//i.test(clip)) {
+          value = clip.trim();
+          handleChange('jobUrl', value);
+        }
+      } catch (_) { /* clipboard not available */ }
+    }
+    if (!value) return;
     try {
-      const u = new URL(formData.jobUrl);
+      const u = new URL(value);
       const domain = u.hostname.replace('www.', '');
       if (!formData.company) handleChange('company', domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1));
       const path = decodeURIComponent(u.pathname.replace(/[-/]+/g, ' ')).trim();
       if (path && !formData.position) handleChange('position', path.replace(/\d+/g, '').trim());
     } catch (_) {
-      // ignore
+      // ignore invalid URL
     }
   };
 
@@ -150,11 +159,11 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             <CheckCircle2 className="h-3 w-3" /> {progress}/6 complete • Streak: {streakDays}d
           </span>
         </div>
-        {/* Split layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-10">
+        {/* Layout inside modal/page: single column wrapper so content centers */}
+        <div className="grid grid-cols-1 gap-6">
           {/* Left form */}
           <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label htmlFor="company">Company *</Label>
               <Input
@@ -186,7 +195,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
               <Input
@@ -220,7 +229,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
             <div className="space-y-2">
               <Label htmlFor="appliedDate">Application Date</Label>
               <Input
