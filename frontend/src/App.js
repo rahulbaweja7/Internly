@@ -18,6 +18,7 @@ import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import Contact from './components/Contact';
 import './App.css';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +99,7 @@ function App() {
         <Router>
           <AppRoutes />
           <AnalyticsOptIn />
+          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
         </Router>
       </AuthProvider>
     </ThemeProvider>
