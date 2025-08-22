@@ -373,15 +373,25 @@ export function InternshipDashboard() {
               </button>
             )}
           </div>
-          <div className="inline-flex rounded-md border border-border overflow-hidden h-10">
+          <div className="inline-flex rounded-lg border border-border overflow-hidden h-10 bg-background">
             <button
-              className={`px-3 py-1.5 text-xs ${layout === 'list' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+              type="button"
+              aria-pressed={layout === 'list'}
+              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'list' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
               onClick={() => setLayout('list')}
-            >List</button>
+              title="List view"
+            >
+              List
+            </button>
             <button
-              className={`px-3 py-1.5 text-xs ${layout === 'grid' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+              type="button"
+              aria-pressed={layout === 'grid'}
+              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'grid' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
               onClick={() => setLayout('grid')}
-            >Grid</button>
+              title="Grid view"
+            >
+              Grid
+            </button>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
