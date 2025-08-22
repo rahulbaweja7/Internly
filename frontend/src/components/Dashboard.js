@@ -513,7 +513,11 @@ export function InternshipDashboard() {
               <Card
                 key={internship._id}
                 style={{ transitionDelay: `${i * 70}ms` }}
-                className={layout === 'grid' ? 'relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500' : 'relative flex rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur p-3'}
+                className={
+                  layout === 'grid'
+                    ? 'relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500'
+                    : 'relative rounded-lg border border-border bg-background hover:bg-muted/20 transition-colors'
+                }
               >
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
@@ -530,81 +534,129 @@ export function InternshipDashboard() {
                     </button>
                   </div>
                 )}
-                
-                <CardHeader className={layout === 'grid' ? 'pt-6 pb-2' : 'p-0'}>
-                  <div className="flex justify-between items-start w-full">
-                    <div className={isSelectionMode ? 'pr-8' : ''}>
-                      <CardTitle className={layout === 'grid' ? 'text-lg clamp-1' : 'text-base clamp-1'}>{internship.role}</CardTitle>
-                      <CardDescription className={layout === 'grid' ? 'flex items-center mt-1 clamp-1' : 'flex items-center clamp-1'}>
-                        <Building className="h-4 w-4 mr-1" />
-                        {internship.company}
-                      </CardDescription>
-                    </div>
-                    <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs`}>
-                      {internship.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className={layout === 'grid' ? 'flex flex-col flex-1 pt-0' : 'flex-1 p-0'}>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="clamp-1">{internship.location}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Applied {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-                    </div>
-                    {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 0 && (() => {
-                      const hist = internship.statusHistory;
-                      const last = hist[hist.length - 1];
-                      const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
-                      // Show only when there is a real change, or when single-entry is a non-Applied status
-                      const isChange = prev && last && last.status !== prev.status;
-                      const isSingleNonApplied = !prev && last && last.status !== 'Applied';
-                      if (!isChange && !isSingleNonApplied) return null;
-                      const when = last.at ? new Date(last.at).toLocaleDateString() : '';
-                      const src = last.source ? ` via ${last.source}` : '';
-                      return (
-                        <div className="text-xs text-muted-foreground">
-                          {`Updated to ${last.status}${when ? ` on ${when}` : ''}${src}`}
+
+                {layout === 'grid' ? (
+                  <>
+                    <CardHeader className="pt-6 pb-2">
+                      <div className="flex justify-between items-start w-full">
+                        <div className={isSelectionMode ? 'pr-8' : ''}>
+                          <CardTitle className="text-lg clamp-1">{internship.role}</CardTitle>
+                          <CardDescription className="flex items-center mt-1 clamp-1">
+                            <Building className="h-4 w-4 mr-1" />
+                            {internship.company}
+                          </CardDescription>
                         </div>
-                      );
-                    })()}
-                    {internship.stipend && (
-                      <div className="text-sm font-medium text-green-600">
-                        {internship.stipend}
+                        <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs`}>
+                          {internship.status}
+                        </Badge>
                       </div>
-                    )}
-                    {internship.notes && (
-                      <p className="text-sm text-muted-foreground clamp-2">
-                        {internship.notes}
-                      </p>
-                    )}
+                    </CardHeader>
+                    <CardContent className="flex flex-col flex-1 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span className="clamp-1">{internship.location}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Applied {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                        </div>
+                        {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 0 && (() => {
+                          const hist = internship.statusHistory;
+                          const last = hist[hist.length - 1];
+                          const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
+                          const isChange = prev && last && last.status !== prev.status;
+                          const isSingleNonApplied = !prev && last && last.status !== 'Applied';
+                          if (!isChange && !isSingleNonApplied) return null;
+                          const when = last.at ? new Date(last.at).toLocaleDateString() : '';
+                          const src = last.source ? ` via ${last.source}` : '';
+                          return (
+                            <div className="text-xs text-muted-foreground">
+                              {`Updated to ${last.status}${when ? ` on ${when}` : ''}${src}`}
+                            </div>
+                          );
+                        })()}
+                        {internship.stipend && (
+                          <div className="text-sm font-medium text-green-600">
+                            {internship.stipend}
+                          </div>
+                        )}
+                        {internship.notes && (
+                          <p className="text-sm text-muted-foreground clamp-2">
+                            {internship.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2 mt-auto pt-3 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingInternship({
+                              _id: internship._id,
+                              company: internship.company,
+                              position: internship.role,
+                              location: internship.location,
+                              status: internship.status,
+                              salary: internship.stipend,
+                              appliedDate: internship.dateApplied,
+                              notes: internship.notes
+                            });
+                            setIsFormOpen(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </>
+                ) : (
+                  <div className="w-full p-3 md:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium truncate text-[15px]">{internship.role}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-3 truncate mt-0.5">
+                        <span className="flex items-center gap-1 min-w-0">
+                          <Building className="h-4 w-4" />
+                          <span className="truncate">{internship.company}</span>
+                        </span>
+                        <span className="hidden sm:inline-flex items-center gap-1 max-w-[220px] truncate">
+                          <MapPin className="h-4 w-4" />
+                          <span className="truncate">{internship.location || '-'}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="md:flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-0.5 text-[11px]`}>{internship.status}</Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingInternship({
+                            _id: internship._id,
+                            company: internship.company,
+                            position: internship.role,
+                            location: internship.location,
+                            status: internship.status,
+                            salary: internship.stipend,
+                            appliedDate: internship.dateApplied,
+                            notes: internship.notes
+                          });
+                          setIsFormOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 mt-auto pt-3 justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingInternship({
-                          _id: internship._id,
-                          company: internship.company,
-                          position: internship.role,
-                          location: internship.location,
-                          status: internship.status,
-                          salary: internship.stipend,
-                          appliedDate: internship.dateApplied,
-                          notes: internship.notes
-                        });
-                        setIsFormOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    {/* History modal trigger TODO: implement full timeline modal if desired */}
-                  </div>
-                </CardContent>
+                )}
               </Card>
             ))
           )}
