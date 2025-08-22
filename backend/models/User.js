@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   picture: String,
+  // Profile fields
+  location: { type: String, trim: true, maxlength: 120 },
+  bio: { type: String, trim: true, maxlength: 600 },
   
   // Email verification
   isEmailVerified: {

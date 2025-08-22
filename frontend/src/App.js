@@ -10,7 +10,7 @@ import Dashboard from './components/Dashboard';
 import AddJob from './components/ui/AddJob';
 import { Analytics } from './components/Analytics';
 import Settings from './components/Settings';
-import Profile from './components/Profile';
+import { Profile } from './components/Profile';
 import ImportGmail from './components/ImportGmail';
 import Activity from './components/Activity';
 // Friends/Leaderboards removed

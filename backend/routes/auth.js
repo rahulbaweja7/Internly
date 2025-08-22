@@ -362,7 +362,7 @@ router.get('/stats/users', isAuthenticated, async (req, res) => {
 // Update current user's profile (name/picture)
 router.put('/me', isAuthenticated, async (req, res) => {
   try {
-    const { name, picture } = req.body || {};
+    const { name, picture, location, bio } = req.body || {};
 
     if (typeof name === 'string') {
       req.user.name = name.trim().slice(0, 64);
@@ -379,6 +379,13 @@ router.put('/me', isAuthenticated, async (req, res) => {
         }
         req.user.picture = picture;
       }
+    }
+
+    if (typeof location === 'string') {
+      req.user.location = location.trim().slice(0, 120);
+    }
+    if (typeof bio === 'string') {
+      req.user.bio = bio.trim().slice(0, 600);
     }
 
     await req.user.save();
