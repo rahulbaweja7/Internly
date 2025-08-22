@@ -28,6 +28,10 @@ export function InternshipDashboard() {
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   // Gentle entrance animation flag
   const [mounted, setMounted] = useState(false);
+  // Layout and pagination
+  const [layout, setLayout] = useState('grid');
+  const pageSize = 50;
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const location = useLocation();
   // Removed unused auth destructuring to satisfy CI
@@ -46,7 +50,7 @@ export function InternshipDashboard() {
 
   // Fetch jobs from backend
   const fetchJobs = () => {
-    axios.get(`${config.API_BASE_URL}/api/jobs`)
+    axios.get(`${config.API_BASE_URL}/api/jobs`, { params: { summary: 1 } })
       .then((res) => {
         console.log('Fetched jobs from backend:', res.data);
         // Debug: Check if jobs have emailId
@@ -70,6 +74,11 @@ export function InternshipDashboard() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  // Reset to first page when filters/search/data change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, internships.length]);
 
   // Trigger entrance animations after first paint
   useEffect(() => {
@@ -115,6 +124,10 @@ export function InternshipDashboard() {
       return tB - tA;
     }); // Sort by day, then createdAt so newest-added for that day appears first
 
+  const totalPages = Math.max(1, Math.ceil(filteredInternships.length / pageSize));
+  const start = (page - 1) * pageSize;
+  const pageItems = filteredInternships.slice(start, start + pageSize);
+
   const getStatusColor = (status) => {
     const styles = {
       Applied: 'bg-blue-500/10 text-blue-300 ring-1 ring-blue-300/20',
@@ -137,7 +150,8 @@ export function InternshipDashboard() {
         dateApplied: internship.appliedDate,
         notes: internship.notes
       });
-      setInternships([...internships, response.data]);
+      // Optimistically prepend to list for snappy UX
+      setInternships((prev) => [response.data, ...prev]);
       setIsFormOpen(false);
     } catch (error) {
       console.error("Error adding job:", error);
@@ -340,7 +354,7 @@ export function InternshipDashboard() {
           ))}
         </div>
 
-        {/* Filters and Actions */}
+        {/* Filters, Layout and Actions */}
         <div className={`flex flex-col sm:flex-row gap-4 mb-6 relative z-50 transition-all duration-[1200ms] delay-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -358,6 +372,16 @@ export function InternshipDashboard() {
                 <X className="h-4 w-4" />
               </button>
             )}
+          </div>
+          <div className="inline-flex rounded-md border border-border overflow-hidden h-10">
+            <button
+              className={`px-3 py-1.5 text-xs ${layout === 'list' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+              onClick={() => setLayout('list')}
+            >List</button>
+            <button
+              className={`px-3 py-1.5 text-xs ${layout === 'grid' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+              onClick={() => setLayout('grid')}
+            >Grid</button>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
@@ -478,18 +502,18 @@ export function InternshipDashboard() {
           </div>
         )}
 
-        {/* Internship Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Internship List */}
+        <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
           {loading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse h-[320px]" />
+              <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse h-[120px]" />
             ))
           ) : (
-            filteredInternships.map((internship, i) => (
+            pageItems.map((internship, i) => (
               <Card
                 key={internship._id}
                 style={{ transitionDelay: `${i * 70}ms` }}
-                className="relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500"
+                className={layout === 'grid' ? 'relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500' : 'relative flex rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur p-3'}
               >
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
@@ -507,21 +531,21 @@ export function InternshipDashboard() {
                   </div>
                 )}
                 
-                <CardHeader className="pt-6 pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className={isSelectionMode ? "pr-8" : ""}>
-                      <CardTitle className="text-lg clamp-1">{internship.role}</CardTitle>
-                      <CardDescription className="flex items-center mt-1 clamp-1">
+                <CardHeader className={layout === 'grid' ? 'pt-6 pb-2' : 'p-0'}>
+                  <div className="flex justify-between items-start w-full">
+                    <div className={isSelectionMode ? 'pr-8' : ''}>
+                      <CardTitle className={layout === 'grid' ? 'text-lg clamp-1' : 'text-base clamp-1'}>{internship.role}</CardTitle>
+                      <CardDescription className={layout === 'grid' ? 'flex items-center mt-1 clamp-1' : 'flex items-center clamp-1'}>
                         <Building className="h-4 w-4 mr-1" />
                         {internship.company}
                       </CardDescription>
                     </div>
-                    <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs` }>
+                    <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs`}>
                       {internship.status}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-col flex-1 pt-0">
+                <CardContent className={layout === 'grid' ? 'flex flex-col flex-1 pt-0' : 'flex-1 p-0'}>
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4 mr-1" />
@@ -584,6 +608,20 @@ export function InternshipDashboard() {
               </Card>
             ))
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="text-foreground font-medium">{filteredInternships.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredInternships.length)}</span> of <span className="text-foreground font-medium">{filteredInternships.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} className="h-8 px-2">«</Button>
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="h-8 px-2">‹</Button>
+            <div className="text-sm">Page {page} / {totalPages}</div>
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-8 px-2">›</Button>
+            <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="h-8 px-2">»</Button>
+          </div>
         </div>
 
         {filteredInternships.length === 0 && (

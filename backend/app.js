@@ -236,8 +236,27 @@ const statusRank = {
 // Protected job routes
 app.get('/api/jobs', isAuthenticated, async (req, res) => {
   try {
-    const jobs = await Job.find({ userId: req.user._id });
-    res.json(jobs);
+    const isSummary = req.query.summary === '1' || req.query.summary === 'true';
+    let query = Job.find({ userId: req.user._id });
+    if (isSummary) {
+      // Minimal fields needed for dashboard list rendering
+      query = query.select('company role location status stipend dateApplied notes emailId statusHistory createdAt');
+    }
+    // Prefer stable ordering for consumers; helps cache and reduces client sorting cost
+    query = query.sort({ dateApplied: -1, createdAt: -1 });
+
+    const docs = await query.lean();
+
+    if (isSummary) {
+      const trimmed = (docs || []).map((j) => ({
+        ...j,
+        // Keep only latest two history entries for lightweight payload
+        statusHistory: Array.isArray(j.statusHistory) ? j.statusHistory.slice(-2) : [],
+      }));
+      return res.json(trimmed);
+    }
+
+    res.json(docs);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
