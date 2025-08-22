@@ -258,7 +258,7 @@ export function Profile() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <Button 
                     variant="outline" 
                     className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-200 hover:scale-105"
@@ -281,16 +281,7 @@ export function Profile() {
                     <span className="font-semibold">Analytics</span>
                   </Button>
                   
-                  <Button 
-                    variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-200 hover:scale-105"
-                    onClick={() => window.location.href = '/import-gmail'}
-                  >
-                    <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-                      <Mail className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <span className="font-semibold">Import Gmail</span>
-                  </Button>
+                  
                   
                   <Button 
                     variant="outline" 
