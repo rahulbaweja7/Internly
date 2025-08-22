@@ -46,9 +46,12 @@ export default function ContributionHeatmap({ internships, weeksToShow = 53 }) {
   }, []);
 
   const start = useMemo(() => {
+    // Anchor the grid so the LAST column includes today.
+    // Start at the Sunday of the week that is (weeksToShow - 1) weeks before the current week.
+    const count = Math.max(1, Math.min(53, weeksToShow));
     const s = new Date(today);
-    s.setDate(s.getDate() - 7 * Math.max(1, Math.min(53, weeksToShow)));
-    s.setDate(s.getDate() - s.getDay());
+    s.setDate(s.getDate() - s.getDay() - (count - 1) * 7);
+    s.setHours(0, 0, 0, 0);
     return s;
   }, [today, weeksToShow]);
 
