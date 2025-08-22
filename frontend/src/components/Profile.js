@@ -56,23 +56,6 @@ export function Profile() {
               </div>
               <div className="flex justify-end mt-5">
                 <Button variant="outline" onClick={() => (window.location.href = '/settings?tab=profile')}>Edit Profile</Button>
-                <Button
-                  variant="ghost"
-                  className="ml-2 inline-flex items-center gap-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                  onClick={async () => {
-                    if (!window.confirm('This will permanently delete your account and all data. Continue?')) return;
-                    try {
-                      const res = await fetch(`${config.API_BASE_URL}/api/auth/delete`, { method: 'DELETE', credentials: 'include' });
-                      if (!res.ok) throw new Error('Delete failed');
-                      localStorage.removeItem('user');
-                      try { await logout(); } catch (_) {}
-                      window.location.href = '/';
-                    } catch (_) { /* noop */ }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" /> Delete Account
-                </Button>
-                <Button variant="ghost" onClick={async () => { await logout(); window.location.href = '/'; }} className="ml-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">Logout</Button>
               </div>
             </CardContent>
           </Card>
