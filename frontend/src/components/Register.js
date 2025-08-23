@@ -62,11 +62,11 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4 animate-fade-in">
       {/* Background decoration (neutral) */}
       <div className="absolute inset-0 overflow-hidden" />
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md animate-slide-in-up">
         <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
           <CardHeader className="text-center space-y-2">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black dark:bg-white">
@@ -174,6 +174,20 @@ export function Register() {
           </CardContent>
         </Card>
       </div>
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-in-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+        .animate-slide-in-up { animation: slide-in-up 0.8s ease-out 0.2s both; }
+      `}</style>
     </div>
   );
 }

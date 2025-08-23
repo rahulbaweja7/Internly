@@ -65,13 +65,13 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4 animate-fade-in">
       {/* Background decoration (neutral) */}
       <div className="absolute inset-0 overflow-hidden" />
 
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Welcome content */}
-        <div className="text-center lg:text-left space-y-6">
+        <div className="text-center lg:text-left space-y-6 animate-slide-in-left">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start gap-3">
               <h1 className="text-3xl font-bold text-black dark:text-white">
@@ -124,7 +124,7 @@ export function Login() {
         </div>
 
         {/* Right side - Login form */}
-        <div className="flex justify-center">
+        <div className="flex justify-center animate-slide-in-right">
           <Card className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
             <CardHeader className="text-center space-y-2">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black dark:bg-white">
@@ -270,17 +270,23 @@ export function Login() {
         </div>
       </div>
 
-      {/* CSS for animations (kept for potential blobs - currently unused) */}
+      {/* CSS for animations */}
       <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
+        @keyframes slide-in-left {
+          from { opacity: 0; transform: translateX(-50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slide-in-right {
+          from { opacity: 0; transform: translateX(50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+        .animate-slide-in-left { animation: slide-in-left 0.8s ease-out; }
+        .animate-slide-in-right { animation: slide-in-right 0.8s ease-out 0.2s both; }
       `}</style>
     </div>
   );
