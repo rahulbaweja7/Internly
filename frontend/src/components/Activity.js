@@ -14,7 +14,7 @@ export default function Activity() {
     const load = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${config.API_BASE_URL}/api/jobs`);
+        const res = await axios.get(`${config.API_BASE_URL}/api/jobs?summary=1`);
         const jobs = res.data || [];
         // Flatten statusHistory into timeline events, but only for actual status changes
         const timeline = [];

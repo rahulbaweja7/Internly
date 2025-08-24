@@ -1,5 +1,6 @@
 import React from 'react';
 import config from '../../config/config';
+import { cachedApiCall } from '../utils';
 
 export function useProfileStats(userId) {
   const [loading, setLoading] = React.useState(true);
@@ -7,15 +8,22 @@ export function useProfileStats(userId) {
   const [jobs, setJobs] = React.useState([]);
   const [rankFriends, setRankFriends] = React.useState(null);
   const [rankGlobal, setRankGlobal] = React.useState(null);
+  const [lastFetch, setLastFetch] = React.useState(0);
 
-  const fetchAll = React.useCallback(async () => {
+  const fetchAll = React.useCallback(async (force = false) => {
+    // Cache for 30 seconds to avoid excessive API calls
+    const now = Date.now();
+    if (!force && now - lastFetch < 30000) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const [jobsRes, friendsRes, globalRes] = await Promise.all([
-        fetch(`${config.API_BASE_URL}/api/jobs`, { credentials: 'include' }).then((r) => r.json()),
-        fetch(`${config.API_BASE_URL}/api/leaderboard/friends?weeks=4`, { credentials: 'include' }).then((r) => r.json()).catch(() => ({ leaderboard: [] })),
-        fetch(`${config.API_BASE_URL}/api/leaderboard/global?weeks=4`, { credentials: 'include' }).then((r) => r.json()).catch(() => ({ leaderboard: [] })),
+        cachedApiCall(`${config.API_BASE_URL}/api/jobs?summary=1`),
+        cachedApiCall(`${config.API_BASE_URL}/api/leaderboard/friends?weeks=4`).catch(() => ({ leaderboard: [] })),
+        cachedApiCall(`${config.API_BASE_URL}/api/leaderboard/global?weeks=4`).catch(() => ({ leaderboard: [] })),
       ]);
       setJobs(Array.isArray(jobsRes) ? jobsRes : []);
       const findRank = (board) => {
@@ -24,12 +32,13 @@ export function useProfileStats(userId) {
       };
       setRankFriends(findRank(friendsRes));
       setRankGlobal(findRank(globalRes));
+      setLastFetch(now);
     } catch (e) {
       setError(e);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, lastFetch]);
 
   React.useEffect(() => {
     if (userId) fetchAll();
@@ -72,5 +81,5 @@ export function useProfileStats(userId) {
     return count;
   }, [jobs]);
 
-  return { loading, error, jobs, total, last7, last30, streak, rankFriends, rankGlobal, refresh: fetchAll };
+  return { loading, error, jobs, total, last7, last30, streak, rankFriends, rankGlobal, refresh: () => fetchAll(true) };
 }

@@ -16,7 +16,7 @@ export function Analytics() {
 
   // Fetch jobs from backend
   const fetchJobs = () => {
-    axios.get(`${config.API_BASE_URL}/api/jobs`)
+    axios.get(`${config.API_BASE_URL}/api/jobs?summary=1`)
       .then((res) => {
         console.log('Fetched jobs for analytics:', res.data);
         setInternships(res.data);

@@ -87,6 +87,17 @@ export function Navbar() {
       try { localStorage.removeItem('streakDays'); } catch (_) {}
       return;
     }
+
+    // Check if we have cached data that's less than 30 seconds old
+    const cached = localStorage.getItem('streakDays');
+    const cachedTime = localStorage.getItem('streakDaysTime');
+    const now = Date.now();
+    
+    if (cached && cachedTime && (now - parseInt(cachedTime)) < 30000) {
+      setStreakDays(parseInt(cached));
+      return;
+    }
+
     const formatLocalYmd = (date) => {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -125,11 +136,14 @@ export function Navbar() {
     };
 
     axios
-      .get(`${config.API_BASE_URL}/api/jobs`)
+      .get(`${config.API_BASE_URL}/api/jobs?summary=1`)
       .then((res) => {
         const value = computeStreak(res.data);
         setStreakDays(value);
-        try { localStorage.setItem('streakDays', String(value)); } catch (_) {}
+        try { 
+          localStorage.setItem('streakDays', String(value)); 
+          localStorage.setItem('streakDaysTime', String(now));
+        } catch (_) {}
       })
       .catch(() => {
         // Keep previous cached value to avoid UI flicker
