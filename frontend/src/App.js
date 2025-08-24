@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { DataProvider } from './contexts/DataContext';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
@@ -96,29 +97,15 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <AppRoutes />
-          <AnalyticsOptIn />
-          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
-        </Router>
+        <DataProvider>
+          <Router>
+            <AppRoutes />
+            {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+          </Router>
+        </DataProvider>
       </AuthProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
-
-// Dynamically load Vercel Analytics only in production so tests/dev do not fail if entrypoint changes
-const AnalyticsOptIn = React.memo(() => {
-  const [Component, setComponent] = React.useState(null);
-
-  React.useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      import('@vercel/analytics/react')
-        .then((mod) => setComponent(() => mod.Analytics))
-        .catch(() => setComponent(null));
-    }
-  }, []);
-
-  return Component ? <Component /> : null;
-});

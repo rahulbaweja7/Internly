@@ -11,16 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
+import { useData } from '../contexts/DataContext';
 // GmailIntegration moved to dedicated import page
 
 export function InternshipDashboard() {
-  const [internships, setInternships] = useState([]);
+  const { jobs: internships, loading, addJob } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   // Removed unused urlSearchTerm state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
-  const [loading, setLoading] = useState(true);
   // Removed unused oauthMessage state
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -47,33 +47,6 @@ export function InternshipDashboard() {
       navigate('/dashboard', { replace: true });
     }
   }, [location, navigate]);
-
-  // Fetch jobs from backend
-  const fetchJobs = () => {
-    axios.get(`${config.API_BASE_URL}/api/jobs`, { params: { summary: 1 } })
-      .then((res) => {
-        console.log('Fetched jobs from backend:', res.data);
-        // Debug: Check if jobs have emailId
-        res.data.forEach((job, index) => {
-          console.log(`Job ${index + 1}:`, {
-            company: job.company,
-            position: job.role,
-            hasEmailId: !!job.emailId,
-            emailId: job.emailId
-          });
-        });
-        setInternships(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching jobs:", err);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
 
   // Reset to first page when filters/search/data change
   useEffect(() => {
@@ -139,29 +112,25 @@ export function InternshipDashboard() {
     return styles[status] || 'bg-muted text-foreground/70 ring-1 ring-border/50';
   };
 
-  const handleAddInternship = async (internship) => {
+  const handleAddInternship = async (internshipData) => {
     try {
-      const response = await axios.post(`${config.API_BASE_URL}/api/jobs`, {
-        company: internship.company,
-        role: internship.position,
-        location: internship.location,
-        status: internship.status,
-        stipend: internship.salary,
-        dateApplied: internship.appliedDate,
-        notes: internship.notes
+      const response = await axios.post(`${config.API_BASE_URL}/api/jobs`, internshipData, {
+        withCredentials: true
       });
-      // Optimistically prepend to list for snappy UX
-      setInternships((prev) => [response.data, ...prev]);
+      
+      // Optimistically add to global state
+      addJob(response.data);
+      
       setIsFormOpen(false);
     } catch (error) {
-      console.error("Error adding job:", error);
-      alert("Failed to add job");
+      console.error('Error adding internship:', error);
+      alert('Failed to add internship. Please try again.');
     }
   };
 
   const handleEditInternship = async (updatedInternship) => {
     try {
-      const response = await axios.put(`${config.API_BASE_URL}/api/jobs/${updatedInternship._id}`, {
+      await axios.put(`${config.API_BASE_URL}/api/jobs/${updatedInternship._id}`, {
         company: updatedInternship.company,
         role: updatedInternship.position,
         location: updatedInternship.location,
@@ -170,9 +139,6 @@ export function InternshipDashboard() {
         dateApplied: updatedInternship.appliedDate,
         notes: updatedInternship.notes
       });
-      setInternships(internships.map(internship => 
-        internship._id === updatedInternship._id ? response.data : internship
-      ));
       setEditingInternship(null);
       setIsFormOpen(false);
     } catch (error) {
@@ -184,7 +150,7 @@ export function InternshipDashboard() {
   const handleDeleteInternship = async (id) => {
     try {
       await axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`);
-      setInternships(internships.filter(internship => internship._id !== id));
+      // setInternships(internships.filter(internship => internship._id !== id));
       // Remove from selected jobs if it was selected
       setSelectedJobs(prev => {
         const newSet = new Set(prev);
@@ -204,7 +170,7 @@ export function InternshipDashboard() {
       const deletePromises = selectedIds.map(id => axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`));
       await Promise.all(deletePromises);
       
-      setInternships(internships.filter(internship => !selectedJobs.has(internship._id)));
+      // setInternships(internships.filter(internship => !selectedJobs.has(internship._id)));
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsBulkDeleteDialogOpen(false);
@@ -220,7 +186,7 @@ export function InternshipDashboard() {
       console.log('Attempting to delete all jobs...');
       const response = await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`);
       console.log('Delete all response:', response.data);
-      setInternships([]);
+      // setInternships([]);
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsDeleteAllDialogOpen(false);
@@ -236,7 +202,7 @@ export function InternshipDashboard() {
       const response = await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
       if (response.data.success) {
         alert('Email deleted successfully from Gmail!');
-        fetchJobs();
+        // fetchJobs(); // This line is removed as per the new_code
       }
     } catch (error) {
       console.error("Error deleting email from Gmail:", error);

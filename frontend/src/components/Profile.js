@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useProfileStats } from '../lib/hooks/useProfileStats';
+import { useData } from '../contexts/DataContext';
 import ContributionHeatmap from './ContributionHeatmap';
 import { Navbar } from './Navbar';
 import { Button } from './ui/button';
@@ -26,11 +26,52 @@ import config from '../config/config';
 
 export function Profile() {
   const { user, updateUser } = useAuth();
-  const { loading, total, last7, streak, rankFriends, jobs } = useProfileStats(user?._id);
+  const { jobs, loading } = useData();
   const [bio, setBio] = useState(user?.bio || '');
   const [location, setLocation] = useState(user?.location || '');
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Calculate stats from jobs data
+  const stats = useMemo(() => {
+    const countLastNDays = (days) => {
+      const since = Date.now() - days * 24 * 60 * 60 * 1000;
+      return jobs.reduce((acc, j) => {
+        const t = new Date(j.dateApplied || j.appliedDate || j.createdAt).getTime();
+        return acc + (isNaN(t) ? 0 : (t >= since ? 1 : 0));
+      }, 0);
+    };
+
+    const total = jobs.length;
+    const last7 = countLastNDays(7);
+    const last30 = countLastNDays(30);
+
+    // Calculate streak
+    const dates = new Set();
+    const format = (d) => {
+      const dt = new Date(d); dt.setHours(0,0,0,0);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth()+1).padStart(2,'0');
+      const da = String(dt.getDate()).padStart(2,'0');
+      return `${y}-${m}-${da}`;
+    };
+    jobs.forEach((j) => {
+      const raw = j.dateApplied || j.appliedDate || j.createdAt;
+      if (raw) dates.add(format(raw));
+    });
+    
+    let streak = 0;
+    if (dates.size > 0) {
+      const probe = new Date(); probe.setHours(0,0,0,0);
+      while (true) {
+        const key = format(probe);
+        if (dates.has(key)) { streak += 1; probe.setDate(probe.getDate()-1); }
+        else break;
+      }
+    }
+
+    return { total, last7, last30, streak };
+  }, [jobs]);
 
   const onSaveProfile = async () => {
     try {
@@ -179,7 +220,7 @@ export function Profile() {
                           </div>
                         )
                       )}
-                    </div>
+                </div>
 
                     {isEditing ? (
                       <div className="space-y-3">
@@ -194,7 +235,7 @@ export function Profile() {
                           rows={3}
                           className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 resize-none rounded-lg"
                         />
-                      </div>
+              </div>
                     ) : (
                       bio && (
                         <p className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
@@ -202,7 +243,7 @@ export function Profile() {
                         </p>
                       )
                     )}
-                  </div>
+                </div>
                 </div>
               </CardContent>
             </Card>
@@ -217,7 +258,7 @@ export function Profile() {
                     </div>
                   </div>
                   <p className="text-blue-100 text-sm font-semibold mb-1">Last 7 days</p>
-                  <p className="text-3xl font-bold">{last7}</p>
+                  <p className="text-3xl font-bold">{stats.last7}</p>
                 </CardContent>
               </Card>
 
@@ -229,7 +270,7 @@ export function Profile() {
                     </div>
                   </div>
                   <p className="text-purple-100 text-sm font-semibold mb-1">Total</p>
-                  <p className="text-3xl font-bold">{total}</p>
+                  <p className="text-3xl font-bold">{stats.total}</p>
                 </CardContent>
               </Card>
 
@@ -238,17 +279,17 @@ export function Profile() {
                   <div className="flex items-center justify-center mb-3">
                     <div className="p-3 bg-white/20 rounded-xl">
                       <Flame className="h-6 w-6" />
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <p className="text-orange-100 text-sm font-semibold mb-1">Streak</p>
                   <div className="flex items-center justify-center space-x-2">
-                    <p className="text-3xl font-bold">{streak}</p>
+                    <p className="text-3xl font-bold">{stats.streak}</p>
                     <Badge className="bg-white/20 text-white border-0 rounded-full px-3 py-1">
                       Active
                     </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
+            </CardContent>
+          </Card>
 
               <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                 <CardContent className="p-6 text-center">
@@ -258,7 +299,7 @@ export function Profile() {
                     </div>
                   </div>
                   <p className="text-emerald-100 text-sm font-semibold mb-1">Rank</p>
-                  <p className="text-3xl font-bold">{rankFriends || '-'}</p>
+                  <p className="text-3xl font-bold">{user?.rankFriends || '-'}</p>
                 </CardContent>
               </Card>
             </div>
@@ -372,7 +413,7 @@ export function Profile() {
                 <div className="flex items-center space-x-2">
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 rounded-full px-3 py-1">
                     <Flame className="h-4 w-4 mr-2" />
-                    {streak}-day streak
+                    {stats.streak}-day streak
                   </Badge>
                 </div>
               </CardHeader>

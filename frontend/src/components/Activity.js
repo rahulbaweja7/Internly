@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import config from '../config/config';
 import { Navbar } from './Navbar';
 import { Clock, Building, Calendar } from 'lucide-react';
 import { getUsageMetrics, formatDuration } from '../lib/usageTracker';
+import { useData } from '../contexts/DataContext';
 
 export default function Activity() {
+  const { jobs, loading } = useData();
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const load = async () => {
+    if (!loading && jobs) {
       try {
-        setLoading(true);
-        const res = await axios.get(`${config.API_BASE_URL}/api/jobs?summary=1`);
-        const jobs = res.data || [];
         // Flatten statusHistory into timeline events, but only for actual status changes
         const timeline = [];
         for (const j of jobs) {
@@ -45,12 +41,9 @@ export default function Activity() {
         setEvents(timeline.slice(0, 100));
       } catch (e) {
         setError('Failed to load activity');
-      } finally {
-        setLoading(false);
       }
-    };
-    load();
-  }, []);
+    }
+  }, [jobs, loading]);
 
   const usage = getUsageMetrics();
 

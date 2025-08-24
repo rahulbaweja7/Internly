@@ -1,36 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import config from '../config/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ArrowLeft, TrendingUp, Calendar, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
 import { Navbar } from './Navbar';
 import { DashboardCharts } from './DashboardCharts';
+import { useData } from '../contexts/DataContext';
 
 export function Analytics() {
-  const [internships, setInternships] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { jobs: internships, loading } = useData();
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
-
-  // Fetch jobs from backend
-  const fetchJobs = () => {
-    axios.get(`${config.API_BASE_URL}/api/jobs?summary=1`)
-      .then((res) => {
-        console.log('Fetched jobs for analytics:', res.data);
-        setInternships(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching jobs:", err);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
 
   useEffect(() => {
     const r = requestAnimationFrame(() => setMounted(true));
