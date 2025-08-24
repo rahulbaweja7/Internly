@@ -4,38 +4,29 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Badge } from './ui/badge';
 import { 
   Search, 
   Menu, 
   X, 
-  Sun, 
-  Moon, 
   User, 
   Settings, 
-  LogOut, 
-  Trash2,
+  LogOut,
   ArrowRight,
   Home,
   BarChart3,
   TrendingUp,
   Plus,
   Clock,
-  Mail,
-  Bell
+  Mail
 } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
 import { ThemeToggle } from './ui/ThemeToggle';
 import StreakBadge from './ui/StreakBadge';
-import config from '../config/config';
-import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const { jobs } = useData();
-  const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -144,14 +135,6 @@ export function Navbar() {
       document.removeEventListener('keydown', handleEsc);
     };
   }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
 
   const handleLogout = async () => {
     try {
