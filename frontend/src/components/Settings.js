@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Navbar } from './Navbar';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,10 +14,63 @@ export default function Settings() {
   const active = params.get('tab') || 'profile';
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
 
-  const nameInitial = useMemo(() => (user?.name ? user.name[0]?.toUpperCase() : 'U'), [user]);
+  const nameInitial = useMemo(() => {
+    console.log('User object:', user);
+    console.log('User name:', user?.name);
+    if (!user?.name) return 'U';
+    
+    // Clean the name and ensure it's valid
+    const cleanName = user.name.trim();
+    if (!cleanName || cleanName.length === 0) return 'U';
+    
+    // Check if the name looks like invalid data (contains "avatar" or similar)
+    if (cleanName.toLowerCase().includes('avatar') || cleanName.toLowerCase().includes('avata')) {
+      console.log('Invalid name detected, using fallback');
+      return 'U';
+    }
+    
+    const firstChar = cleanName[0];
+    const initial = firstChar ? firstChar.toUpperCase() : 'U';
+    console.log('Calculated initial:', initial);
+    return initial;
+  }, [user]);
   const [displayName, setDisplayName] = useState(user?.name || '');
-  const [avatarPreview, setAvatarPreview] = useState(user?.picture || '');
+  const [avatarPreview, setAvatarPreview] = useState('');
   const fileInputRef = useRef(null);
+
+  // Sync avatarPreview with user picture and clean invalid data
+  useEffect(() => {
+    console.log('User picture value:', user?.picture);
+    
+    // Check if picture contains invalid data and clear it
+    if (user?.picture && (
+      user.picture.toLowerCase().includes('avatar') || 
+      user.picture.toLowerCase().includes('avata') ||
+      (!user.picture.startsWith('data:image') && !user.picture.startsWith('https://'))
+    )) {
+      console.log('Invalid picture data detected, clearing...');
+      // Clear invalid picture data
+      updateUser({ picture: '' });
+      setAvatarPreview('');
+      
+      // Also update on server
+      fetch(`${config.API_BASE_URL}/api/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ picture: '' })
+      }).catch(() => {});
+    } else if (user?.picture && (
+      user.picture.startsWith('data:image') || 
+      user.picture.startsWith('https://')
+    )) {
+      setAvatarPreview(user.picture);
+    } else {
+      setAvatarPreview('');
+    }
+  }, [user?.picture, updateUser]);
   
   // Helpers to persist avatar across refresh by storing a compact data URL
   const readFileAsDataURL = (file) => new Promise((resolve, reject) => {
@@ -101,11 +154,13 @@ export default function Settings() {
                     className="relative h-16 w-16 shrink-0 rounded-full ring-4 ring-muted/60 border border-input overflow-hidden group"
                     title="Change avatar"
                   >
-                    {avatarPreview ? (
+                    {avatarPreview && (avatarPreview.startsWith('data:image') || avatarPreview.startsWith('https://')) ? (
                       <img src={avatarPreview} alt="avatar" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full bg-muted flex items-center justify-center">
-                        <span className="text-lg font-semibold">{nameInitial}</span>
+                      <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-lg font-semibold text-white select-none">
+                          {nameInitial && nameInitial.length === 1 ? nameInitial : 'U'}
+                        </span>
                       </div>
                     )}
                     <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />

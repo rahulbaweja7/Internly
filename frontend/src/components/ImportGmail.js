@@ -11,7 +11,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Mail } from 'lucide-react';
 
 export default function ImportGmail() {
   const navigate = useNavigate();
@@ -204,7 +204,9 @@ export default function ImportGmail() {
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border" />
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border">
+              <Mail className="h-5 w-5 text-blue-500" />
+            </div>
             <div>
               <h1 className="text-3xl font-bold">Import from Gmail</h1>
               <p className="text-muted-foreground">Scan your mailbox to add jobs in seconds</p>

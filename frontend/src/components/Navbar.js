@@ -340,15 +340,17 @@ export function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={isUserMenuOpen}
               >
-                {user?.picture ? (
+                {user?.picture && (user.picture.startsWith('data:image') || user.picture.startsWith('https://')) ? (
                   <img 
                     src={user.picture} 
                     alt={user.name} 
-                    className="h-8 w-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm"
+                    className="h-8 w-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm object-cover"
                   />
                 ) : (
-                  <div className="h-8 w-8 bg-gray-900 dark:bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
+                  <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-semibold text-white">
+                      {user?.name ? user.name[0].toUpperCase() : 'U'}
+                    </span>
                   </div>
                 )}
                 {isUserMenuOpen && (
@@ -460,15 +462,17 @@ export function Navbar() {
                 </div>
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                   <div className="flex items-center space-x-2 px-3 py-2">
-                    {user?.picture ? (
+                    {user?.picture && (user.picture.startsWith('data:image') || user.picture.startsWith('https://')) ? (
                       <img 
                         src={user.picture} 
                         alt={user.name} 
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="h-8 w-8 bg-gray-900 dark:bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+                      <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-semibold text-white">
+                          {user?.name ? user.name[0].toUpperCase() : 'U'}
+                        </span>
                       </div>
                     )}
                     <span className="text-sm text-gray-700 dark:text-gray-300">{user?.name || user?.email}</span>

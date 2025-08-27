@@ -141,7 +141,10 @@ export function Profile() {
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-20"></div>
                     <Avatar className="relative h-24 w-24 border-4 border-white dark:border-slate-700 shadow-xl">
-                      <AvatarImage src={user.picture} alt={user.name} />
+                      <AvatarImage 
+                        src={user.picture && (user.picture.startsWith('data:image') || user.picture.startsWith('https://')) ? user.picture : undefined} 
+                        alt={user.name} 
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
                         {user.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
