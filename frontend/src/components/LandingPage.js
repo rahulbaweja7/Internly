@@ -64,10 +64,7 @@ export function LandingPage() {
       <section className={`py-1.5 lg:py-4 ${mounted ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
         <div className="container mx-auto px-3 lg:px-6 grid md:grid-cols-[1.15fr_1fr] gap-4 lg:gap-8 items-start">
           {/* Left: headline + CTA */}
-          <div className={`transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground mb-4">
-              Your internship companion
-            </div>
+                      <div className={`transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               From Apply to Accepted,
               <br />
