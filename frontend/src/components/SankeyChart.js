@@ -2,8 +2,11 @@ import React, { useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { TrendingUp } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const SankeyChart = ({ data }) => {
+  const { isDarkMode } = useTheme();
+  
   const sankeyData = useMemo(() => {
     if (!data || data.length === 0) {
       return null;
@@ -50,6 +53,21 @@ const SankeyChart = ({ data }) => {
     };
   }, [data]);
 
+  // Define link colors that work well in both light and dark modes
+  const linkColors = isDarkMode 
+    ? [
+        'rgba(147, 197, 253, 0.6)',   // Applied flow - brighter blue for dark mode
+        'rgba(239, 68, 68, 0.6)',     // Rejected flow - brighter red for dark mode
+        'rgba(245, 158, 11, 0.6)',    // Interviewing flow - brighter amber for dark mode
+        'rgba(34, 197, 94, 0.6)'      // Accepted flow - brighter green for dark mode
+      ]
+    : [
+        'rgba(59, 130, 246, 0.4)',    // Applied flow
+        'rgba(239, 68, 68, 0.4)',     // Rejected flow
+        'rgba(245, 158, 11, 0.4)',    // Interviewing flow
+        'rgba(16, 185, 129, 0.4)'     // Accepted flow
+      ];
+
   if (!sankeyData) {
     return (
       <Card>
@@ -93,7 +111,7 @@ const SankeyChart = ({ data }) => {
                   pad: 15,
                   thickness: 20,
                   line: { 
-                    color: 'rgba(0,0,0,0.15)', 
+                    color: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
                     width: 1 
                   },
                   label: ['Total', 'Applied', 'Rejected', 'Interviewing', 'Accepted'],
@@ -106,7 +124,7 @@ const SankeyChart = ({ data }) => {
                   ],
                   font: {
                     size: 12,
-                    color: '#ffffff',
+                    color: isDarkMode ? '#ffffff' : '#000000',
                     family: 'Inter, system-ui, sans-serif',
                     weight: '600'
                   }
@@ -115,12 +133,7 @@ const SankeyChart = ({ data }) => {
                   source: [0, 0, 0, 0], // from Total
                   target: [1, 2, 3, 4], // to Applied, Rejected, Interviewing, Accepted
                   value: [sankeyData.applied, sankeyData.rejected, sankeyData.interviewing, sankeyData.accepted],
-                  color: [
-                    'rgba(59, 130, 246, 0.4)',   // Applied flow
-                    'rgba(239, 68, 68, 0.4)',    // Rejected flow
-                    'rgba(245, 158, 11, 0.4)',   // Interviewing flow
-                    'rgba(16, 185, 129, 0.4)'    // Accepted flow
-                  ],
+                  color: linkColors,
                   hoverinfo: 'all',
                   hovertemplate: '<b>%{source.label}</b> → <b>%{target.label}</b><br>Applications: <b>%{value}</b><extra></extra>'
                 },
@@ -148,9 +161,9 @@ const SankeyChart = ({ data }) => {
               plot_bgcolor: 'rgba(0,0,0,0)',
               hovermode: 'closest',
               hoverlabel: {
-                bgcolor: 'rgba(17,24,39,0.85)',
-                bordercolor: 'rgba(148,163,184,0.2)',
-                font: { size: 12, color: '#e5e7eb' }
+                bgcolor: isDarkMode ? 'rgba(17,24,39,0.95)' : 'rgba(255,255,255,0.95)',
+                bordercolor: isDarkMode ? 'rgba(148,163,184,0.2)' : 'rgba(0,0,0,0.1)',
+                font: { size: 12, color: isDarkMode ? '#e5e7eb' : '#000000' }
               }
             }}
             config={{

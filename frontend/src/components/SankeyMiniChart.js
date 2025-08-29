@@ -1,9 +1,12 @@
 import React from 'react';
 import { Sankey, ResponsiveContainer, Tooltip } from 'recharts';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Lightweight, animated Sankey preview for the landing page.
 // Data is static (preview only) but can be wired to real aggregates later.
 export default function SankeyMiniChart() {
+  const { isDarkMode } = useTheme();
+  
   const data = {
     nodes: [
       { name: 'Total' },
@@ -24,6 +27,11 @@ export default function SankeyMiniChart() {
     Interviewing: '#f59e0b',
     Rejected: '#ef4444',
   };
+
+  // Define link colors that work well in both light and dark modes
+  const linkColors = isDarkMode 
+    ? ['rgba(147, 197, 253, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(239, 68, 68, 0.6)'] // Brighter for dark mode
+    : ['rgba(59, 130, 246, 0.4)', 'rgba(245, 158, 11, 0.4)', 'rgba(239, 68, 68, 0.4)']; // Standard for light mode
 
   return (
     <div style={{ width: '100%', height: 80 }}>
@@ -53,6 +61,20 @@ export default function SankeyMiniChart() {
                   </text>
                 )}
               </g>
+            );
+          }}
+          link={(props) => {
+            const { sourceX, sourceY, targetX, targetY, sourceControlX, linkWidth, index } = props;
+            const linkColor = linkColors[index % linkColors.length];
+            
+            return (
+              <path
+                d={`M ${sourceX} ${sourceY} Q ${sourceControlX} ${sourceY} ${targetX} ${targetY}`}
+                stroke={linkColor}
+                strokeWidth={Math.max(1, linkWidth)}
+                fill="none"
+                opacity={0.8}
+              />
             );
           }}
         >
