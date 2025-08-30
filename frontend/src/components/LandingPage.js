@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
-import { ArrowRight, Search, Bell, TrendingUp, Users as UsersIcon, ShieldCheck, MailCheck, Lock, Github } from 'lucide-react';
+import { ArrowRight, Search, Bell, TrendingUp, Users as UsersIcon, ShieldCheck, MailCheck, Lock, Github, XCircle } from 'lucide-react';
 import SankeyMiniChart from './SankeyMiniChart';
 import { Navbar } from './Navbar';
 
@@ -128,6 +128,7 @@ export function LandingPage() {
                 <TrustPill icon={<MailCheck className="h-4 w-4" />} text="Read‑only Gmail access" />
                 <TrustPill icon={<Lock className="h-4 w-4" />} text="Secure by design" />
                 <TrustPill icon={<Github className="h-4 w-4" />} text="Open‑source core" />
+                <TrustPill icon={<XCircle className="h-4 w-4" />} text="Not vibe coded" />
               </div>
             </div>
           </div>
