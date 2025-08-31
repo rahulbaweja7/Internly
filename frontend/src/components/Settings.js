@@ -325,25 +325,61 @@ export default function Settings() {
                   <div className="text-sm text-muted-foreground">Background presets</div>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { name: 'Soft Gray', hsl: '210 40% 98%' },
-                      { name: 'Warm', hsl: '48 100% 97%' },
-                      { name: 'Cool', hsl: '200 50% 97%' },
-                      { name: 'Off‑white', hsl: '0 0% 98%' },
+                      { name: 'Classic White', hsl: '0 0% 100%' },
+                      { name: 'Warm Cream', hsl: '45 100% 98%' },
+                      { name: 'Cool Blue', hsl: '210 40% 98%' },
+                      { name: 'Soft Mint', hsl: '160 50% 98%' },
+                      { name: 'Lavender Mist', hsl: '270 30% 98%' },
+                      { name: 'Peach Fade', hsl: '25 100% 98%' },
+                      { name: 'Sage Green', hsl: '120 20% 98%' },
+                      { name: 'Rose Gold', hsl: '350 30% 98%' },
                     ].map((p) => (
-                      <button key={p.name} className="px-3 py-1.5 rounded-md border hover:bg-muted/30" onClick={() => setLightBackground(p.hsl)}>{p.name}</button>
+                      <button 
+                        key={p.name} 
+                        className="px-3 py-1.5 rounded-md border hover:bg-muted/30 transition-colors" 
+                        onClick={() => setLightBackground(p.hsl)}
+                        style={{ 
+                          backgroundColor: `hsl(${p.hsl})`,
+                          borderColor: `hsl(${p.hsl.replace(/\d+%$/, '85%')})`
+                        }}
+                      >
+                        {p.name}
+                      </button>
                     ))}
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Custom background (HSL)</div>
-                    <input type="text" placeholder="e.g., 210 40% 98%" className="w-full border rounded px-3 py-2 bg-background" onBlur={(e) => setLightBackground(e.target.value)} />
-                    <div className="text-xs text-muted-foreground mt-1">Tip: try 210 40% 98% (soft gray) or 48 100% 97% (warm).</div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="e.g., 210 40% 98%" 
+                        className="flex-1 border rounded px-3 py-2 bg-background" 
+                        onBlur={(e) => setLightBackground(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setLightBackground(e.target.value);
+                          }
+                        }}
+                      />
+                      <button 
+                        className="px-3 py-2 border rounded hover:bg-muted/30 transition-colors"
+                        onClick={() => setLightBackground('0 0% 100%')}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Try: <span className="cursor-pointer underline" onClick={() => setLightBackground('45 100% 98%')}>Warm Cream</span> • 
+                      <span className="cursor-pointer underline ml-1" onClick={() => setLightBackground('160 50% 98%')}>Soft Mint</span> • 
+                      <span className="cursor-pointer underline ml-1" onClick={() => setLightBackground('270 30% 98%')}>Lavender</span>
+                    </div>
                   </div>
                 </div>
               )}
             </section>
           )}
 
-          {active !== 'profile' && active !== 'security' && active !== 'integrations' && active !== 'privacy' && (
+          {active !== 'profile' && active !== 'security' && active !== 'integrations' && active !== 'privacy' && active !== 'appearance' && (
             <div className="rounded-md border border-input bg-background p-6 text-sm text-muted-foreground">
               {tabs.find((t) => t.id === active)?.label} coming soon.
             </div>
