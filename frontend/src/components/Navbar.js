@@ -36,6 +36,8 @@ export function Navbar() {
   const isAuthenticated = !!user;
   const isDashboard = location.pathname === '/dashboard';
   const isAnalytics = location.pathname === '/analytics';
+  const isAdd = location.pathname === '/add';
+  const isProfile = location.pathname === '/profile';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';
 
@@ -298,7 +300,7 @@ export function Navbar() {
             <Button 
               variant={isDashboard ? "default" : "ghost"}
               onClick={() => navigate('/dashboard')}
-              className={isDashboard ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}
+              className={`transition-colors duration-200 ${isDashboard ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}`}
             >
               <BarChart3 className="h-4 w-4 mr-2" />
               Dashboard
@@ -307,18 +309,28 @@ export function Navbar() {
             <Button 
               variant={isAnalytics ? "default" : "ghost"}
               onClick={() => navigate('/analytics')}
-              className={isAnalytics ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}
+              className={`transition-colors duration-200 ${isAnalytics ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}`}
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Analytics
             </Button>
 
             <Button 
+              variant={isAdd ? "default" : "ghost"}
               onClick={() => navigate('/add')}
-              className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              className={`transition-colors duration-200 ${isAdd ? "bg-black text-white dark:bg-white dark:text-black" : "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"}`}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Internship
+            </Button>
+
+            <Button 
+              variant={isProfile ? "default" : "ghost"}
+              onClick={() => navigate('/profile')}
+              className={`transition-colors duration-200 ${isProfile ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}`}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Profile
             </Button>
 
             {/* User menu group */}
@@ -358,14 +370,14 @@ export function Navbar() {
                     role="menu"
                     className="absolute right-0 top-10 z-[10000] w-48 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1"
                   >
-                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => { setIsUserMenuOpen(false); navigate('/profile'); }} role="menuitem">
+                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors duration-200" onClick={() => { setIsUserMenuOpen(false); navigate('/profile'); }} role="menuitem">
                       <User className="h-4 w-4" /> Profile
                     </button>
-                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => { setIsUserMenuOpen(false); navigate('/settings'); }} role="menuitem">
+                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors duration-200" onClick={() => { setIsUserMenuOpen(false); navigate('/settings'); }} role="menuitem">
                       <Settings className="h-4 w-4" /> Settings
                     </button>
                     <button
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors duration-200"
                       onClick={() => {
                         setIsUserMenuOpen(false);
                         navigate('/activity');
@@ -376,7 +388,7 @@ export function Navbar() {
                       My Activity
                     </button>
                     <button
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors duration-200"
                       onClick={() => {
                         setIsUserMenuOpen(false);
                         navigate('/import/gmail');
@@ -389,7 +401,7 @@ export function Navbar() {
                     <hr className="my-1 border-gray-200 dark:border-gray-600" />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors duration-200"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout

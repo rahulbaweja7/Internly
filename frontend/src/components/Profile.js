@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import ContributionHeatmap from './ContributionHeatmap';
@@ -31,6 +31,14 @@ export function Profile() {
   const [location, setLocation] = useState(user?.location || '');
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // Gentle entrance animation flag
+  const [mounted, setMounted] = useState(false);
+
+  // Trigger entrance animations after first paint
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
 
   // Calculate stats from jobs data
   const stats = useMemo(() => {
@@ -121,7 +129,7 @@ export function Profile() {
       
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-12">
+        <div className={`mb-12 transition-all duration-[2200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-4">
             Your Profile
           </h1>
@@ -130,11 +138,11 @@ export function Profile() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 transition-all duration-[2200ms] delay-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           {/* Left Column - Profile Overview */}
           <div className="lg:col-span-2 space-y-8">
             {/* Profile Header Card */}
-            <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden transition-all duration-[2200ms] delay-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
               <CardContent className="relative p-8">
                 <div className="flex items-start space-x-8">
@@ -252,8 +260,8 @@ export function Profile() {
             </Card>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-[2200ms] delay-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
+                              <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
                 <CardContent className="p-6 text-center">
                   <div className="flex items-center justify-center mb-3">
                     <div className="p-3 bg-white/20 rounded-xl">
@@ -265,7 +273,7 @@ export function Profile() {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
                 <CardContent className="p-6 text-center">
                   <div className="flex items-center justify-center mb-3">
                     <div className="p-3 bg-white/20 rounded-xl">
@@ -277,7 +285,7 @@ export function Profile() {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
                 <CardContent className="p-6 text-center">
                   <div className="flex items-center justify-center mb-3">
                     <div className="p-3 bg-white/20 rounded-xl">
@@ -294,7 +302,7 @@ export function Profile() {
             </CardContent>
           </Card>
 
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
                 <CardContent className="p-6 text-center">
                   <div className="flex items-center justify-center mb-3">
                     <div className="p-3 bg-white/20 rounded-xl">
@@ -308,7 +316,7 @@ export function Profile() {
             </div>
 
             {/* Quick Actions */}
-            <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl">
+            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl transition-all duration-[2200ms] delay-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
                   Quick Actions
@@ -321,7 +329,7 @@ export function Profile() {
                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <Button 
                     variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-200 hover:scale-105"
+                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
                     onClick={() => window.location.href = '/dashboard?add=true'}
                   >
                     <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
@@ -332,7 +340,7 @@ export function Profile() {
                   
                   <Button 
                     variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-200 hover:scale-105"
+                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
                     onClick={() => window.location.href = '/analytics'}
                   >
                     <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
@@ -345,7 +353,7 @@ export function Profile() {
                   
                   <Button 
                     variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-200 hover:scale-105"
+                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
                     onClick={() => window.location.href = '/settings'}
                   >
                     <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
@@ -358,7 +366,7 @@ export function Profile() {
             </Card>
 
             {/* Recent Activity */}
-            <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl">
+            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl transition-all duration-[2200ms] delay-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
                   Recent Activity
@@ -404,7 +412,7 @@ export function Profile() {
           </div>
 
           {/* Right Column - Heatmap */}
-          <div className="space-y-8">
+          <div className={`space-y-8 transition-all duration-[2200ms] delay-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
             <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600">
                 <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
