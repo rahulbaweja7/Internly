@@ -118,7 +118,6 @@ export function InternshipDashboard() {
         withCredentials: true
       });
       
-      // Optimistically add to global state
       addJob(response.data);
       
       setIsFormOpen(false);

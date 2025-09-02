@@ -37,7 +37,6 @@ export function Navbar() {
   const isDashboard = location.pathname === '/dashboard';
   const isAnalytics = location.pathname === '/analytics';
   const isAdd = location.pathname === '/add';
-  const isProfile = location.pathname === '/profile';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';
 
@@ -322,15 +321,6 @@ export function Navbar() {
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Internship
-            </Button>
-
-            <Button 
-              variant={isProfile ? "default" : "ghost"}
-              onClick={() => navigate('/profile')}
-              className={`transition-colors duration-200 ${isProfile ? "bg-black text-white dark:bg-white dark:text-black" : "text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"}`}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Profile
             </Button>
 
             {/* User menu group */}
