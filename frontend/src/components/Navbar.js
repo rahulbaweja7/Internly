@@ -31,7 +31,10 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [streakDays, setStreakDays] = useState(null);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
   const userMenuRef = useRef(null);
+  const searchRef = useRef(null);
 
   const isAuthenticated = !!user;
   const isDashboard = location.pathname === '/dashboard';
@@ -103,6 +106,52 @@ export function Navbar() {
     } catch (_) {}
   }, [isAuthenticated, jobs]);
 
+  // Load recent searches from localStorage and sync with URL search param
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (_) {
+        setRecentSearches([]);
+      }
+    }
+    
+    // Sync search input with URL search parameter
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [location.search]);
+
+  // Add search to recent searches
+  const addToRecentSearches = (query) => {
+    if (!query.trim()) return;
+    
+    const newSearches = [
+      query.trim(),
+      ...recentSearches.filter(s => s !== query.trim())
+    ].slice(0, 5); // Keep only last 5
+    
+    setRecentSearches(newSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(newSearches));
+  };
+
+  // Handle recent search selection
+  const handleRecentSearchClick = (query) => {
+    setSearchQuery(query);
+    setShowRecentSearches(false);
+    navigate(`/dashboard?search=${encodeURIComponent(query)}`);
+  };
+
+  // Clear recent searches
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+    setShowRecentSearches(false);
+  };
+
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -125,9 +174,16 @@ export function Navbar() {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
         setIsUserMenuOpen(false);
       }
+      // Close recent searches dropdown when clicking outside
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowRecentSearches(false);
+      }
     };
     const handleEsc = (e) => {
-      if (e.key === 'Escape') setIsUserMenuOpen(false);
+      if (e.key === 'Escape') {
+        setIsUserMenuOpen(false);
+        setShowRecentSearches(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEsc);
@@ -264,17 +320,28 @@ export function Navbar() {
 
           {/* Center - Search */}
           <div className="hidden md:flex items-center space-x-4 flex-1 justify-center max-w-md mx-8">
-            <div className="relative w-full">
+            <div className="relative w-full" ref={searchRef}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 type="text"
                 placeholder="Search internships... (⌘K)"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSearchQuery(newValue);
+                  
+                  // If search is cleared, navigate to dashboard without search
+                  if (!newValue.trim()) {
+                    // Navigate to dashboard without search parameters
+                    navigate('/dashboard', { replace: true });
+                  }
+                }}
+                onFocus={() => setShowRecentSearches(true)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && searchQuery.trim()) {
+                    addToRecentSearches(searchQuery.trim());
                     navigate(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);
-                    setSearchQuery('');
+                    setShowRecentSearches(false);
                   }
                 }}
                 className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -283,12 +350,41 @@ export function Navbar() {
                 <button
                   onClick={() => {
                     setSearchQuery('');
-                    navigate('/dashboard');
+                    navigate('/dashboard', { replace: true });
+                    setShowRecentSearches(false);
                   }}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  title="Clear search and show all applications"
                 >
                   <X className="h-4 w-4" />
                 </button>
+              )}
+              
+              {/* Recent Searches Dropdown */}
+              {showRecentSearches && recentSearches.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                  <div className="p-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Recent Searches</span>
+                      <button
+                        onClick={clearRecentSearches}
+                        className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    {recentSearches.map((search, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleRecentSearchClick(search)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150 flex items-center gap-2"
+                      >
+                        <Search className="h-3 w-3 text-gray-400" />
+                        {search}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>

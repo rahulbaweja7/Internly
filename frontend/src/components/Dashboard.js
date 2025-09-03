@@ -43,10 +43,11 @@ export function InternshipDashboard() {
     if (searchParam) {
       // Handle search from navbar
       setSearchTerm(searchParam);
-      // Clear the search parameter from URL
-      navigate('/dashboard', { replace: true });
+    } else {
+      // If no search parameter, clear the search term
+      setSearchTerm('');
     }
-  }, [location, navigate]);
+  }, [location.search]);
 
   // Reset to first page when filters/search/data change
   useEffect(() => {
