@@ -86,7 +86,7 @@ export function LandingPage() {
               ) : (
                 <>
                   <Button size="lg" onClick={() => navigate('/register')} className="px-5 py-3 text-sm">
-                    Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                    Get Started<ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="px-5 py-3 text-sm">
                     Sign In
@@ -172,20 +172,64 @@ function DashboardPreview({ active }) {
       {/* Unified: Dashboard + Connect Gmail */}
       <MockWindow title="Dashboard" tag="Preview">
         <div className="space-y-4">
-          {/* Gmail connected & scan – first */}
-          <div className="rounded-lg border border-dashed p-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              <span className="text-sm text-emerald-400">Gmail connected</span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-md border p-3">
-                <div className="text-xs text-muted-foreground">Gmail scanned</div>
-                <button className="mt-2 text-xs px-3 py-1 rounded-md border border-border hover:bg-muted/30">Scan mail</button>
+          {/* Gmail Import - Enhanced Design */}
+          <div className="relative overflow-hidden rounded-xl border border-emerald-200/20 bg-gradient-to-br from-emerald-50/50 to-blue-50/30 dark:from-emerald-950/30 dark:to-blue-950/20 dark:border-emerald-800/30">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_50%)]" />
+            
+            <div className="relative p-6">
+              {/* Header with Icon */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                  <MailCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Gmail Connected</span>
+                  </div>
+                  <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">Ready to import applications</p>
+                </div>
               </div>
-              <div className="rounded-md border p-3">
-                <div className="text-xs text-muted-foreground">Detected applications</div>
-                <div className="text-2xl font-semibold">23</div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group relative overflow-hidden rounded-lg border border-emerald-200/40 bg-white/60 dark:bg-gray-800/60 dark:border-emerald-700/40 backdrop-blur-sm">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 rounded-full bg-blue-400" />
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Last Scan</span>
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-gray-100">2 min ago</div>
+                    <button className="mt-3 w-full text-xs px-3 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                      Scan Now
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="group relative overflow-hidden rounded-lg border border-emerald-200/40 bg-white/60 dark:bg-gray-800/60 dark:border-emerald-700/40 backdrop-blur-sm">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 rounded-full bg-purple-400" />
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Detected</span>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">23</div>
+                    <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">+5 this week</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action */}
+              <div className="mt-4 p-3 rounded-lg bg-white/40 dark:bg-gray-800/40 border border-emerald-200/30 dark:border-emerald-700/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span className="text-xs text-gray-600 dark:text-gray-300">Import Status</span>
+                  </div>
+                  <button className="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm">
+                    Open Import Page
+                  </button>
+                </div>
               </div>
             </div>
           </div>
