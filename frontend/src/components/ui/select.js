@@ -66,8 +66,8 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
               return React.cloneElement(child, {
                 onClick: () => handleSelect(child.props.value),
                 className: cn(
-                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none hover:bg-gray-100 transition-colors",
-                  child.props.value === selectedValue && "bg-blue-50 text-blue-900"
+                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+                  child.props.value === selectedValue && "bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
                 )
               })
             }
@@ -125,7 +125,7 @@ const SelectItem = React.forwardRef(({ className, children, value, onClick, ...p
   <div
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none hover:bg-gray-100 transition-colors",
+      "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
       className
     )}
     onClick={onClick}
