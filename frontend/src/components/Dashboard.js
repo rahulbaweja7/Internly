@@ -283,7 +283,7 @@ export function InternshipDashboard() {
       <div className={`container mx-auto p-6 max-w-7xl transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header */}
         <div className={`mb-8 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
-          <h1 className="text-3xl font-bold mb-2">Internship Tracker</h1>
+          <h1 className="text-3xl font-bold mb-2">Internship Tracker.</h1>
           <p className="text-muted-foreground">
             Track your internship applications and stay organized
           </p>
