@@ -68,7 +68,7 @@ export function LandingPage() {
             <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               From Apply to Accepted,
               <br />
-              <GradientText>Track Your Job</GradientText>
+              <GradientText>Track Your Job.</GradientText>
             </h1>
             <p className={`mt-3 text-[15px] text-muted-foreground max-w-lg ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] delay-[360ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               A smarter way to track applications with Gmail import, clean dashboards, and actionable analytics.
