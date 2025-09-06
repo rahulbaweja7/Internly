@@ -289,61 +289,32 @@ export function InternshipDashboard() {
           </p>
         </div>
 
-        {/* Gmail Import Widget - Gen Z Style */}
-        <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
-          <Card className="group relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-[2px] hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/25">
-            {/* Inner Card */}
-            <div className="relative rounded-2xl bg-white dark:bg-gray-900 p-6">
-              {/* Animated Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-100/20 via-pink-100/20 to-orange-100/20 dark:from-purple-900/10 dark:via-pink-900/10 dark:to-orange-900/10 rounded-2xl" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.05),transparent_50%)]" />
-              
-              <div className="relative">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
-                        <MailCheck className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-400 border-2 border-white dark:border-gray-900 animate-pulse" />
+        {/* Gmail Connected banner - very compact */}
+        <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <Card className="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 p-[1px]">
+            <div className="relative rounded-xl bg-white dark:bg-gray-900 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500">
+                      <MailCheck className="h-3.5 w-3.5 text-white" />
                     </div>
-                    <div>
-                      <CardTitle className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                        Gmail Import
-                      </CardTitle>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">✨ Auto-sync your applications</p>
-                    </div>
+                    <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-400 border-2 border-white dark:border-gray-900" />
                   </div>
-                  
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200 dark:border-green-700">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-semibold text-green-700 dark:text-green-400">LIVE</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      <CardTitle className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 truncate">Gmail Connected</CardTitle>
+                    </div>
+                    <p className="text-[11px] text-gray-600 dark:text-gray-400 truncate">Ready to import applications</p>
                   </div>
                 </div>
-
-                {/* Content */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                      📧 Scan email and add applications
-                    </div>
-                    <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">⚡</span>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">30s setup</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    onClick={() => navigate('/import/gmail')}
-                    className="relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white font-bold px-6 py-2.5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 border-0"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      🚀 Open Import
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => navigate('/import/gmail')}
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs"
+                >
+                  Open Import
+                </Button>
               </div>
             </div>
           </Card>
