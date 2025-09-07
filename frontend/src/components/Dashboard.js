@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Calendar, Building, MapPin, HelpCircle, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
+import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 import { useData } from '../contexts/DataContext';
@@ -710,11 +710,6 @@ export function InternshipDashboard() {
           </Card>
         )}
       </div>
-
-      {/* Help Button */}
-      <button className="fixed bottom-6 right-6 h-12 w-12 bg-gray-800 dark:bg-gray-700 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
-        <HelpCircle className="h-6 w-6" />
-      </button>
 
       {/* Add/Edit Internship Modal */}
       {isFormOpen && (
