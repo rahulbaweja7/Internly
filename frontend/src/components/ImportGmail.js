@@ -187,39 +187,44 @@ export default function ImportGmail() {
   }, [showAll, query, layout]);
 
   const SkeletonCard = () => (
-    <Card className="rounded-xl border border-border/80 bg-gradient-to-b from-background/70 to-background/30 backdrop-blur animate-pulse h-full">
+    <Card className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md animate-pulse h-full">
       <CardContent className="p-4 min-h-[140px]">
-        <div className="h-4 w-40 bg-muted/40 rounded mb-2" />
-        <div className="h-3 w-28 bg-muted/30 rounded mb-1" />
-        <div className="h-3 w-32 bg-muted/20 rounded" />
+        <div className="h-4 w-40 bg-white/10 rounded mb-2" />
+        <div className="h-3 w-28 bg-white/10 rounded mb-1" />
+        <div className="h-3 w-32 bg-white/10 rounded" />
       </CardContent>
     </Card>
   );
 
   return (
     <>
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative bg-slate-950">
       <Navbar />
+      {/* Aurora background accents */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-32 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-24 h-[460px] w-[460px] rounded-full bg-gradient-to-br from-purple-500/15 to-blue-500/15 blur-3xl" />
+      </div>
       <div className="h-16" />
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border">
-              <Mail className="h-5 w-5 text-blue-500" />
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-r from-cyan-500/30 to-violet-500/30 flex items-center justify-center ring-1 ring-white/10">
+              <Mail className="h-5 w-5 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Import from Gmail</h1>
-              <p className="text-muted-foreground">Scan your mailbox to add jobs in seconds</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">Import from Gmail</h1>
+              <p className="text-slate-300">Scan your mailbox to add jobs in seconds</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-md border border-border overflow-hidden">
+            <div className="inline-flex rounded-md border border-white/10 overflow-hidden bg-white/5">
               <button
-                className={`px-3 py-1.5 text-xs ${layout === 'list' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+                className={`px-3 py-1.5 text-xs transition-colors ${layout === 'list' ? 'bg-white/10 text-white' : 'hover:bg-white/10 text-slate-300'}`}
                 onClick={() => setLayout('list')}
               >List</button>
               <button
-                className={`px-3 py-1.5 text-xs ${layout === 'grid' ? 'bg-muted/30' : 'hover:bg-muted/10'}`}
+                className={`px-3 py-1.5 text-xs transition-colors ${layout === 'grid' ? 'bg-white/10 text-white' : 'hover:bg-white/10 text-slate-300'}`}
                 onClick={() => setLayout('grid')}
               >Grid</button>
             </div>
@@ -227,39 +232,41 @@ export default function ImportGmail() {
           </div>
         </div>
 
-        <Card className="rounded-2xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur sticky top-16 z-10">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">Gmail Connection {status.connected && <Badge variant="secondary">Connected</Badge>}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3 items-center pb-4">
-            {!status.connected ? (
-              <Button onClick={connect}>Connect Gmail</Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={scan} disabled={loading}>{loading ? 'Scanning…' : 'Scan Emails'}</Button>
-                <label className="text-xs text-muted-foreground inline-flex items-center gap-2">
-                  <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
-                  Show all
-                </label>
-                <Input
-                  placeholder="Search detected applications…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="w-72"
-                />
-                <Button onClick={addAll} disabled={adding || filtered.length === 0}>
-                  Add All ({filtered.length})
-                </Button>
-                <Button variant="outline" onClick={disconnect}>Disconnect</Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <div className="sticky top-16 z-10 rounded-2xl p-[1px] bg-gradient-to-r from-cyan-500/30 via-emerald-500/30 to-violet-500/30">
+          <Card className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">Gmail Connection {status.connected && <Badge variant="secondary">Connected</Badge>}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3 items-center pb-4">
+              {!status.connected ? (
+                <Button onClick={connect}>Connect Gmail</Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={scan} disabled={loading}>{loading ? 'Scanning…' : 'Scan Emails'}</Button>
+                  <label className="text-xs text-slate-300 inline-flex items-center gap-2">
+                    <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+                    Show all
+                  </label>
+                  <Input
+                    placeholder="Search detected applications…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-72"
+                  />
+                  <Button onClick={addAll} disabled={adding || filtered.length === 0}>
+                    Add All ({filtered.length})
+                  </Button>
+                  <Button variant="outline" onClick={disconnect}>Disconnect</Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="mt-4">
           {filtered.length === 0 ? (
-            <Card className="rounded-2xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur">
-              <CardContent className="py-10 text-center text-muted-foreground">
+            <Card className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md">
+              <CardContent className="py-10 text-center text-slate-300">
                 {loading ? 'Scanning…' : 'No detected applications yet. Click Scan Emails to begin.'}
               </CardContent>
             </Card>
@@ -272,14 +279,15 @@ export default function ImportGmail() {
               {!loading && pageItems.map((a) => {
                 const already = jobsEmailIds.has(a.emailId);
                 return (
-                  <Card key={a.emailId} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur h-full">
+                  <Card key={a.emailId} className="relative rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] transition-colors backdrop-blur-md h-full">
+                    <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400/70 via-emerald-400/70 to-violet-400/70 rounded-t-xl" />
                     <CardContent className="p-4 min-h-[140px] h-full flex flex-col">
                       <div className="flex items-start justify-between gap-3 flex-1">
                         <div>
                           <div className="font-medium clamp-1">{a.position || 'Unknown Position'}</div>
-                          <div className="text-sm text-muted-foreground clamp-1">{a.company || 'Unknown Company'}</div>
-                          <div className="text-xs text-muted-foreground">Applied: {new Date(a.appliedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}</div>
-                          {a.subject && <div className="text-xs text-muted-foreground mt-1 clamp-1">Subject: {a.subject}</div>}
+                          <div className="text-sm text-slate-300 clamp-1">{a.company || 'Unknown Company'}</div>
+                          <div className="text-xs text-slate-300">Applied: {new Date(a.appliedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}</div>
+                          {a.subject && <div className="text-xs text-slate-300 mt-1 clamp-1">Subject: {a.subject}</div>}
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
                           <Button size="sm" variant="outline" onClick={() => setEditing(a)}>
@@ -300,31 +308,33 @@ export default function ImportGmail() {
               })}
 
               {/* Pagination */}
-              <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="text-foreground font-medium">{start + 1}-{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronsLeft className="h-4 w-4"/></Button>
-                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronLeft className="h-4 w-4"/></Button>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span>Page</span>
-                    <input
-                      className="w-12 h-8 rounded-md border border-input bg-background px-2 text-center text-sm"
-                      value={jumpPage}
-                      onChange={(e) => setJumpPage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const n = parseInt(jumpPage, 10);
-                          if (!isNaN(n)) setPage(n);
-                        }
-                      }}
-                      placeholder={String(currentPage)}
-                    />
-                    <span>/ {totalPages}</span>
+              <div className="rounded-md p-[1px] bg-gradient-to-r from-cyan-500/30 via-emerald-500/30 to-violet-500/30">
+                <div className="flex items-center justify-between py-3 rounded-md border border-white/10 bg-white/[0.04] backdrop-blur-md px-3">
+                  <div className="text-sm text-slate-300">
+                    Showing <span className="text-foreground font-medium">{start + 1}-{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronRight className="h-4 w-4"/></Button>
-                  <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronsRight className="h-4 w-4"/></Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronsLeft className="h-4 w-4"/></Button>
+                    <Button variant="outline" size="sm" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronLeft className="h-4 w-4"/></Button>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>Page</span>
+                      <input
+                        className="w-12 h-8 rounded-md border border-input bg-background px-2 text-center text-sm"
+                        value={jumpPage}
+                        onChange={(e) => setJumpPage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const n = parseInt(jumpPage, 10);
+                            if (!isNaN(n)) setPage(n);
+                          }
+                        }}
+                        placeholder={String(currentPage)}
+                      />
+                      <span>/ {totalPages}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronRight className="h-4 w-4"/></Button>
+                    <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={currentPage >= totalPages} className="h-8 px-2"><ChevronsRight className="h-4 w-4"/></Button>
+                  </div>
                 </div>
               </div>
             </div>
