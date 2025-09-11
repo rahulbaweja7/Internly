@@ -11,7 +11,7 @@ import config from '../config/config';
 
 export function Login() {
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
+  const { updateUser, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -19,6 +19,13 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const firstName = (user?.name || user?.fullName || user?.email || '')
+    .toString()
+    .split(' ')[0]
+    .split('@')[0];
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -65,24 +72,24 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4 animate-fade-in">
-      {/* Background decoration (neutral) */}
-      <div className="absolute inset-0 overflow-hidden" />
-
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen relative bg-white dark:bg-gray-950 flex items-center justify-center p-6 animate-fade-in">
+      {/* Aesthetic background: mesh gradient + film grain (dark mode only) */}
+      <div className="absolute inset-0 -z-10">
+        <div className="hidden dark:block absolute inset-0 bg-mesh" />
+        <div className="hidden dark:block absolute inset-0 bg-noise opacity-[0.05] mix-blend-overlay pointer-events-none" />
+      </div>
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         {/* Left side - Welcome content */}
         <div className="text-center lg:text-left space-y-6 animate-slide-in-left">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start gap-3">
-              <h1 className="text-3xl font-bold text-black dark:text-white">
-                Applycation
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Applycation</h1>
             </div>
             
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+            <h2 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900 dark:text-gray-100">
               Track Your Career
               <br />
-              <span className="text-gray-900 dark:text-gray-100">Journey</span>
+              Journey
             </h2>
             
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto lg:mx-0">
@@ -92,17 +99,29 @@ export function Login() {
 
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8">
-            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
-              <Building className="h-5 w-5 text-gray-900 dark:text-gray-100" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Track Applications</span>
+            <div className="group rounded-xl p-[1px] bg-gradient-to-r from-rose-400/40 via-amber-400/40 to-sky-400/40">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 transition-all group-hover:bg-white/95 dark:group-hover:bg-gray-800">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 text-white flex items-center justify-center shadow-sm">
+                  <Building className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100">Track Applications</span>
+              </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
-              <TrendingUp className="h-5 w-5 text-gray-900 dark:text-gray-100" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Monitor Progress</span>
+            <div className="group rounded-xl p-[1px] bg-gradient-to-r from-sky-400/40 via-indigo-400/40 to-purple-400/40">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 transition-all group-hover:bg-white/95 dark:group-hover:bg-gray-800">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 text-white flex items-center justify-center shadow-sm">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100">Monitor Progress</span>
+              </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-200/60 dark:border-gray-700/60">
-              <Users className="h-5 w-5 text-gray-900 dark:text-gray-100" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Smart Insights</span>
+            <div className="group rounded-xl p-[1px] bg-gradient-to-r from-emerald-400/40 via-teal-400/40 to-cyan-400/40">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 transition-all group-hover:bg-white/95 dark:group-hover:bg-gray-800">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm">
+                  <Users className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100">Smart Insights</span>
+              </div>
             </div>
           </div>
 
@@ -125,14 +144,16 @@ export function Login() {
 
         {/* Right side - Login form */}
         <div className="flex justify-center animate-slide-in-right">
-          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
+          <div className="w-full max-w-md rounded-2xl p-[1px] bg-gradient-to-r from-rose-400/40 via-amber-400/40 to-sky-400/40">
+          <Card className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-[#0f1424]/95 border border-gray-200 dark:border-white/10 shadow-2xl">
+            <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-rose-400 via-amber-400 to-sky-400" />
             <CardHeader className="text-center space-y-2">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black dark:bg-white">
-                <Sparkles className="h-8 w-8 text-white dark:text-black" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-md">
+                <Sparkles className="h-8 w-8" />
               </div>
-              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</CardTitle>
+              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}{firstName ? `, ${firstName}` : ''} 👋</CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-300">
-                Sign in to continue your career journey
+                Welcome back! Sign in to continue your career journey.
               </CardDescription>
             </CardHeader>
             
@@ -141,7 +162,7 @@ export function Login() {
               <Button 
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full h-12 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                className="w-full h-12 bg-white border-2 border-gray-200 text-gray-800 hover:bg-gray-50 transition-colors"
                 size="lg"
               >
                 {isLoading ? (
@@ -178,10 +199,10 @@ export function Login() {
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-gray-200 dark:border-gray-800" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">Or continue with</span>
                 </div>
               </div>
 
@@ -202,7 +223,7 @@ export function Login() {
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       placeholder="Enter your email"
-                      className="pl-10"
+                      className="pl-10 focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:border-blue-400"
                       required
                     />
                   </div>
@@ -218,7 +239,7 @@ export function Login() {
                       value={formData.password}
                       onChange={(e) => handleChange('password', e.target.value)}
                       placeholder="Enter your password"
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:border-blue-400"
                       required
                     />
                     <button
@@ -233,7 +254,7 @@ export function Login() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                  className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white hover:from-rose-400 hover:to-amber-400 transition-transform hover:scale-[1.01]"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -267,11 +288,25 @@ export function Login() {
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
 
       {/* CSS for animations */}
       <style jsx>{`
+        .bg-mesh {
+          background-image:
+            radial-gradient(60% 60% at 0% 0%, rgba(253,164,175,0.14) 0%, transparent 60%),
+            radial-gradient(60% 60% at 100% 0%, rgba(251,191,36,0.14) 0%, transparent 60%),
+            radial-gradient(70% 70% at 20% 100%, rgba(147,197,253,0.12) 0%, transparent 60%),
+            radial-gradient(80% 80% at 100% 100%, rgba(167,139,250,0.12) 0%, transparent 60%),
+            linear-gradient(180deg, #0b1020 0%, #0b1222 40%, #0b1020 100%);
+          background-repeat: no-repeat;
+        }
+        .bg-noise {
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.9'/></svg>");
+          background-size: cover;
+        }
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -284,6 +319,7 @@ export function Login() {
           from { opacity: 0; transform: translateX(50px); }
           to { opacity: 1; transform: translateX(0); }
         }
+        
         .animate-fade-in { animation: fade-in 0.6s ease-out; }
         .animate-slide-in-left { animation: slide-in-left 0.8s ease-out; }
         .animate-slide-in-right { animation: slide-in-right 0.8s ease-out 0.2s both; }
