@@ -268,7 +268,7 @@ function TrustPill({ icon, text }) {
 // Gradient helper used in headline
 function GradientText({ children }) {
   return (
-    <span className="bg-gradient-to-r from-[#8ab4ff] via-[#c084fc] to-[#a78bfa] bg-clip-text text-transparent">
+    <span className="bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 bg-clip-text text-transparent dark:from-[#8ab4ff] dark:via-[#c084fc] dark:to-[#a78bfa]">
       {children}
     </span>
   );
