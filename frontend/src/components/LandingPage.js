@@ -64,8 +64,8 @@ export function LandingPage() {
       <section className={`py-1.5 lg:py-4 ${mounted ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
         <div className="container mx-auto px-3 lg:px-6 grid md:grid-cols-[1.15fr_1fr] gap-4 lg:gap-8 items-start">
           {/* Left: headline + CTA */}
-                      <div className={`transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
+                      <div className={`transition-transform duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'translate-y-0' : 'translate-y-4'}`}>
+            <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight text-black dark:text-white leading-tight ${mounted ? 'translate-y-0' : 'translate-y-4'} transition-transform duration-[1800ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}>
               From Apply to Accepted,
               <br />
               <GradientText>Track Your Job.</GradientText>
@@ -201,7 +201,11 @@ function DashboardPreview({ active }) {
                     <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-300">Import Status</span>
                   </div>
-                  <button className="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm">
+                  <button
+                    className="text-xs px-3 py-1.5 rounded-md font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm
+                    bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50
+                    dark:bg-gradient-to-r dark:from-emerald-500 dark:to-blue-500 dark:text-white dark:border-transparent dark:hover:from-emerald-600 dark:hover:to-blue-600"
+                  >
                     Open Import Page
                   </button>
                 </div>
@@ -268,7 +272,16 @@ function TrustPill({ icon, text }) {
 // Gradient helper used in headline
 function GradientText({ children }) {
   return (
-    <span className="bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 bg-clip-text text-transparent dark:from-[#8ab4ff] dark:via-[#c084fc] dark:to-[#a78bfa]">
+    <span
+      className="relative bg-clip-text text-transparent"
+      style={{
+        backgroundImage:
+          'linear-gradient(90deg, #6d28d9 0%, #6d28d9 15%, #c026d3 50%, #1d4ed8 85%, #1d4ed8 100%)',
+        WebkitTextFillColor: 'transparent',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 100%'
+      }}
+    >
       {children}
     </span>
   );
