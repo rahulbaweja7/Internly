@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './button';
-import { Sun, Moon, Palette, Check } from 'lucide-react';
+import { Sun, Moon, Check } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const ThemeToggle = ({ className = '' }) => {
@@ -30,10 +30,6 @@ export const ThemeToggle = ({ className = '' }) => {
           <button className="w-full px-3 py-2 text-sm flex items-center justify-between hover:bg-muted" onClick={() => { setMode('dark'); setOpen(false); }}>
             <span className="flex items-center gap-2"><Moon className="h-4 w-4"/> Dark</span>
             {mode === 'dark' && <Check className="h-4 w-4"/>}
-          </button>
-          <button className="w-full px-3 py-2 text-sm flex items-center justify-between hover:bg-muted" onClick={() => { setMode('custom'); window.location.href = '/settings?tab=appearance'; }}>
-            <span className="flex items-center gap-2"><Palette className="h-4 w-4"/> Custom…</span>
-            {mode === 'custom' && <Check className="h-4 w-4"/>}
           </button>
         </div>
       )}
