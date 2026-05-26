@@ -11,12 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck, Download } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
+import KanbanBoard from './KanbanBoard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-// GmailIntegration moved to dedicated import page
 
 export function InternshipDashboard() {
-  const { jobs: internships, loading, addJob } = useData();
+  const { jobs: internships, loading, addJob, updateJob } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -206,6 +206,19 @@ export function InternshipDashboard() {
 
   const handleExportData = () => {
     window.location.href = `${config.API_BASE_URL}/api/auth/export`;
+  };
+
+  const handleUpdateStatus = async (jobId, newStatus) => {
+    // Optimistic update so the card snaps to the new column instantly
+    updateJob(jobId, { status: newStatus });
+    try {
+      await axios.put(`${config.API_BASE_URL}/api/jobs/${jobId}`, { status: newStatus });
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      // Revert on failure — re-fetch from server
+      const original = internships.find(j => j._id === jobId);
+      if (original) updateJob(jobId, { status: original.status });
+    }
   };
 
   const handleDeleteEmail = async (emailId) => {
@@ -445,6 +458,15 @@ export function InternshipDashboard() {
             >
               Grid
             </button>
+            <button
+              type="button"
+              aria-pressed={layout === 'kanban'}
+              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'kanban' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
+              onClick={() => setLayout('kanban')}
+              title="Kanban board"
+            >
+              Board
+            </button>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
@@ -565,8 +587,30 @@ export function InternshipDashboard() {
           </div>
         )}
 
-        {/* Internship List */}
-        <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
+        {/* Kanban Board */}
+        {layout === 'kanban' && (
+          <KanbanBoard
+            internships={filteredInternships}
+            searchTerm=""
+            onUpdateStatus={handleUpdateStatus}
+            onEdit={(job) => {
+              setEditingInternship({
+                _id: job._id,
+                company: job.company,
+                position: job.role,
+                location: job.location,
+                status: job.status,
+                salary: job.stipend,
+                appliedDate: job.dateApplied,
+                notes: job.notes,
+              });
+              setIsFormOpen(true);
+            }}
+          />
+        )}
+
+        {/* Internship List / Grid */}
+        {layout !== 'kanban' && <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
           {loading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse h-[120px]" />
@@ -723,10 +767,10 @@ export function InternshipDashboard() {
               </Card>
             ))
           )}
-        </div>
+        </div>}
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
+        {/* Pagination — hidden in kanban mode */}
+        {layout !== 'kanban' && <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
           <div className="text-sm text-muted-foreground">
             Showing <span className="text-foreground font-medium">{filteredInternships.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredInternships.length)}</span> of <span className="text-foreground font-medium">{filteredInternships.length}</span>
           </div>
@@ -737,9 +781,9 @@ export function InternshipDashboard() {
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-8 px-2">›</Button>
             <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="h-8 px-2">»</Button>
           </div>
-        </div>
+        </div>}
 
-        {filteredInternships.length === 0 && (
+        {layout !== 'kanban' && filteredInternships.length === 0 && (
           <Card className="text-center py-12">
             <CardContent>
               <p className="text-muted-foreground">
