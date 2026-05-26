@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { ArrowLeft, TrendingUp, Calendar, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Briefcase, CheckCircle2, XCircle, Download } from 'lucide-react';
 import { Navbar } from './Navbar';
 import { DashboardCharts } from './DashboardCharts';
 import { useData } from '../contexts/DataContext';
@@ -22,6 +22,24 @@ export function Analytics() {
     return acc;
   }, {});
 
+  const handleExportCSV = () => {
+    const headers = ['Company', 'Role', 'Location', 'Status', 'Date Applied', 'Stipend', 'Notes'];
+    const rows = internships.map(j => [
+      j.company, j.role, j.location, j.status,
+      j.dateApplied ? new Date(j.dateApplied).toLocaleDateString() : '',
+      j.stipend || '',
+      (j.notes || '').replace(/"/g, '""'),
+    ].map(v => `"${v}"`).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `internly-applications-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const totalApplications = internships.length;
   const acceptedCount = statusCounts.Accepted || 0;
   const rejectedCount = statusCounts.Rejected || 0;
@@ -37,7 +55,7 @@ export function Analytics() {
       <div className={`container mx-auto p-6 max-w-7xl relative z-10 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Button
               variant="outline"
               size="sm"
@@ -47,6 +65,17 @@ export function Analytics() {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
+            {internships.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            )}
           </div>
           <h1 className="text-3xl font-bold mb-2">Analytics & Insights</h1>
           <p className="text-muted-foreground">

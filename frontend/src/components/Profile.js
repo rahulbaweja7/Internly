@@ -78,7 +78,9 @@ export function Profile() {
       }
     }
 
-    return { total, last7, last30, streak };
+    const accepted = jobs.filter(j => j.status === 'Accepted').length;
+    const acceptRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
+    return { total, last7, last30, streak, acceptRate };
   }, [jobs]);
 
   const onSaveProfile = async () => {
@@ -309,8 +311,8 @@ export function Profile() {
                       <Trophy className="h-6 w-6" />
                     </div>
                   </div>
-                  <p className="text-emerald-100 text-sm font-semibold mb-1">Rank</p>
-                  <p className="text-3xl font-bold">{user?.rankFriends || '-'}</p>
+                  <p className="text-emerald-100 text-sm font-semibold mb-1">Acceptance Rate</p>
+                  <p className="text-3xl font-bold">{stats.acceptRate}%</p>
                 </CardContent>
               </Card>
             </div>

@@ -6,12 +6,9 @@ export function useProfileStats(userId) {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [jobs, setJobs] = React.useState([]);
-  const [rankFriends, setRankFriends] = React.useState(null);
-  const [rankGlobal, setRankGlobal] = React.useState(null);
   const [lastFetch, setLastFetch] = React.useState(0);
 
   const fetchAll = React.useCallback(async (force = false) => {
-    // Cache for 30 seconds to avoid excessive API calls
     const now = Date.now();
     if (!force && now - lastFetch < 30000) {
       return;
@@ -20,18 +17,8 @@ export function useProfileStats(userId) {
     setLoading(true);
     setError(null);
     try {
-      const [jobsRes, friendsRes, globalRes] = await Promise.all([
-        cachedApiCall(`${config.API_BASE_URL}/api/jobs?summary=1`),
-        cachedApiCall(`${config.API_BASE_URL}/api/leaderboard/friends?weeks=4`).catch(() => ({ leaderboard: [] })),
-        cachedApiCall(`${config.API_BASE_URL}/api/leaderboard/global?weeks=4`).catch(() => ({ leaderboard: [] })),
-      ]);
+      const jobsRes = await cachedApiCall(`${config.API_BASE_URL}/api/jobs?summary=1`);
       setJobs(Array.isArray(jobsRes) ? jobsRes : []);
-      const findRank = (board) => {
-        const idx = (board.leaderboard || []).findIndex((row) => String(row.userId) === String(userId));
-        return idx >= 0 ? idx + 1 : null;
-      };
-      setRankFriends(findRank(friendsRes));
-      setRankGlobal(findRank(globalRes));
       setLastFetch(now);
     } catch (e) {
       setError(e);
@@ -81,5 +68,5 @@ export function useProfileStats(userId) {
     return count;
   }, [jobs]);
 
-  return { loading, error, jobs, total, last7, last30, streak, rankFriends, rankGlobal, refresh: () => fetchAll(true) };
+  return { loading, error, jobs, total, last7, last30, streak, refresh: () => fetchAll(true) };
 }

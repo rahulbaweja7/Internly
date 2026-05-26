@@ -115,21 +115,29 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     }
     const latestEmails = Array.from(byThread.values()).sort((a, b) => b.ts - a.ts);
 
+    const ProcessedEmail = require('../models/ProcessedEmail');
+    const Job = require('../models/Job');
+    const CHUNK = 15;
     const parsed = [];
-    for (const { email } of latestEmails) {
-      const app = parseJobApplicationFromEmail(email);
-      if (!app) continue;
-      if (!showAll) {
-        const ProcessedEmail = require('../models/ProcessedEmail');
-        const Job = require('../models/Job');
-        const emailId = app.emailId || email.id;
-        const [seenProc, seenJob] = await Promise.all([
-          ProcessedEmail.findOne({ emailId, userId }).lean(),
-          Job.findOne({ emailId }).lean(),
-        ]);
-        if (seenProc || seenJob) continue;
+
+    for (let i = 0; i < latestEmails.length; i += CHUNK) {
+      // Yield to event loop between chunks so we don't block on large mailboxes
+      if (i > 0) await new Promise(resolve => setImmediate(resolve));
+
+      const chunk = latestEmails.slice(i, i + CHUNK);
+      for (const { email } of chunk) {
+        const app = parseJobApplicationFromEmail(email);
+        if (!app) continue;
+        if (!showAll) {
+          const emailId = app.emailId || email.id;
+          const [seenProc, seenJob] = await Promise.all([
+            ProcessedEmail.findOne({ emailId, userId }).lean(),
+            Job.findOne({ emailId }).lean(),
+          ]);
+          if (seenProc || seenJob) continue;
+        }
+        parsed.push(app);
       }
-      parsed.push(app);
     }
 
     res.json({ success: true, count: parsed.length, applications: parsed });

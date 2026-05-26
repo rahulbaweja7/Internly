@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('user');
+      ['user', 'streakDays', 'streakDaysTime', 'recentSearches'].forEach(k => localStorage.removeItem(k));
       setUser(null);
     }
   };

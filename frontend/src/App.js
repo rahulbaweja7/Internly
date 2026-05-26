@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
@@ -95,16 +96,20 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <Router>
-            <AppRoutes />
-            {process.env.NODE_ENV === 'production' && <SpeedInsights />}
-          </Router>
-        </DataProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <DataProvider>
+            <Router>
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+              {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+            </Router>
+          </DataProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

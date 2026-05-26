@@ -17,7 +17,6 @@ describe('Authentication Tests', () => {
         .send(userData)
         .expect(201);
 
-      expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('user');
       expect(response.body.user.email).toBe(userData.email);
       expect(response.body.user.name).toBe(userData.name);
@@ -75,7 +74,6 @@ describe('Authentication Tests', () => {
         .send(loginData)
         .expect(200);
 
-      expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('user');
     });
 

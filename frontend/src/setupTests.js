@@ -7,9 +7,6 @@ import '@testing-library/jest-dom';
 // Force axios to use its CommonJS build in Jest to avoid ESM parse errors
 jest.mock('axios', () => require('axios/dist/node/axios.cjs'));
 
-// Stub out heavy charting libs that depend on Canvas/WebGL
-jest.mock('react-plotly.js', () => () => null);
-
 // Polyfill/override matchMedia for components that query color scheme
 window.matchMedia = jest.fn().mockImplementation((query) => ({
   matches: false,

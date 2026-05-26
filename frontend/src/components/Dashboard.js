@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
+import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck, Download } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -204,6 +204,10 @@ export function InternshipDashboard() {
     }
   };
 
+  const handleExportData = () => {
+    window.location.href = `${config.API_BASE_URL}/api/auth/export`;
+  };
+
   const handleDeleteEmail = async (emailId) => {
     try {
       const response = await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
@@ -300,12 +304,28 @@ export function InternshipDashboard() {
               Welcome back{firstName ? `, ${firstName}` : ''} 👋
             </p>
           )}
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-foreground">
-            Internship Tracker.
-          </h1>
-          <p className="text-muted-foreground">
-            Track your internship applications and stay organized
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-foreground">
+                Internship Tracker.
+              </h1>
+              <p className="text-muted-foreground">
+                Track your internship applications and stay organized
+              </p>
+            </div>
+            {internships.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportData}
+                className="flex items-center gap-2 shrink-0 mt-2"
+                title="Export all your data as JSON"
+              >
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Gmail Connected banner - very compact */}

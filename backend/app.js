@@ -158,13 +158,10 @@ passport.deserializeUser(async (id, done) => {
 // Routes
 const authRoutes = require('./routes/auth');
 const gmailRoutes = require('./routes/gmail');
-// Friends/Leaderboard temporarily disabled
 const { isAuthenticated } = require('./middleware/auth');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/gmail', gmailRoutes);
-// app.use('/api/friends', friendsRoutes);
-// app.use('/api/leaderboard', leaderboardRoutes);
 
 // Lightweight CSRF protection (double-submit cookie):
 // - Server issues a non-HttpOnly `csrf` cookie with a random token
@@ -215,9 +212,44 @@ const verifyCsrf = (req, res, next) => {
 app.use(regenerateCsrfIfMissing);
 app.use(verifyCsrf);
 
-// Health check
+// Health check (basic ping)
 app.get('/healthz', (req, res) => {
   res.json({ ok: true, service: 'internly-api', time: new Date().toISOString() });
+});
+
+// Deep health check — verifies DB connectivity
+app.get('/api/health', async (req, res) => {
+  const start = Date.now();
+  try {
+    const mongoose = require('mongoose');
+    const dbState = mongoose.connection.readyState;
+    const dbOk = dbState === 1;
+    if (!dbOk) {
+      return res.status(503).json({
+        ok: false,
+        db: 'disconnected',
+        dbState,
+        latencyMs: Date.now() - start,
+        time: new Date().toISOString(),
+      });
+    }
+    // Lightweight ping to confirm actual DB round-trip
+    await mongoose.connection.db.admin().ping();
+    res.json({
+      ok: true,
+      db: 'connected',
+      latencyMs: Date.now() - start,
+      time: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(503).json({
+      ok: false,
+      db: 'error',
+      error: err.message,
+      latencyMs: Date.now() - start,
+      time: new Date().toISOString(),
+    });
+  }
 });
 
 // Status precedence for auto-promotion
@@ -237,22 +269,31 @@ const statusRank = {
 app.get('/api/jobs', isAuthenticated, async (req, res) => {
   try {
     const isSummary = req.query.summary === '1' || req.query.summary === 'true';
+    const page = parseInt(req.query.page, 10) || 0;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 0, 500);
+    const isPaginated = page > 0 && limit > 0;
+
     let query = Job.find({ userId: req.user._id });
     if (isSummary) {
-      // Minimal fields needed for dashboard list rendering
       query = query.select('company role location status stipend dateApplied notes emailId statusHistory createdAt');
     }
-    // Prefer stable ordering for consumers; helps cache and reduces client sorting cost
     query = query.sort({ dateApplied: -1, createdAt: -1 });
+
+    if (isPaginated) {
+      query = query.skip((page - 1) * limit).limit(limit);
+    }
 
     const docs = await query.lean();
 
     if (isSummary) {
       const trimmed = (docs || []).map((j) => ({
         ...j,
-        // Keep only latest two history entries for lightweight payload
         statusHistory: Array.isArray(j.statusHistory) ? j.statusHistory.slice(-2) : [],
       }));
+      if (isPaginated) {
+        const total = await Job.countDocuments({ userId: req.user._id });
+        return res.json({ jobs: trimmed, total, page, limit, pages: Math.ceil(total / limit) });
+      }
       return res.json(trimmed);
     }
 
