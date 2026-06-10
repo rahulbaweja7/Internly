@@ -33,7 +33,6 @@ const sendReminderEmail = async (user, staleJobs) => {
         </a>
         <p style="color:#9ca3af;font-size:12px;margin-top:24px">
           You're receiving this because you have an Internly account.
-          Visit your settings to adjust reminder preferences.
         </p>
       </div>`,
   });
@@ -41,45 +40,30 @@ const sendReminderEmail = async (user, staleJobs) => {
 
 const runReminders = async () => {
   if (process.env.NODE_ENV === 'test') return;
-  try {
-    const Job = require('../models/Job');
-    const User = require('../models/User');
-    const cutoff = new Date(Date.now() - STALE_DAYS * MS_PER_DAY);
-    const activeStatuses = ['Applied', 'Online Assessment', 'Phone Interview', 'Technical Interview', 'Final Interview'];
+  const Job = require('../models/Job');
+  const User = require('../models/User');
+  const cutoff = new Date(Date.now() - STALE_DAYS * MS_PER_DAY);
+  const activeStatuses = ['Applied', 'Online Assessment', 'Phone Interview', 'Technical Interview', 'Final Interview'];
 
-    const staleJobs = await Job.find({
-      status: { $in: activeStatuses },
-      updatedAt: { $lt: cutoff },
-    }).lean();
+  const staleJobs = await Job.find({
+    status: { $in: activeStatuses },
+    updatedAt: { $lt: cutoff },
+  }).lean();
 
-    if (staleJobs.length === 0) return;
+  if (staleJobs.length === 0) return;
 
-    const byUser = staleJobs.reduce((acc, job) => {
-      const uid = String(job.userId);
-      if (!acc[uid]) acc[uid] = [];
-      acc[uid].push(job);
-      return acc;
-    }, {});
+  const byUser = staleJobs.reduce((acc, job) => {
+    const uid = String(job.userId);
+    if (!acc[uid]) acc[uid] = [];
+    acc[uid].push(job);
+    return acc;
+  }, {});
 
-    for (const [userId, jobs] of Object.entries(byUser)) {
-      const user = await User.findById(userId).lean();
-      if (!user || !user.email || !user.isEmailVerified) continue;
-      await sendReminderEmail(user, jobs);
-    }
-  } catch (err) {
-    console.error('[reminderService] Error running reminders:', err.message);
+  for (const [userId, jobs] of Object.entries(byUser)) {
+    const user = await User.findById(userId).lean();
+    if (!user || !user.email || !user.isEmailVerified) continue;
+    await sendReminderEmail(user, jobs);
   }
 };
 
-const INTERVAL_MS = 24 * 60 * 60 * 1000; // every 24 hours
-
-const startReminderSchedule = () => {
-  if (process.env.NODE_ENV === 'test') return;
-  // Run once after 1 hour on startup, then every 24 hours
-  setTimeout(() => {
-    runReminders();
-    setInterval(runReminders, INTERVAL_MS);
-  }, 60 * 60 * 1000);
-};
-
-module.exports = { startReminderSchedule, runReminders };
+module.exports = { runReminders };
