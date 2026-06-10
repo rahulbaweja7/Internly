@@ -99,4 +99,10 @@ userSchema.methods.toPublicJSON = function() {
   return userObject;
 };
 
-module.exports = mongoose.model("User", userSchema); 
+// sparse: true because these fields are null for the vast majority of users
+// (cleared after use), so a sparse index skips nulls and stays compact
+userSchema.index({ emailVerificationToken: 1 }, { sparse: true });
+userSchema.index({ passwordResetToken: 1 }, { sparse: true });
+userSchema.index({ createdAt: 1 });
+
+module.exports = mongoose.model("User", userSchema);

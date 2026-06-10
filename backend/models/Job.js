@@ -53,6 +53,8 @@ jobSchema.pre('save', function setNormalized(next) {
 });
 
 jobSchema.index({ userId: 1, normalizedCompany: 1, normalizedRole: 1 });
-jobSchema.index({ userId: 1, dateApplied: -1, createdAt: -1 }); // For the main dashboard query
+jobSchema.index({ userId: 1, dateApplied: -1, createdAt: -1 });
+// sparse: emailId is null on manually-added jobs; only Gmail-imported jobs have it
+jobSchema.index({ emailId: 1 }, { sparse: true });
 
 module.exports = mongoose.model("Job", jobSchema);
