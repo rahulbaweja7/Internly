@@ -55,18 +55,35 @@ async function startReminders() {
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────────
-async function boot() {
+// Start Express first so Render's health check passes immediately.
+// Connect to MongoDB in the background with retries — a slow Atlas cold-start
+// on a free-tier spin-up was causing process.exit(1) and triggering crash loops.
+async function connectWithRetry(uri, attempt = 1) {
+  const MAX = 10;
+  const DELAY_MS = 5000;
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('[boot] MongoDB connected');
-
-    app.listen(PORT, () => console.log(`[boot] Server running on port ${PORT}`));
-
-    await startReminders();
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 20000,
+      socketTimeoutMS: 30000,
+    });
+    console.log(`[boot] MongoDB connected (attempt ${attempt})`);
   } catch (err) {
-    console.error('[boot] Fatal startup error:', err);
-    process.exit(1);
+    console.error(`[boot] MongoDB connection failed (attempt ${attempt}/${MAX}): ${err.message}`);
+    if (attempt >= MAX) {
+      console.error('[boot] Could not connect to MongoDB after max retries — giving up');
+      return; // don't exit; health check will show DB down
+    }
+    await new Promise(r => setTimeout(r, DELAY_MS));
+    await connectWithRetry(uri, attempt + 1);
   }
+}
+
+async function boot() {
+  // 1. Start HTTP server immediately so health checks pass during DB cold-start
+  app.listen(PORT, () => console.log(`[boot] Server running on port ${PORT}`));
+
+  // 2. Connect to MongoDB in background (retries, never kills the process)
+  connectWithRetry(process.env.MONGO_URI).then(() => startReminders());
 }
 
 boot();
