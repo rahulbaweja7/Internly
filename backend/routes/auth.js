@@ -7,6 +7,11 @@ const { authLimiter } = require('../middleware/security');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 const { createTransport } = require('nodemailer');
+const validate = require('../middleware/validate');
+const {
+  registerSchema, loginSchema, verifyEmailSchema,
+  forgotPasswordSchema, resetPasswordSchema, contactSchema,
+} = require('../schemas/auth');
 
 const router = express.Router();
 // Export user data (jobs + basic profile) – authenticated via cookie or Authorization header
@@ -112,24 +117,9 @@ const generateToken = (user) => {
 };
 
 // Register new user
-router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
+router.post('/register', authLimiter, isNotAuthenticated, validate(registerSchema), async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
-    // Validation
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    // Basic email format validation to prevent obvious bad emails
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -184,14 +174,9 @@ router.post('/register', authLimiter, isNotAuthenticated, async (req, res) => {
 });
 
 // Login user
-router.post('/login', authLimiter, isNotAuthenticated, async (req, res) => {
+router.post('/login', authLimiter, isNotAuthenticated, validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
 
     // Find user
     const user = await User.findOne({ email });
@@ -235,13 +220,9 @@ router.post('/login', authLimiter, isNotAuthenticated, async (req, res) => {
 });
 
 // Verify email
-router.post('/verify-email', async (req, res) => {
+router.post('/verify-email', validate(verifyEmailSchema), async (req, res) => {
   try {
     const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ error: 'Verification token is required' });
-    }
 
     const hashedToken = hashToken(token);
     const user = await User.findOne({
@@ -268,13 +249,9 @@ router.post('/verify-email', async (req, res) => {
 });
 
 // Request password reset
-router.post('/forgot-password', authLimiter, async (req, res) => {
+router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -302,17 +279,9 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
 });
 
 // Reset password
-router.post('/reset-password', authLimiter, async (req, res) => {
+router.post('/reset-password', authLimiter, validate(resetPasswordSchema), async (req, res) => {
   try {
     const { token, password } = req.body;
-
-    if (!token || !password) {
-      return res.status(400).json({ error: 'Token and new password are required' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-    }
 
     const hashedToken = hashToken(token);
     const user = await User.findOne({
@@ -454,12 +423,9 @@ router.put('/password', isAuthenticated, async (req, res) => {
 });
 
 // Lightweight contact endpoint – sends message to a fixed inbox
-router.post('/contact', async (req, res) => {
+router.post('/contact', validate(contactSchema), async (req, res) => {
   try {
-    const { name = 'Anonymous', email = '', message = '' } = req.body || {};
-    if (!message || message.trim().length < 5) {
-      return res.status(400).json({ error: 'Message is too short' });
-    }
+    const { name, email, message } = req.body;
 
     const to = process.env.CONTACT_TO || 'rahulbaweja2004@gmail.com';
     const subject = `Applycation contact form: ${name}`;

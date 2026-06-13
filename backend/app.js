@@ -303,9 +303,12 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
   }
 });
 
-app.post('/api/jobs', isAuthenticated, async (req, res) => {
+const validate = require('./middleware/validate');
+const { createJobSchema } = require('./schemas/job');
+
+app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, res) => {
   try {
-    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend, onlyUpdateStatusIfExists } = req.body || {};
+    const { company, role, status, dateApplied, notes, emailId, subject, location, stipend, onlyUpdateStatusIfExists } = req.body;
 
     const normalize = (v) => (v || '').toString().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
     const normalizedCompany = normalize(company);

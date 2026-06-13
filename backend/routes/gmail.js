@@ -171,10 +171,12 @@ router.get('/status', isAuthenticated, async (req, res) => {
 });
 
 // Step 5: Mark processed
-router.post('/mark-processed', isAuthenticated, async (req, res) => {
+const validate = require('../middleware/validate');
+const { markProcessedSchema } = require('../schemas/gmail');
+
+router.post('/mark-processed', isAuthenticated, validate(markProcessedSchema), async (req, res) => {
   try {
-    const { emailId } = req.body || {};
-    if (!emailId) return res.status(400).json({ error: 'emailId is required' });
+    const { emailId } = req.body;
     const userId = String(req.user._id);
     const ProcessedEmail = require('../models/ProcessedEmail');
     const existing = await ProcessedEmail.findOne({ emailId, userId });

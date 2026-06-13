@@ -49,7 +49,9 @@ describe('Authentication Tests', () => {
         .send(userData)
         .expect(400);
 
-      expect(response.body.error).toContain('Password must be at least 6 characters');
+      // Zod returns { error: 'Validation failed', issues: [{field, message}] }
+      const messages = (response.body.issues || []).map(i => i.message).join(' ');
+      expect(messages).toContain('6 characters');
     });
   });
 
