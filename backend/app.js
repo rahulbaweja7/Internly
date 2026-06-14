@@ -217,29 +217,33 @@ app.get('/healthz', (req, res) => {
   res.json({ ok: true, service: 'internly-api', time: new Date().toISOString() });
 });
 
-// Deep health check — verifies DB connectivity
+// Deep health check — verifies DB connectivity, reports uptime + memory
 app.get('/api/health', async (req, res) => {
   const start = Date.now();
+  const mem = process.memoryUsage();
+  const meta = {
+    uptimeSeconds: Math.floor(process.uptime()),
+    memoryMB: Math.round(mem.rss / 1024 / 1024),
+    time: new Date().toISOString(),
+  };
   try {
     const mongoose = require('mongoose');
     const dbState = mongoose.connection.readyState;
-    const dbOk = dbState === 1;
-    if (!dbOk) {
+    if (dbState !== 1) {
       return res.status(503).json({
         ok: false,
         db: 'disconnected',
         dbState,
         latencyMs: Date.now() - start,
-        time: new Date().toISOString(),
+        ...meta,
       });
     }
-    // Lightweight ping to confirm actual DB round-trip
     await mongoose.connection.db.admin().ping();
     res.json({
       ok: true,
       db: 'connected',
       latencyMs: Date.now() - start,
-      time: new Date().toISOString(),
+      ...meta,
     });
   } catch (err) {
     res.status(503).json({
@@ -247,7 +251,7 @@ app.get('/api/health', async (req, res) => {
       db: 'error',
       error: err.message,
       latencyMs: Date.now() - start,
-      time: new Date().toISOString(),
+      ...meta,
     });
   }
 });
