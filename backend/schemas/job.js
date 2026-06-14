@@ -19,4 +19,4 @@ const createJobSchema = z.object({
   onlyUpdateStatusIfExists: z.boolean().optional(),
 });
 
-module.exports = { createJobSchema };
+module.exports = { createJobSchema, VALID_STATUSES };

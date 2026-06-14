@@ -1,12 +1,15 @@
 const mongoose = require("mongoose");
+const { VALID_STATUSES } = require("../schemas/job");
+
+const VALID_SOURCES = ['gmail', 'manual'];
 
 const StatusHistorySchema = new mongoose.Schema(
   {
-    status: { type: String, required: true },
+    status: { type: String, required: true, enum: VALID_STATUSES },
     at: { type: Date, default: Date.now },
-    source: { type: String }, // e.g., gmail, manual
+    source: { type: String, enum: VALID_SOURCES },
     emailId: { type: String },
-    subject: { type: String },
+    subject: { type: String, maxlength: 500 },
   },
   { _id: false }
 );
@@ -19,18 +22,22 @@ const jobSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    company: { type: String, required: true },
-    role: { type: String, required: true },
-    location: { type: String },
-    status: { type: String, required: true }, // Applied, Online Assessment, Phone Interview, Technical Interview, Final Interview, Accepted, Rejected, Waitlisted, Withdrawn
-    stipend: { type: String },
+    company:  { type: String, required: true, trim: true, maxlength: 200 },
+    role:     { type: String, required: true, trim: true, maxlength: 200 },
+    location: { type: String, trim: true, maxlength: 200 },
+    status: {
+      type: String,
+      required: true,
+      enum: VALID_STATUSES,
+      default: 'Applied',
+    },
+    stipend:     { type: String, trim: true, maxlength: 100 },
     dateApplied: { type: Date },
-    notes: { type: String },
-    emailId: { type: String }, // Gmail message ID to track processed emails
+    notes:       { type: String, maxlength: 5000 },
+    emailId:     { type: String },
 
-    // Normalized keys for deduplication
     normalizedCompany: { type: String, index: true },
-    normalizedRole: { type: String, index: true },
+    normalizedRole:    { type: String, index: true },
 
     statusHistory: { type: [StatusHistorySchema], default: [] },
   },
