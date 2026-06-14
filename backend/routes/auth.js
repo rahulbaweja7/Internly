@@ -1,4 +1,5 @@
 const express = require('express');
+const logger = require('../utils/logger').child({ module: 'auth' });
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -29,7 +30,7 @@ router.get('/export', isAuthenticated, async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="internly-export.json"');
     res.send(JSON.stringify(data, null, 2));
   } catch (e) {
-    console.error('Export error:', e);
+    logger.error({ err: e }, 'Export error');
     res.status(500).json({ error: 'Export failed' });
   }
 });
@@ -65,7 +66,7 @@ router.delete('/delete', isAuthenticated, async (req, res) => {
     res.setHeader('Set-Cookie', cookiesToSet);
     res.json({ success: true });
   } catch (e) {
-    console.error('Delete account error:', e);
+    logger.error({ err: e, userId: req.user?._id }, 'Delete account error');
     res.status(500).json({ error: 'Delete failed' });
   }
 });
@@ -168,7 +169,7 @@ router.post('/register', authLimiter, isNotAuthenticated, validate(registerSchem
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error({ err: error }, 'Registration error');
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -214,7 +215,7 @@ router.post('/login', authLimiter, isNotAuthenticated, validate(loginSchema), as
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ err: error }, 'Login error');
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -243,7 +244,7 @@ router.post('/verify-email', validate(verifyEmailSchema), async (req, res) => {
     res.json({ message: 'Email verified successfully' });
 
   } catch (error) {
-    console.error('Email verification error:', error);
+    logger.error({ err: error }, 'Email verification error');
     res.status(500).json({ error: 'Email verification failed' });
   }
 });
@@ -273,7 +274,7 @@ router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), asy
     res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
 
   } catch (error) {
-    console.error('Password reset request error:', error);
+    logger.error({ err: error }, 'Password reset request error');
     res.status(500).json({ error: 'Password reset request failed' });
   }
 });
@@ -302,7 +303,7 @@ router.post('/reset-password', authLimiter, validate(resetPasswordSchema), async
     res.json({ message: 'Password reset successfully' });
 
   } catch (error) {
-    console.error('Password reset error:', error);
+    logger.error({ err: error }, 'Password reset error');
     res.status(500).json({ error: 'Password reset failed' });
   }
 });
@@ -323,7 +324,7 @@ router.get('/stats/users', isAuthenticated, async (req, res) => {
     const last7d = await User.countDocuments({ createdAt: { $gte: since(7) } });
     res.json({ total, last24h, last7d });
   } catch (e) {
-    console.error('User stats error:', e);
+    logger.error({ err: e }, 'User stats error');
     res.status(500).json({ error: 'Failed to fetch user stats' });
   }
 });
@@ -360,7 +361,7 @@ router.put('/me', isAuthenticated, async (req, res) => {
     await req.user.save();
     return res.json({ user: req.user.toPublicJSON() });
   } catch (e) {
-    console.error('Update /me error:', e);
+    logger.error({ err: e }, 'Update /me error');
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
@@ -417,7 +418,7 @@ router.put('/password', isAuthenticated, async (req, res) => {
     await user.save();
     return res.json({ success: true });
   } catch (e) {
-    console.error('Update password error:', e);
+    logger.error({ err: e }, 'Update password error');
     res.status(500).json({ error: 'Failed to update password' });
   }
 });
@@ -454,7 +455,7 @@ router.post('/contact', validate(contactSchema), async (req, res) => {
             if (resp.statusCode && resp.statusCode >= 200 && resp.statusCode < 300) {
               resolve({ ok: true, status: resp.statusCode, body: data });
             } else {
-              console.error('Resend error:', resp.statusCode, data);
+              logger.error({ statusCode: resp.statusCode, body: data }, 'Resend API error');
               resolve({ ok: false, status: resp.statusCode, body: data });
             }
           });
@@ -486,10 +487,10 @@ router.post('/contact', validate(contactSchema), async (req, res) => {
       return res.json({ success: true });
     }
 
-    console.error('No email transport configured. Set RESEND_API_KEY (preferred) or EMAIL_USER/EMAIL_PASS.');
+    logger.error('No email transport configured. Set RESEND_API_KEY (preferred) or EMAIL_USER/EMAIL_PASS.');
     return res.status(500).json({ error: 'Email service not configured' });
   } catch (e) {
-    console.error('Contact form error:', e);
+    logger.error({ err: e }, 'Contact form error');
     return res.status(500).json({ error: 'Failed to send message' });
   }
 });

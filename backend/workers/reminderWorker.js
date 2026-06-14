@@ -1,6 +1,7 @@
 const { Worker } = require('bullmq');
 const connection = require('../queues/connection');
 const { runReminders } = require('../utils/reminderService');
+const logger = require('../utils/logger').child({ module: 'reminderWorker' });
 
 let worker;
 
@@ -10,9 +11,9 @@ function startReminderWorker() {
   worker = new Worker(
     'reminders',
     async (job) => {
-      console.log(`[reminderWorker] Starting job ${job.id} (${job.name})`);
+      logger.info({ jobId: job.id, jobName: job.name }, 'Reminder job started');
       await runReminders();
-      console.log(`[reminderWorker] Finished job ${job.id}`);
+      logger.info({ jobId: job.id }, 'Reminder job finished');
     },
     {
       connection,
@@ -21,7 +22,7 @@ function startReminderWorker() {
   );
 
   worker.on('failed', (job, err) => {
-    console.error(`[reminderWorker] Job ${job?.id} failed: ${err.message}`);
+    logger.error({ err, jobId: job?.id }, 'Reminder job failed');
   });
 
   return worker;

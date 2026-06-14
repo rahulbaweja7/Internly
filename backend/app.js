@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const logger = require('./utils/logger');
 const RedisStoreLib = require('connect-redis').default;
 const { Redis } = require('ioredis');
 const passport = require('passport');
@@ -138,8 +139,7 @@ try {
   const cbUrl = process.env.GOOGLE_AUTH_CALLBACK_URL || `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/google/callback`;
   const cid = process.env.GOOGLE_CLIENT_ID || '';
   const cidSuffix = cid.length > 8 ? cid.slice(-8) : cid;
-  // eslint-disable-next-line no-console
-  console.log('[OAUTH] Google client ID (suffix) =', cidSuffix, 'callbackURL =', cbUrl);
+  logger.info({ clientIdSuffix: cidSuffix, callbackURL: cbUrl }, '[OAUTH] Google OAuth configured');
 } catch (_) {}
 
 passport.serializeUser((user, done) => {

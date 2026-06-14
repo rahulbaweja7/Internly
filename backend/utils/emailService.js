@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger').child({ module: 'emailService' });
 
 // Create transporter (you'll need to configure this with your email service)
 const createTransporter = () => {
@@ -57,7 +58,7 @@ const sendVerificationEmail = async (email, name, token) => {
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    logger.error({ err: error, email }, 'Failed to send verification email');
     return false;
   }
 };
@@ -95,7 +96,7 @@ const sendPasswordResetEmail = async (email, name, token) => {
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending password reset email:', error);
+    logger.error({ err: error, email }, 'Failed to send password reset email');
     return false;
   }
 };

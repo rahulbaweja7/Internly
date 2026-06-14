@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logger = require('../utils/logger').child({ module: 'auth-middleware' });
 
 const isAuthenticated = async (req, res, next) => {
   try {
@@ -41,7 +42,7 @@ const isAuthenticated = async (req, res, next) => {
 
     res.status(401).json({ error: 'Not authenticated' });
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error({ err: error }, 'Authentication error');
     res.status(500).json({ error: 'Authentication failed' });
   }
 };

@@ -1,5 +1,6 @@
 const { google } = require('googleapis');
 require('dotenv').config();
+const logger = require('./utils/logger').child({ module: 'gmail' });
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -7,13 +8,7 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.REDIRECT_URI || `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/gmail/oauth2callback`
 );
 
-// Debug logs to verify redirect URIs and env loading
-try {
-  // eslint-disable-next-line no-console
-  console.log('[GMAIL] REDIRECT_URI env =', JSON.stringify(process.env.REDIRECT_URI));
-  // eslint-disable-next-line no-console
-  console.log('[GMAIL] oauth2Client redirectUri =', oauth2Client.redirectUri);
-} catch (_) {}
+logger.debug({ redirectUriEnv: process.env.REDIRECT_URI, clientRedirectUri: oauth2Client.redirectUri }, 'Gmail OAuth client initialised');
 
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
@@ -28,10 +23,7 @@ const generateAuthUrl = (state) => {
     response_type: 'code',
     state,
   });
-  try {
-    // eslint-disable-next-line no-console
-    console.log('[GMAIL] Generated auth URL =', url);
-  } catch (_) {}
+  logger.debug({ url }, 'Generated Gmail auth URL');
   return url;
 };
 
@@ -64,13 +56,11 @@ const fetchJobApplicationEmails = async (maxResults = 200) => {
       const isRate = status === 429 || e?.response?.data?.error?.status === 'RESOURCE_EXHAUSTED';
       if (isRate && attempt < 5) {
         const delay = 200 * Math.pow(2, attempt); // 200ms, 400ms, 800ms, 1.6s, 3.2s
-        // eslint-disable-next-line no-console
-        console.warn('[GMAIL] 429 on messages.get; backing off', { id, attempt, delayMs: delay });
+        logger.warn({ id, attempt, delayMs: delay }, 'Gmail 429 — backing off');
         await sleep(delay);
         return getWithRetry(id, attempt + 1);
       }
-      // eslint-disable-next-line no-console
-      console.error('[GMAIL] messages.get failed', id, status, e?.message);
+      logger.error({ err: e, id, status }, 'Gmail messages.get failed');
       return null;
     }
   };

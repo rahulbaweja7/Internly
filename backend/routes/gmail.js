@@ -1,4 +1,5 @@
 const express = require('express');
+const logger = require('../utils/logger').child({ module: 'gmail-routes' });
 const jwt = require('jsonwebtoken');
 const { isAuthenticated } = require('../middleware/auth');
 const {
@@ -40,7 +41,7 @@ router.get('/auth', async (req, res) => {
     const url = generateAuthUrl(state);
     res.redirect(url);
   } catch (e) {
-    console.error('Gmail /auth error:', e);
+    logger.error({ err: e }, 'Gmail /auth error');
     res.status(500).json({ error: 'Failed to start OAuth' });
   }
 });
@@ -77,7 +78,7 @@ router.get('/oauth2callback', async (req, res) => {
     const frontendUrl = rawUrl.replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_connected=true`);
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error({ err: error }, 'Gmail OAuth callback error');
     const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const frontendUrl = rawUrl.replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_error=true`);
@@ -144,11 +145,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   } catch (error) {
     const gStatus = error?.response?.status || error?.code;
     const gBody = error?.response?.data;
-    console.error('Error fetching emails:', {
-      message: error?.message,
-      status: gStatus,
-      data: gBody,
-    });
+    logger.error({ err: error, googleStatus: gStatus, googleError: gBody }, 'Error fetching emails');
     res.status(500).json({ 
       error: 'Failed to fetch emails', 
       details: error?.message, 
@@ -165,7 +162,7 @@ router.get('/status', isAuthenticated, async (req, res) => {
     const tokenDoc = await GmailToken.findOne({ userId });
     res.json({ connected: !!tokenDoc, lastConnected: tokenDoc ? tokenDoc.updatedAt : null });
   } catch (error) {
-    console.error('Error checking Gmail status:', error);
+    logger.error({ err: error }, 'Error checking Gmail status');
     res.status(500).json({ error: 'Failed to check Gmail status' });
   }
 });
@@ -185,7 +182,7 @@ router.post('/mark-processed', isAuthenticated, validate(markProcessedSchema), a
     }
     res.json({ success: true, emailId });
   } catch (error) {
-    console.error('Error marking email as processed:', error);
+    logger.error({ err: error }, 'Error marking email as processed');
     res.status(500).json({ error: 'Failed to mark email as processed' });
   }
 });
@@ -207,7 +204,7 @@ router.delete('/delete-email/:emailId', isAuthenticated, async (req, res) => {
     await gmail.users.messages.delete({ userId: 'me', id: emailId });
     res.json({ success: true, emailId });
   } catch (error) {
-    console.error('Error deleting email from Gmail:', error);
+    logger.error({ err: error }, 'Error deleting email from Gmail');
     res.status(500).json({ error: 'Failed to delete email from Gmail' });
   }
 });
@@ -219,7 +216,7 @@ router.delete('/disconnect', isAuthenticated, async (req, res) => {
     await GmailToken.findOneAndDelete({ userId });
     res.json({ success: true });
   } catch (error) {
-    console.error('Error disconnecting Gmail:', error);
+    logger.error({ err: error }, 'Error disconnecting Gmail');
     res.status(500).json({ error: 'Failed to disconnect Gmail' });
   }
 });
