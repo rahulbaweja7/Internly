@@ -7,6 +7,9 @@ const gmailTokenSchema = new mongoose.Schema({
   scope: { type: String, required: true },
   token_type: { type: String, required: true, enum: ['Bearer'] },
   expiry_date: { type: Number, required: true },
+  // Gmail history cursor — enables incremental sync (only new messages since last fetch)
+  historyId: { type: String },
+  lastSyncAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

@@ -104,11 +104,26 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
       expiry_date: tokenDoc.expiry_date,
     });
 
-    const emails = showAll || full ? await fetchJobApplicationEmails(limit) : await fetchNewJobApplicationEmails(limit);
+    let rawEmails;
+    let newHistoryId;
 
-    // Parse and dedupe by thread (prefer latest)
+    if (showAll || full) {
+      ({ emails: rawEmails, historyId: newHistoryId } = await fetchJobApplicationEmails(limit));
+    } else {
+      ({ emails: rawEmails, historyId: newHistoryId } = await fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
+    }
+
+    // Persist the updated historyId cursor so the next sync can be incremental
+    if (newHistoryId && newHistoryId !== tokenDoc.historyId) {
+      await GmailToken.findOneAndUpdate(
+        { userId },
+        { historyId: newHistoryId, lastSyncAt: new Date() },
+      );
+    }
+
+    // Dedupe by thread — keep the latest message per thread
     const byThread = new Map();
-    for (const email of emails) {
+    for (const email of rawEmails) {
       const ts = Number(email.internalDate || 0);
       const key = email.threadId || email.id;
       const prev = byThread.get(key);
@@ -116,28 +131,15 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     }
     const latestEmails = Array.from(byThread.values()).sort((a, b) => b.ts - a.ts);
 
-    const ProcessedEmail = require('../models/ProcessedEmail');
-    const Job = require('../models/Job');
+    // Parse — no per-email DB query needed here since fetchNewJobApplicationEmails
+    // already filtered out known IDs before fetching content
     const CHUNK = 15;
     const parsed = [];
-
     for (let i = 0; i < latestEmails.length; i += CHUNK) {
-      // Yield to event loop between chunks so we don't block on large mailboxes
-      if (i > 0) await new Promise(resolve => setImmediate(resolve));
-
-      const chunk = latestEmails.slice(i, i + CHUNK);
-      for (const { email } of chunk) {
+      if (i > 0) await new Promise((resolve) => setImmediate(resolve));
+      for (const { email } of latestEmails.slice(i, i + CHUNK)) {
         const app = parseJobApplicationFromEmail(email);
-        if (!app) continue;
-        if (!showAll) {
-          const emailId = app.emailId || email.id;
-          const [seenProc, seenJob] = await Promise.all([
-            ProcessedEmail.findOne({ emailId, userId }).lean(),
-            Job.findOne({ emailId }).lean(),
-          ]);
-          if (seenProc || seenJob) continue;
-        }
-        parsed.push(app);
+        if (app) parsed.push(app);
       }
     }
 
@@ -160,7 +162,11 @@ router.get('/status', isAuthenticated, async (req, res) => {
   try {
     const userId = String(req.user._id);
     const tokenDoc = await GmailToken.findOne({ userId });
-    res.json({ connected: !!tokenDoc, lastConnected: tokenDoc ? tokenDoc.updatedAt : null });
+    res.json({
+      connected: !!tokenDoc,
+      lastConnected: tokenDoc ? tokenDoc.updatedAt : null,
+      lastSyncAt: tokenDoc ? tokenDoc.lastSyncAt : null,
+    });
   } catch (error) {
     logger.error({ err: error }, 'Error checking Gmail status');
     res.status(500).json({ error: 'Failed to check Gmail status' });
