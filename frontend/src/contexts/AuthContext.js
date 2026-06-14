@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../config/config';
+import { identifyUser, resetUser } from '../utils/analytics';
 
 const AuthContext = createContext();
 
@@ -77,6 +78,16 @@ export const AuthProvider = ({ children }) => {
       return next;
     });
   };
+
+  // Identify the user in PostHog whenever the user ID changes (login, OAuth, session restore).
+  // Reset on logout (user becomes null).
+  useEffect(() => {
+    if (user?._id) {
+      identifyUser(user._id);
+    } else if (!user?._id && !loading) {
+      resetUser();
+    }
+  }, [user?._id, loading]);
 
   useEffect(() => {
     checkAuth();

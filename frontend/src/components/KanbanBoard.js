@@ -10,6 +10,7 @@ import {
   rectIntersection,
 } from '@dnd-kit/core';
 import { Building, Calendar, MapPin } from 'lucide-react';
+import { trackEvent } from '../utils/analytics';
 
 // ─── Column definitions ────────────────────────────────────────────────────
 export const KANBAN_COLUMNS = [
@@ -162,6 +163,7 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
           if (!over || !COL_IDS.has(over.id)) return;
           const job = internships.find(j => j._id === active.id);
           if (!job || job.status === over.id) return;
+          trackEvent('job_status_changed', { from: job.status, to: over.id, method: 'kanban' });
           onUpdateStatus(active.id, over.id);
         }}
       >

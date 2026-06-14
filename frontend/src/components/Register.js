@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import config from '../config/config';
+import { trackEvent } from '../utils/analytics';
 
 export function Register() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export function Register() {
       }, { withCredentials: true });
       setSuccess(response.data.message);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      trackEvent('user_signed_up', { method: 'email' });
       setTimeout(() => { navigate('/dashboard'); }, 2000);
     } catch (error) {
       console.error('Registration error:', error);

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Mail } from 'lucide-react';
+import { trackEvent } from '../utils/analytics';
 
 export default function ImportGmail() {
   const navigate = useNavigate();
@@ -91,6 +92,7 @@ export default function ImportGmail() {
       const list = res.data.applications || [];
       setApps(list);
       saveCache(list);
+      trackEvent('gmail_scan_completed', { email_count: list.length });
     } catch (e) {
       const msg = e?.response?.data?.error || e.message || 'Failed to fetch emails';
       alert(msg);
@@ -142,6 +144,7 @@ export default function ImportGmail() {
         subject,
         ...(already ? { onlyUpdateStatusIfExists: true } : {}),
       });
+      trackEvent('gmail_job_imported', { status: s, status_update_only: already });
       setApps((prev) => {
         const next = prev.filter((x) => x.emailId !== emailId);
         saveCache(next);

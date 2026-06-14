@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Navbar } from '../Navbar';
 import axios from 'axios';
 import config from '../../config/config';
+import { trackEvent } from '../../utils/analytics';
 import { Briefcase, CheckCircle2, Link as LinkIcon } from 'lucide-react';
 
 function AddJob() {
@@ -77,6 +78,7 @@ function AddJob() {
         withCredentials: true,
         headers: csrf ? { 'X-CSRF-Token': csrf } : {}
       });
+      trackEvent('job_added', { method: 'manual', status: formData.status });
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 1600);
       navigate("/dashboard");
