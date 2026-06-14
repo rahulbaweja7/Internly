@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const session = require('express-session');
 const logger = require('./utils/logger');
 const RedisStoreLib = require('connect-redis').default;
@@ -19,6 +20,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Security and basic middleware
 setupSecurity(app);
+app.use(compression()); // gzip all responses > 1KB
 app.use(express.json());
 
 // Session configuration (kept for passport compatibility); no auth data stored here
