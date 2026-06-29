@@ -5,6 +5,8 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Trash2, Briefcase, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { JOB_STATUSES } from '../constants/jobStatuses';
 
 export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDeleteEmail }) {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     location: '',
     status: 'Applied',
     appliedDate: '',
+    interviewDate: '',
     description: '',
     salary: '',
     notes: '',
@@ -39,14 +42,15 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
 
   useEffect(() => {
     if (internship) {
-      console.log('Internship data in form:', internship);
-      console.log('Has emailId:', !!internship.emailId);
       setFormData({
         company: internship.company,
         position: internship.position,
         location: internship.location,
         status: internship.status,
         appliedDate: internship.appliedDate,
+        interviewDate: internship.interviewDate
+          ? new Date(internship.interviewDate).toISOString().split('T')[0]
+          : '',
         description: internship.description,
         salary: internship.salary || '',
         notes: internship.notes || '',
@@ -56,13 +60,13 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
         amount: ''
       });
     } else {
-      // Reset form for new internship
       setFormData({
         company: '',
         position: '',
         location: '',
         status: 'Applied',
         appliedDate: new Date().toISOString().split('T')[0],
+        interviewDate: '',
         description: '',
         salary: '',
         notes: '',
@@ -78,7 +82,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     e.preventDefault();
     
     if (!formData.company || !formData.position) {
-      alert('Please fill in company and position fields');
+      toast.error('Company and position are required');
       return;
     }
 
@@ -104,7 +108,6 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
   // Quick helpers data
   const companySuggestions = ['Google', 'Meta', 'Amazon', 'Apple', 'Microsoft', 'Stripe', 'OpenAI', 'Databricks'];
   const citySuggestions = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Remote'];
-  const statuses = ['Applied', 'Online Assessment', 'Interview', 'Accepted', 'Rejected'];
 
   const streakDays = (() => {
     try { return Number(localStorage.getItem('streakDays')) || 0; } catch (_) { return 0; }
@@ -215,7 +218,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="flex flex-wrap gap-2">
-                {statuses.map((s) => (
+                {JOB_STATUSES.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -244,6 +247,19 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                 <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('lastweek')}>Last week</button>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="interviewDate">Interview Date (Optional)</Label>
+              <Input
+                id="interviewDate"
+                type="date"
+                value={formData.interviewDate}
+                onChange={(e) => handleChange('interviewDate', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Set when you schedule an interview</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
             <div className="space-y-2">
               <Label>Salary (Optional)</Label>
               <div className="grid grid-cols-5 gap-2">

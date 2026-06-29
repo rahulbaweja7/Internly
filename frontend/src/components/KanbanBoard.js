@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   DndContext,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -21,6 +22,8 @@ export const KANBAN_COLUMNS = [
   { id: 'Final Interview',     label: 'Final Interview',   dot: 'bg-rose-500',    col: 'border-rose-300/40 dark:border-rose-700/40',     header: 'text-rose-600 dark:text-rose-400',     count: 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300',     drop: 'bg-rose-500/8 border-rose-400' },
   { id: 'Accepted',            label: 'Accepted',          dot: 'bg-emerald-500', col: 'border-emerald-300/40 dark:border-emerald-700/40', header: 'text-emerald-600 dark:text-emerald-400', count: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300', drop: 'bg-emerald-500/8 border-emerald-400' },
   { id: 'Rejected',            label: 'Rejected',          dot: 'bg-red-500',     col: 'border-red-300/40 dark:border-red-700/40',       header: 'text-red-600 dark:text-red-400',       count: 'bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300',       drop: 'bg-red-500/8 border-red-400' },
+  { id: 'Waitlisted',          label: 'Waitlisted',        dot: 'bg-yellow-500',  col: 'border-yellow-300/40 dark:border-yellow-700/40', header: 'text-yellow-600 dark:text-yellow-400', count: 'bg-yellow-100 dark:bg-yellow-900/60 text-yellow-700 dark:text-yellow-300', drop: 'bg-yellow-500/8 border-yellow-400' },
+  { id: 'Withdrawn',           label: 'Withdrawn',         dot: 'bg-gray-400',    col: 'border-gray-300/40 dark:border-gray-700/40',     header: 'text-gray-500 dark:text-gray-400',     count: 'bg-gray-100 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400',     drop: 'bg-gray-500/8 border-gray-400' },
 ];
 
 const COL_IDS = new Set(KANBAN_COLUMNS.map(c => c.id));
@@ -34,7 +37,7 @@ function columnOnlyCollision(args) {
 }
 
 // ─── Job card ─────────────────────────────────────────────────────────────
-function JobCard({ job, onEdit }) {
+function JobCard({ job, onEdit, onUpdateStatus }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: job._id });
 
   const style = transform
@@ -47,6 +50,7 @@ function JobCard({ job, onEdit }) {
       style={style}
       {...listeners}
       {...attributes}
+      aria-label={`${job.role} at ${job.company}, status: ${job.status}. Drag or use the status selector to move.`}
       className={`
         rounded-lg border bg-white dark:bg-gray-800 p-3 select-none
         transition-shadow duration-100
@@ -61,6 +65,7 @@ function JobCard({ job, onEdit }) {
         <button
           onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onEdit(job); }}
+          aria-label={`Edit ${job.role} at ${job.company}`}
           className="shrink-0 text-[11px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-1.5 py-0.5 hover:bg-muted/50 transition-colors"
         >
           Edit
@@ -68,45 +73,67 @@ function JobCard({ job, onEdit }) {
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Building className="h-3 w-3 shrink-0" />
+          <Building className="h-3 w-3 shrink-0" aria-hidden="true" />
           <span className="truncate">{job.company}</span>
         </div>
         {job.location && (
           <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-            <MapPin className="h-3 w-3 shrink-0" />
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span className="truncate">{job.location}</span>
           </div>
         )}
         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Calendar className="h-3 w-3 shrink-0" />
+          <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
           <span>{job.dateApplied ? new Date(job.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' }) : '—'}</span>
         </div>
         {job.stipend && (
           <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400 pt-0.5">{job.stipend}</p>
         )}
       </div>
+      {/* Keyboard-accessible status selector — visually minimal, always available to keyboard/screen-reader users */}
+      <div className="mt-2 pt-2 border-t border-border/40">
+        <label htmlFor={`status-${job._id}`} className="sr-only">Move to status</label>
+        <select
+          id={`status-${job._id}`}
+          value={job.status}
+          onPointerDown={e => e.stopPropagation()}
+          onChange={e => {
+            const next = e.target.value;
+            if (next !== job.status) {
+              trackEvent('job_status_changed', { from: job.status, to: next, method: 'kanban_select' });
+              onUpdateStatus(job._id, next);
+            }
+          }}
+          className="w-full text-[11px] bg-transparent border border-border/40 rounded px-1.5 py-0.5 text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+          aria-label={`Change status for ${job.role}`}
+        >
+          {KANBAN_COLUMNS.map(col => (
+            <option key={col.id} value={col.id}>{col.label}</option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
 
 // ─── Column ────────────────────────────────────────────────────────────────
-function KanbanColumn({ col, jobs, onEdit }) {
+function KanbanColumn({ col, jobs, onEdit, onUpdateStatus }) {
   const { setNodeRef, isOver } = useDroppable({ id: col.id });
 
   return (
     <div className="flex flex-col w-full min-w-0">
-      {/* Header */}
       <div className="flex items-center gap-2 mb-2 px-0.5">
-        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${col.dot}`} />
+        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${col.dot}`} aria-hidden="true" />
         <span className={`text-[13px] font-semibold truncate ${col.header}`}>{col.label}</span>
-        <span className={`ml-auto text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${col.count}`}>
+        <span className={`ml-auto text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${col.count}`} aria-label={`${jobs.length} jobs`}>
           {jobs.length}
         </span>
       </div>
 
-      {/* Drop zone */}
       <div
         ref={setNodeRef}
+        role="group"
+        aria-label={`${col.label} column — ${jobs.length} job${jobs.length !== 1 ? 's' : ''}`}
         className={`
           flex-1 rounded-xl border-2 border-dashed p-2 space-y-2 min-h-[200px] transition-colors duration-150
           ${isOver
@@ -116,10 +143,10 @@ function KanbanColumn({ col, jobs, onEdit }) {
         `}
       >
         {jobs.map(job => (
-          <JobCard key={job._id} job={job} onEdit={onEdit} />
+          <JobCard key={job._id} job={job} onEdit={onEdit} onUpdateStatus={onUpdateStatus} />
         ))}
         {jobs.length === 0 && (
-          <div className={`flex items-center justify-center h-16 text-[12px] rounded-lg transition-colors ${isOver ? 'text-foreground/60' : 'text-muted-foreground/30'}`}>
+          <div className={`flex items-center justify-center h-16 text-[12px] rounded-lg transition-colors ${isOver ? 'text-foreground/60' : 'text-muted-foreground/30'}`} aria-hidden="true">
             {isOver ? '↓ Drop here' : 'Empty'}
           </div>
         )}
@@ -131,7 +158,8 @@ function KanbanColumn({ col, jobs, onEdit }) {
 // ─── Main board ───────────────────────────────────────────────────────────
 export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, onEdit }) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor)
   );
 
   const filtered = useMemo(() => {
@@ -167,13 +195,14 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
           onUpdateStatus(active.id, over.id);
         }}
       >
-        <div className="grid gap-2 pb-4 pt-1" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
+        <div role="region" aria-label="Kanban board — drag cards between columns or use the status selector on each card" className="grid gap-2 pb-4 pt-1" style={{ gridTemplateColumns: 'repeat(9, minmax(0, 1fr))' }}>
           {KANBAN_COLUMNS.map(col => (
             <KanbanColumn
               key={col.id}
               col={col}
               jobs={byColumn[col.id] || []}
               onEdit={onEdit}
+              onUpdateStatus={onUpdateStatus}
             />
           ))}
         </div>

@@ -14,6 +14,7 @@ const createJobSchema = z.object({
   stipend:                z.string().max(100).optional(),
   dateApplied:            z.coerce.date().optional(),
   notes:                  z.string().max(5000).optional(),
+  interviewDate:          z.coerce.date().optional(),
   emailId:                z.string().optional(),
   subject:                z.string().max(500).optional(),
   onlyUpdateStatusIfExists: z.boolean().optional(),

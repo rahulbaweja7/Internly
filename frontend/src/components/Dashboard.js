@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'sonner';
 import config from '../config/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -14,6 +15,7 @@ import { Navbar } from './Navbar';
 import KanbanBoard from './KanbanBoard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { JOB_STATUSES } from '../constants/jobStatuses';
 
 export function InternshipDashboard() {
   const { jobs: internships, loading, addJob, updateJob } = useData();
@@ -28,6 +30,7 @@ export function InternshipDashboard() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   // Gentle entrance animation flag
   const [mounted, setMounted] = useState(false);
   // Layout and pagination
@@ -111,11 +114,15 @@ export function InternshipDashboard() {
 
   const getStatusColor = (status) => {
     const styles = {
-      Applied: 'bg-blue-500/10 text-blue-300 ring-1 ring-blue-300/20',
-      'Online Assessment': 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-300/20',
-      Interview: 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-300/20',
-      Accepted: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-300/20',
-      Rejected: 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-300/20',
+      'Applied':             'bg-blue-500/10 text-blue-300 ring-1 ring-blue-300/20',
+      'Online Assessment':   'bg-violet-500/10 text-violet-300 ring-1 ring-violet-300/20',
+      'Phone Interview':     'bg-amber-500/10 text-amber-300 ring-1 ring-amber-300/20',
+      'Technical Interview': 'bg-orange-500/10 text-orange-300 ring-1 ring-orange-300/20',
+      'Final Interview':     'bg-rose-500/10 text-rose-300 ring-1 ring-rose-300/20',
+      'Accepted':            'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-300/20',
+      'Rejected':            'bg-red-500/10 text-red-300 ring-1 ring-red-300/20',
+      'Waitlisted':          'bg-yellow-500/10 text-yellow-300 ring-1 ring-yellow-300/20',
+      'Withdrawn':           'bg-gray-500/10 text-gray-400 ring-1 ring-gray-400/20',
     };
     return styles[status] || 'bg-muted text-foreground/70 ring-1 ring-border/50';
   };
@@ -125,13 +132,11 @@ export function InternshipDashboard() {
       const response = await axios.post(`${config.API_BASE_URL}/api/jobs`, internshipData, {
         withCredentials: true
       });
-      
       addJob(response.data);
-      
       setIsFormOpen(false);
+      toast.success('Job added');
     } catch (error) {
-      console.error('Error adding internship:', error);
-      alert('Failed to add internship. Please try again.');
+      toast.error('Failed to add job. Please try again.');
     }
   };
 
@@ -144,63 +149,59 @@ export function InternshipDashboard() {
         status: updatedInternship.status,
         stipend: updatedInternship.salary,
         dateApplied: updatedInternship.appliedDate,
+        interviewDate: updatedInternship.interviewDate || null,
         notes: updatedInternship.notes
       });
       setEditingInternship(null);
       setIsFormOpen(false);
+      toast.success('Job updated');
     } catch (error) {
-      console.error("Error updating job:", error);
-      alert("Failed to update job");
+      toast.error('Failed to update job');
     }
   };
 
   const handleDeleteInternship = async (id) => {
     try {
       await axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`);
-      // setInternships(internships.filter(internship => internship._id !== id));
-      // Remove from selected jobs if it was selected
       setSelectedJobs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
       });
+      toast.success('Job deleted');
     } catch (error) {
-      console.error("Error deleting job:", error);
-      alert("Failed to delete job");
+      toast.error('Failed to delete job');
     }
   };
 
-  // Bulk delete functionality
   const handleBulkDelete = async () => {
+    setDeleting(true);
     try {
-      const selectedIds = Array.from(selectedJobs);
-      const deletePromises = selectedIds.map(id => axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`));
-      await Promise.all(deletePromises);
-      
-      // setInternships(internships.filter(internship => !selectedJobs.has(internship._id)));
+      const ids = Array.from(selectedJobs);
+      await Promise.all(ids.map(id => axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`)));
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsBulkDeleteDialogOpen(false);
+      toast.success(`Deleted ${ids.length} job${ids.length !== 1 ? 's' : ''}`);
     } catch (error) {
-      console.error("Error bulk deleting jobs:", error);
-      alert("Failed to delete some jobs");
+      toast.error('Failed to delete some jobs');
+    } finally {
+      setDeleting(false);
     }
   };
 
-  // Delete all internships functionality
   const handleDeleteAll = async () => {
+    setDeleting(true);
     try {
-      console.log('Attempting to delete all jobs...');
-      const response = await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`);
-      console.log('Delete all response:', response.data);
-      // setInternships([]);
+      await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`);
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsDeleteAllDialogOpen(false);
+      toast.success('All jobs deleted');
     } catch (error) {
-      console.error("Error deleting all jobs:", error);
-      console.error("Error response:", error.response?.data);
-      alert("Failed to delete all internships: " + (error.response?.data?.message || error.message));
+      toast.error(error.response?.data?.message || 'Failed to delete all jobs');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -209,28 +210,22 @@ export function InternshipDashboard() {
   };
 
   const handleUpdateStatus = async (jobId, newStatus) => {
-    // Optimistic update so the card snaps to the new column instantly
     updateJob(jobId, { status: newStatus });
     try {
       await axios.put(`${config.API_BASE_URL}/api/jobs/${jobId}`, { status: newStatus });
     } catch (error) {
-      console.error('Failed to update status:', error);
-      // Revert on failure — re-fetch from server
       const original = internships.find(j => j._id === jobId);
       if (original) updateJob(jobId, { status: original.status });
+      toast.error('Failed to update status');
     }
   };
 
   const handleDeleteEmail = async (emailId) => {
     try {
-      const response = await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
-      if (response.data.success) {
-        alert('Email deleted successfully from Gmail!');
-        // fetchJobs(); // This line is removed as per the new_code
-      }
+      await axios.delete(`${config.API_BASE_URL}/api/gmail/delete-email/${emailId}`);
+      toast.success('Email deleted from Gmail');
     } catch (error) {
-      console.error("Error deleting email from Gmail:", error);
-      alert('Failed to delete email from Gmail. Please try again.');
+      toast.error('Failed to delete email from Gmail');
     }
   };
 
@@ -433,9 +428,10 @@ export function InternshipDashboard() {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -474,11 +470,9 @@ export function InternshipDashboard() {
             </SelectTrigger>
             <SelectContent className="z-[1000]">
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Applied">Applied</SelectItem>
-              <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-              <SelectItem value="Interview">Interview</SelectItem>
-              <SelectItem value="Accepted">Accepted</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
+              {JOB_STATUSES.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
@@ -552,9 +546,10 @@ export function InternshipDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={exitSelectionMode}
+                  aria-label="Exit selection mode"
                   className="text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/20"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -602,6 +597,7 @@ export function InternshipDashboard() {
                 status: job.status,
                 salary: job.stipend,
                 appliedDate: job.dateApplied,
+                interviewDate: job.interviewDate,
                 notes: job.notes,
               });
               setIsFormOpen(true);
@@ -612,8 +608,28 @@ export function InternshipDashboard() {
         {/* Internship List / Grid */}
         {layout !== 'kanban' && <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
           {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse h-[120px]" />
+            Array.from({ length: layout === 'list' ? 8 : 6 }).map((_, i) => (
+              layout === 'list' ? (
+                <div key={i} className="rounded-lg border border-border bg-background/50 animate-pulse p-4 flex items-center gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-2/5" />
+                    <div className="h-3 bg-muted rounded w-1/4" />
+                  </div>
+                  <div className="h-3 bg-muted rounded w-20" />
+                  <div className="h-6 bg-muted rounded-full w-24" />
+                  <div className="h-8 bg-muted rounded w-14" />
+                </div>
+              ) : (
+                <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse p-5 space-y-3 min-h-[200px]">
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-muted rounded w-3/5" />
+                    <div className="h-6 bg-muted rounded-full w-20" />
+                  </div>
+                  <div className="h-3 bg-muted rounded w-2/5" />
+                  <div className="h-3 bg-muted rounded w-1/3" />
+                  <div className="h-3 bg-muted rounded w-1/4 mt-2" />
+                </div>
+              )
             ))
           ) : (
             pageItems.map((internship, i) => (
@@ -668,18 +684,22 @@ export function InternshipDashboard() {
                           <Calendar className="h-4 w-4 mr-1" />
                           Applied {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                         </div>
-                        {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 0 && (() => {
+                        {internship.interviewDate && (
+                          <div className="flex items-center gap-1 text-sm font-medium text-amber-600 dark:text-amber-400">
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                            Interview: {new Date(internship.interviewDate).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        )}
+                        {Array.isArray(internship.statusHistory) && internship.statusHistory.length > 1 && (() => {
                           const hist = internship.statusHistory;
-                          const last = hist[hist.length - 1];
-                          const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
-                          const isChange = prev && last && last.status !== prev.status;
-                          const isSingleNonApplied = !prev && last && last.status !== 'Applied';
-                          if (!isChange && !isSingleNonApplied) return null;
-                          const when = last.at ? new Date(last.at).toLocaleDateString() : '';
-                          const src = last.source ? ` via ${last.source}` : '';
+                          const changes = hist.filter((h, idx) => idx === 0 || h.status !== hist[idx - 1].status);
+                          if (changes.length < 2) return null;
+                          const last = changes[changes.length - 1];
+                          const when = last.at ? new Date(last.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
                           return (
-                            <div className="text-xs text-muted-foreground">
-                              {`Updated to ${last.status}${when ? ` on ${when}` : ''}${src}`}
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" aria-hidden="true" />
+                              {`→ ${last.status}${when ? ` · ${when}` : ''}`}
                             </div>
                           );
                         })()}
@@ -707,6 +727,7 @@ export function InternshipDashboard() {
                               status: internship.status,
                               salary: internship.stipend,
                               appliedDate: internship.dateApplied,
+                              interviewDate: internship.interviewDate,
                               notes: internship.notes
                             });
                             setIsFormOpen(true);
@@ -754,6 +775,7 @@ export function InternshipDashboard() {
                             status: internship.status,
                             salary: internship.stipend,
                             appliedDate: internship.dateApplied,
+                            interviewDate: internship.interviewDate,
                             notes: internship.notes
                           });
                           setIsFormOpen(true);
@@ -784,11 +806,31 @@ export function InternshipDashboard() {
         </div>}
 
         {layout !== 'kanban' && filteredInternships.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground">
-                No internships found. {searchTerm || statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Add your first internship to get started!'}
-              </p>
+          <Card className="text-center py-16 border-dashed">
+            <CardContent className="flex flex-col items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border">
+                <Briefcase className="h-7 w-7 text-blue-400" />
+              </div>
+              {searchTerm || statusFilter !== 'all' ? (
+                <>
+                  <div>
+                    <p className="font-semibold text-foreground">No results</p>
+                    <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filter</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>Clear filters</Button>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="font-semibold text-foreground">No applications yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">Add your first job to start tracking your search</p>
+                  </div>
+                  <Button onClick={() => navigate('/add')} className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Add your first job
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
@@ -858,10 +900,11 @@ export function InternshipDashboard() {
               <Button
                 variant="destructive"
                 onClick={handleBulkDelete}
+                disabled={deleting}
                 className="flex items-center gap-2"
               >
-                <Trash2 className="h-4 w-4" />
-                Delete {selectedCount} Job{selectedCount !== 1 ? 's' : ''}
+                {deleting ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Trash2 className="h-4 w-4" />}
+                {deleting ? 'Deleting…' : `Delete ${selectedCount} Job${selectedCount !== 1 ? 's' : ''}`}
               </Button>
             </div>
           </div>
@@ -915,10 +958,11 @@ export function InternshipDashboard() {
               <Button
                 variant="destructive"
                 onClick={handleDeleteAll}
+                disabled={deleting}
                 className="flex items-center gap-2"
               >
-                <Trash2 className="h-4 w-4" />
-                Delete All {internships.length} Internship{internships.length !== 1 ? 's' : ''}
+                {deleting ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Trash2 className="h-4 w-4" />}
+                {deleting ? 'Deleting…' : `Delete All ${internships.length} Internship${internships.length !== 1 ? 's' : ''}`}
               </Button>
             </div>
           </div>

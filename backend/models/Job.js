@@ -31,9 +31,10 @@ const jobSchema = new mongoose.Schema(
       enum: VALID_STATUSES,
       default: 'Applied',
     },
-    stipend:     { type: String, trim: true, maxlength: 100 },
-    dateApplied: { type: Date },
-    notes:       { type: String, maxlength: 5000 },
+    stipend:       { type: String, trim: true, maxlength: 100 },
+    dateApplied:   { type: Date },
+    interviewDate: { type: Date },
+    notes:         { type: String, maxlength: 5000 },
     emailId:     { type: String },
 
     normalizedCompany: { type: String, index: true },

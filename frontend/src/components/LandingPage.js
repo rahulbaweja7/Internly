@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight, Mail, BarChart3, Trello } from 'lucide-react';
+import { ArrowRight, Mail, BarChart3, Trello, CheckCircle } from 'lucide-react';
 import { Navbar } from './Navbar';
 
 const COMPANIES = [
@@ -18,167 +18,238 @@ export function LandingPage() {
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
       <Navbar />
 
-      {/* ── Hero ──────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 pt-16 pb-8 grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center">
+      <main>
+        {/* ── Hero ──────────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-6 pt-16 pb-8 grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center">
 
-        {/* Left */}
-        <div>
-          <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
-            Every app.
-            <br />
-            <span className="text-gray-300 dark:text-gray-600">One board.</span>
-          </h1>
+          {/* Left */}
+          <div>
+            <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
+              Every app.
+              <br />
+              {/* intentional muted second line — readable but subordinate */}
+              <span className="text-gray-400 dark:text-gray-500">One board.</span>
+            </h1>
 
-          <p className="mt-5 text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
-            Applycation imports from Gmail and turns your job hunt into a Kanban board.
-            See exactly where you stand with every company.
-          </p>
+            <p className="mt-5 text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
+              Applycation imports from Gmail and turns your job hunt into a Kanban board.
+              See exactly where you stand with every company.
+            </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={() => navigate(user ? '/dashboard' : '/register')}
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                {user ? 'Go to Dashboard' : 'Start for free'}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              {!user && (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-sm font-medium hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+                >
+                  Sign in
+                </button>
+              )}
+            </div>
+
+            {/* Social proof */}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {['R','J','S','A','M'].map((l, i) => (
+                  <div key={i} className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-950 flex items-center justify-center">
+                    <span className="text-[8px] font-bold text-gray-500 dark:text-gray-400">{l}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-400 dark:text-gray-500">Join 300+ students tracking their job hunt</p>
+            </div>
+
+            <div className="mt-10 grid grid-cols-3 gap-4 pt-8 border-t border-gray-100 dark:border-gray-800">
+              <div>
+                <div className="text-3xl font-black text-gray-900 dark:text-white">9</div>
+                <div className="text-xs text-gray-400 mt-0.5">pipeline stages</div>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-gray-900 dark:text-white">30s</div>
+                <div className="text-xs text-gray-400 mt-0.5">Gmail import</div>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-gray-900 dark:text-white">$0</div>
+                <div className="text-xs text-gray-400 mt-0.5">forever free</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — Kanban mock */}
+          <div className="relative hidden lg:block">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden shadow-xl">
+              {/* Window chrome */}
+              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+                <span className="ml-3 text-xs text-gray-400">Applycation — Dashboard</span>
+              </div>
+              {/* Board */}
+              <div className="p-4 flex gap-2 overflow-hidden">
+                <KanbanColMock label="Applied" dot="bg-blue-500" count={8} cards={[
+                  { role: 'Software Engineer', co: 'Google' },
+                  { role: 'SWE Intern', co: 'Meta' },
+                  { role: 'Backend Intern', co: 'Stripe' },
+                ]} />
+                <KanbanColMock label="OA" dot="bg-violet-500" count={3} cards={[
+                  { role: 'SWE Intern', co: 'Amazon' },
+                  { role: 'Frontend Dev', co: 'Figma' },
+                ]} />
+                <KanbanColMock label="Phone Screen" dot="bg-amber-500" count={2} cards={[
+                  { role: 'iOS Intern', co: 'Apple' },
+                ]} active />
+                <KanbanColMock label="Accepted" dot="bg-emerald-500" count={1} cards={[
+                  { role: 'SWE Intern', co: 'OpenAI', accepted: true },
+                ]} />
+                <KanbanColMock label="Rejected" dot="bg-red-400" count={4} cards={[
+                  { role: 'PM Intern', co: 'Netflix' },
+                ]} />
+              </div>
+            </div>
+            {/* Floating status card */}
+            <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg px-4 py-3 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-900 dark:text-white">OpenAI offer!</p>
+                <p className="text-[11px] text-gray-400">Moved to Accepted</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Marquee ──────────────────────────────────────────────── */}
+        <div className="mt-12 border-y border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 py-3.5 overflow-hidden">
+          <div className="flex gap-10 whitespace-nowrap" style={{ animation: 'marquee 32s linear infinite' }}>
+            {[...COMPANIES, ...COMPANIES].map((c, i) => (
+              <span key={i} className="text-[12px] text-gray-400 dark:text-gray-500 font-medium shrink-0">{c}</span>
+            ))}
+          </div>
+        </div>
+        <style>{`@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
+
+        {/* ── How it works ─────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Up and running in 2 minutes</h2>
+            <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">No setup. No CSV imports. Just connect Gmail.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* connector lines between steps */}
+            <div className="hidden md:block absolute top-7 left-[38%] right-[38%] h-px bg-gray-100 dark:bg-gray-800" />
+            {[
+              {
+                n: '1',
+                title: 'Connect Gmail',
+                body: 'Sign in with Google and grant read-only access. We never store your emails.',
+              },
+              {
+                n: '2',
+                title: 'We detect your apps',
+                body: 'We scan subject lines for application emails and fill in company, role, and date automatically.',
+              },
+              {
+                n: '3',
+                title: 'Track on Kanban',
+                body: 'Every application shows as a card. Drag to update status. See your full pipeline at a glance.',
+              },
+            ].map(step => (
+              <div key={step.n} className="flex flex-col items-center text-center gap-4">
+                <div className="h-14 w-14 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-lg font-black z-10 shadow-sm">
+                  {step.n}
+                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{step.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Features ─────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-6 py-16 space-y-16">
+
+          <FeatureRow
+            tag="Gmail import"
+            icon={<Mail className="h-3.5 w-3.5" />}
+            headline="Your inbox already has the data."
+            body="Connect Gmail once. We scan subject lines for application emails and build your tracker automatically — company, role, date, all filled in. No copy-pasting."
+            visual={<GmailMock />}
+          />
+
+          <FeatureRow
+            tag="Kanban board"
+            icon={<Trello className="h-3.5 w-3.5" />}
+            headline="Drag it to where it actually is."
+            body="Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected — nine stages that map to reality. Drag a card and the status saves instantly."
+            visual={<BoardMock />}
+            flip
+          />
+
+          <FeatureRow
+            tag="Analytics"
+            icon={<BarChart3 className="h-3.5 w-3.5" />}
+            headline="See where your funnel leaks."
+            body="Response rate, interview conversion, weekly pace. Charts that show where applications go quiet so you can fix it before the semester ends."
+            visual={<AnalyticsMock />}
+          />
+        </section>
+
+        {/* ── CTA ──────────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-6 pb-24">
+          <div
+            className="rounded-2xl bg-gray-900 dark:bg-gray-800 px-10 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative overflow-hidden"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
+            }}
+          >
+            {/* subtle top-left glow */}
+            <div className="absolute -top-16 -left-16 h-48 w-48 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+            <div className="relative">
+              <h2 className="text-2xl font-bold text-white">Ready to stop losing track?</h2>
+              <p className="mt-1.5 text-gray-400 text-sm">Takes two minutes. Works with your existing Gmail.</p>
+            </div>
             <button
               onClick={() => navigate(user ? '/dashboard' : '/register')}
-              className="group flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="relative shrink-0 group flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors cursor-pointer"
             >
-              {user ? 'Go to Dashboard' : 'Start for free'}
+              {user ? 'Open Dashboard' : 'Create free account'}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
-            {!user && (
-              <button
-                onClick={() => navigate('/login')}
-                className="px-5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-sm font-medium hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-              >
-                Sign in
-              </button>
-            )}
           </div>
+        </section>
 
-          <div className="mt-10 grid grid-cols-3 gap-4 pt-8 border-t border-gray-100 dark:border-gray-800">
+        {/* ── Footer ───────────────────────────────────────────────── */}
+        <footer className="border-t border-gray-100 dark:border-gray-800 px-6 py-8">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <div className="text-3xl font-black text-gray-900 dark:text-white">7</div>
-              <div className="text-xs text-gray-400 mt-0.5">pipeline stages</div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Applycation</span>
+              <p className="text-xs text-gray-400 mt-0.5">Your job hunt, organised.</p>
             </div>
-            <div>
-              <div className="text-3xl font-black text-gray-900 dark:text-white">30s</div>
-              <div className="text-xs text-gray-400 mt-0.5">Gmail import</div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-gray-900 dark:text-white">$0</div>
-              <div className="text-xs text-gray-400 mt-0.5">forever free</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right — Kanban mock */}
-        <div className="relative hidden lg:block">
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden shadow-xl">
-            {/* Window chrome */}
-            <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-              <span className="ml-3 text-xs text-gray-400">Applycation — Dashboard</span>
-            </div>
-            {/* Board */}
-            <div className="p-4 flex gap-2 overflow-hidden">
-              <KanbanColMock label="Applied" dot="bg-blue-500" count={8} cards={[
-                { role: 'Software Engineer', co: 'Google' },
-                { role: 'SWE Intern', co: 'Meta' },
-                { role: 'Backend Intern', co: 'Stripe' },
-              ]} />
-              <KanbanColMock label="OA" dot="bg-violet-500" count={3} cards={[
-                { role: 'SWE Intern', co: 'Amazon' },
-                { role: 'Frontend Dev', co: 'Figma' },
-              ]} />
-              <KanbanColMock label="Interview" dot="bg-amber-500" count={2} cards={[
-                { role: 'iOS Intern', co: 'Apple' },
-              ]} active />
-              <KanbanColMock label="Accepted" dot="bg-emerald-500" count={1} cards={[
-                { role: 'SWE Intern', co: 'OpenAI', accepted: true },
-              ]} />
-              <KanbanColMock label="Rejected" dot="bg-red-400" count={4} cards={[
-                { role: 'PM Intern', co: 'Netflix' },
-              ]} />
+            <div className="flex items-center gap-6 text-xs text-gray-400">
+              {user && (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center gap-1 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer font-medium"
+                >
+                  Dashboard <ArrowRight className="h-3 w-3" />
+                </button>
+              )}
+              <a href="/privacy" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Terms</a>
             </div>
           </div>
-          {/* Floating status card */}
-          <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg px-4 py-3 flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-              <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">✓</span>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-900 dark:text-white">OpenAI offer!</p>
-              <p className="text-[11px] text-gray-400">Moved to Accepted</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Marquee ──────────────────────────────────────────────── */}
-      <div className="mt-12 border-y border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 py-3.5 overflow-hidden">
-        <div className="flex gap-10 whitespace-nowrap" style={{ animation: 'marquee 32s linear infinite' }}>
-          {[...COMPANIES, ...COMPANIES].map((c, i) => (
-            <span key={i} className="text-[12px] text-gray-300 dark:text-gray-600 font-medium shrink-0">{c}</span>
-          ))}
-        </div>
-      </div>
-      <style>{`@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
-
-      {/* ── Features ─────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 py-24 space-y-24">
-
-        <FeatureRow
-          tag="Gmail import"
-          icon={<Mail className="h-4 w-4" />}
-          headline="Your inbox already has the data."
-          body="Connect Gmail once. We scan subject lines for application emails and build your tracker automatically — company, role, date, all filled in. No copy-pasting."
-          visual={<GmailMock />}
-        />
-
-        <FeatureRow
-          tag="Kanban board"
-          icon={<Trello className="h-4 w-4" />}
-          headline="Drag it to where it actually is."
-          body="Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected — seven stages that map to reality. Drag a card and the status saves instantly."
-          visual={<BoardMock />}
-          flip
-        />
-
-        <FeatureRow
-          tag="Analytics"
-          icon={<BarChart3 className="h-4 w-4" />}
-          headline="See where your funnel leaks."
-          body="Response rate, interview conversion, weekly pace. Charts that show where applications go quiet so you can fix it before the semester ends."
-          visual={<AnalyticsMock />}
-        />
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 pb-24">
-        <div className="rounded-2xl bg-gray-900 dark:bg-gray-800 px-10 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Ready to stop losing track?</h2>
-            <p className="mt-1.5 text-gray-400 text-sm">Takes two minutes. Works with your existing Gmail.</p>
-          </div>
-          <button
-            onClick={() => navigate(user ? '/dashboard' : '/register')}
-            className="shrink-0 group flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
-          >
-            {user ? 'Open Dashboard' : 'Create free account'}
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-100 dark:border-gray-800 px-6 py-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <span className="text-sm font-semibold text-gray-500">Applycation</span>
-          <div className="flex gap-6 text-xs text-gray-400">
-            <a href="/privacy" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Terms</a>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </main>
     </div>
   );
 }
@@ -189,7 +260,7 @@ function FeatureRow({ tag, icon, headline, body, visual, flip = false }) {
   return (
     <div className={`grid lg:grid-cols-2 gap-12 items-center ${flip ? 'lg:[&>*:first-child]:order-2' : ''}`}>
       <div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 mb-4">
+        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 mb-4 bg-blue-50 dark:bg-blue-950/60 rounded-full px-3 py-1">
           {icon}
           {tag}
         </div>
@@ -254,14 +325,14 @@ function BoardMock() {
     <div className="p-4">
       <div className="flex gap-2">
         {[
-          { label: 'Applied', dot: 'bg-blue-500', n: '362' },
-          { label: 'OA', dot: 'bg-violet-500', n: '200' },
-          { label: 'Interview', dot: 'bg-amber-500', n: '7' },
+          { label: 'Applied', dot: 'bg-blue-500', n: '8' },
+          { label: 'OA', dot: 'bg-violet-500', n: '3' },
+          { label: 'Phone Screen', dot: 'bg-amber-500', n: '2' },
         ].map(col => (
           <div key={col.label} className="flex-1">
             <div className="flex items-center gap-1 mb-2">
               <span className={`h-1.5 w-1.5 rounded-full ${col.dot}`} />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">{col.label}</span>
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 truncate">{col.label}</span>
               <span className="ml-auto text-[9px] font-bold text-gray-400">{col.n}</span>
             </div>
             <div className="space-y-1.5">
@@ -299,7 +370,7 @@ function AnalyticsMock() {
       </div>
       <div className="flex justify-between mt-1.5">
         {['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'].map(m => (
-          <span key={m} className="text-[8px] text-gray-300 dark:text-gray-600 flex-1 text-center">{m}</span>
+          <span key={m} className="text-[8px] text-gray-400 dark:text-gray-500 flex-1 text-center">{m}</span>
         ))}
       </div>
       <div className="mt-4 grid grid-cols-3 gap-3">

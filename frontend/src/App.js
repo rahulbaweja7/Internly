@@ -5,6 +5,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Toaster } from 'sonner';
 import './App.css';
 
 // ── Eager — needed on first load for unauthenticated visitors ─────────────────
@@ -77,6 +78,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+        <Toaster richColors position="bottom-right" />
         <AuthProvider>
           <DataProvider>
             <Router>

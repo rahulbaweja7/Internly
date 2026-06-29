@@ -11,6 +11,8 @@ import axios from 'axios';
 import config from '../../config/config';
 import { trackEvent } from '../../utils/analytics';
 import { Briefcase, CheckCircle2, Link as LinkIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { JOB_STATUSES } from '../../constants/jobStatuses';
 
 function AddJob() {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ function AddJob() {
     amount: ''
   });
   const [showConfetti, setShowConfetti] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const requiredKeys = useMemo(() => ['company', 'position', 'location', 'appliedDate', 'status', 'description'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
@@ -47,21 +50,19 @@ function AddJob() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.company || !formData.position || !formData.location || !formData.appliedDate) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
+    setSubmitting(true);
     try {
-      // Ensure CSRF cookie exists; if missing, perform a safe GET to prime it
       const hasCsrf = /(?:^|; )csrf=([^;]+)/.test(document.cookie || '');
       if (!hasCsrf) {
         try {
           await axios.get(`${config.API_BASE_URL}/healthz`, { withCredentials: true });
-        } catch (_) {
-          // ignore health check failures; verifyCsrf will still guard POST
-        }
+        } catch (_) {}
       }
 
       const csrf = (document.cookie.match(/(?:^|; )csrf=([^;]+)/) || [])[1] || '';
@@ -81,16 +82,16 @@ function AddJob() {
       trackEvent('job_added', { method: 'manual', status: formData.status });
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 1600);
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (error) {
-      console.error("Error adding job:", error);
-      alert("Failed to add internship");
+      toast.error('Failed to add job. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const companySuggestions = ['Google', 'Meta', 'Amazon', 'Apple', 'Microsoft', 'Stripe', 'OpenAI', 'Databricks'];
   const citySuggestions = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Remote'];
-  const statuses = ['Applied', 'Online Assessment', 'Interview', 'Accepted', 'Rejected'];
 
   const setDateQuick = (preset) => {
     const d = new Date();
@@ -187,7 +188,7 @@ function AddJob() {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <div className="flex flex-wrap gap-2">
-                    {statuses.map(s => (
+                    {JOB_STATUSES.map(s => (
                       <button key={s} type="button" className={`px-3 py-1.5 rounded-full text-xs ring-1 ring-border transition ${formData.status === s ? 'bg-white/10 ring-white/30' : 'hover:bg-white/5'}`} onClick={() => handleChange('status', s)}>{s}</button>
                     ))}
                   </div>
@@ -265,8 +266,11 @@ function AddJob() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1">Add Job</Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1">Cancel</Button>
+                <Button type="submit" disabled={submitting} className="flex-1 flex items-center justify-center gap-2">
+                  {submitting && <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                  {submitting ? 'Adding…' : 'Add Job'}
+                </Button>
+                <Button type="button" variant="outline" disabled={submitting} onClick={() => navigate('/dashboard')} className="flex-1">Cancel</Button>
               </div>
             </form>
           </CardContent>

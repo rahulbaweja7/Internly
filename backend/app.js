@@ -281,7 +281,7 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 
     let query = Job.find({ userId: req.user._id });
     if (isSummary) {
-      query = query.select('company role location status stipend dateApplied notes emailId statusHistory createdAt');
+      query = query.select('company role location status stipend dateApplied interviewDate notes emailId statusHistory createdAt');
     }
     query = query.sort({ dateApplied: -1, createdAt: -1 });
 
@@ -401,7 +401,7 @@ app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, re
 app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
   try {
     // Whitelist updatable fields
-    const { company, role, status, dateApplied, notes, location, stipend } = req.body || {};
+    const { company, role, status, dateApplied, interviewDate, notes, location, stipend } = req.body || {};
     const update = {};
     if (typeof company === 'string') update.company = company;
     if (typeof role === 'string') update.role = role;
@@ -409,6 +409,7 @@ app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
     if (location !== undefined) update.location = location;
     if (stipend !== undefined) update.stipend = stipend;
     if (dateApplied !== undefined) update.dateApplied = dateApplied;
+    if (interviewDate !== undefined) update.interviewDate = interviewDate || null;
     if (typeof notes === 'string') update.notes = notes;
 
     const job = await Job.findOneAndUpdate(

@@ -15,41 +15,22 @@ export default function Settings() {
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
 
   const nameInitial = useMemo(() => {
-    console.log('User object:', user);
-    console.log('User name:', user?.name);
     if (!user?.name) return 'U';
-    
-    // Clean the name and ensure it's valid
     const cleanName = user.name.trim();
-    if (!cleanName || cleanName.length === 0) return 'U';
-    
-    // Check if the name looks like invalid data (contains "avatar" or similar)
-    if (cleanName.toLowerCase().includes('avatar') || cleanName.toLowerCase().includes('avata')) {
-      console.log('Invalid name detected, using fallback');
-      return 'U';
-    }
-    
-    const firstChar = cleanName[0];
-    const initial = firstChar ? firstChar.toUpperCase() : 'U';
-    console.log('Calculated initial:', initial);
-    return initial;
+    if (!cleanName) return 'U';
+    if (cleanName.toLowerCase().includes('avatar') || cleanName.toLowerCase().includes('avata')) return 'U';
+    return (cleanName[0] || 'U').toUpperCase();
   }, [user]);
   const [displayName, setDisplayName] = useState(user?.name || '');
   const [avatarPreview, setAvatarPreview] = useState('');
   const fileInputRef = useRef(null);
 
-  // Sync avatarPreview with user picture and clean invalid data
   useEffect(() => {
-    console.log('User picture value:', user?.picture);
-    
-    // Check if picture contains invalid data and clear it
     if (user?.picture && (
-      user.picture.toLowerCase().includes('avatar') || 
+      user.picture.toLowerCase().includes('avatar') ||
       user.picture.toLowerCase().includes('avata') ||
       (!user.picture.startsWith('data:image') && !user.picture.startsWith('https://'))
     )) {
-      console.log('Invalid picture data detected, clearing...');
-      // Clear invalid picture data
       updateUser({ picture: '' });
       setAvatarPreview('');
       

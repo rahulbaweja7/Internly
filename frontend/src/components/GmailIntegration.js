@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'sonner';
 import config from '../config/config';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -61,9 +62,7 @@ export function GmailIntegration({ onApplicationsFound }) {
       setApps((prev) => prev.filter((x) => x.emailId !== emailId));
       if (onApplicationsFound) onApplicationsFound(['refresh']);
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Add application failed', e);
-      alert('Failed to add application');
+      toast.error('Failed to add application');
     } finally {
       setAdding(false);
     }
