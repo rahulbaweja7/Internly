@@ -49,7 +49,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 
     try {
       const res = await axios.get(`${config.API_BASE_URL}/api/gmail/scan/${scanId}`);
-      const { state, applications, error: scanError } = res.data;
+      const { state, applications, requiresReconnect } = res.data;
 
       if (state === 'completed') {
         setApps(applications || []);
@@ -58,7 +58,12 @@ export function GmailIntegration({ onApplicationsFound }) {
         if ((applications || []).length === 0) toast.info('No new applications found');
       } else if (state === 'failed') {
         setLoading(false);
-        toast.error(scanError || 'Scan failed — please try again');
+        if (requiresReconnect) {
+          // Refresh status so the reconnect UI renders immediately
+          await refreshStatus();
+        } else {
+          toast.error('Scan failed — please try again');
+        }
       } else {
         pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
       }
@@ -95,7 +100,9 @@ export function GmailIntegration({ onApplicationsFound }) {
       pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
     } catch (e) {
       setLoading(false);
-      if (e.response?.status === 429) {
+      if (e.response?.data?.requiresReconnect) {
+        await refreshStatus(); // triggers reconnect UI
+      } else if (e.response?.status === 429) {
         const wait = e.response.data.retryAfter || 60;
         toast.error(`Please wait ${wait}s before scanning again`);
       } else {
@@ -173,6 +180,12 @@ export function GmailIntegration({ onApplicationsFound }) {
       <CardContent className="space-y-3">
         {!status.connected ? (
           <Button onClick={connect}>Connect Gmail</Button>
+        ) : status.needsReconnect ? (
+          <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 space-y-2">
+            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">Your Gmail connection has expired.</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">Click below to reconnect and resume scanning.</p>
+            <Button onClick={connect} size="sm">Reconnect Gmail</Button>
+          </div>
         ) : (
           <div className="flex flex-wrap gap-2 items-center">
             <Button variant="outline" onClick={scan} disabled={loading}>

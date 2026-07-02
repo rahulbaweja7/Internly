@@ -10,6 +10,9 @@ const gmailTokenSchema = new mongoose.Schema({
   // Gmail history cursor — enables incremental sync (only new messages since last fetch)
   historyId: { type: String },
   lastSyncAt: { type: Date },
+  // Set true when a scan fails with an auth error (expired/revoked token).
+  // Cleared to false when fresh tokens are stored via OAuth reconnect.
+  tokenInvalid: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

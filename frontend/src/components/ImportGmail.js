@@ -97,7 +97,7 @@ export default function ImportGmail() {
     }
     try {
       const res = await axios.get(`${config.API_BASE_URL}/api/gmail/scan/${scanId}`);
-      const { state, applications, error: scanError } = res.data;
+      const { state, applications, requiresReconnect } = res.data;
 
       if (state === 'completed') {
         const list = applications || [];
@@ -108,7 +108,11 @@ export default function ImportGmail() {
         setLoading(false);
       } else if (state === 'failed') {
         setLoading(false);
-        toast.error(scanError || 'Scan failed — please try again');
+        if (requiresReconnect) {
+          await refreshStatus(); // triggers reconnect UI
+        } else {
+          toast.error('Scan failed — please try again');
+        }
       } else {
         pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
       }
@@ -144,7 +148,9 @@ export default function ImportGmail() {
       pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
     } catch (e) {
       setLoading(false);
-      if (e.response?.status === 429) {
+      if (e.response?.data?.requiresReconnect) {
+        await refreshStatus(); // triggers reconnect UI
+      } else if (e.response?.status === 429) {
         const wait = e.response.data.retryAfter || 60;
         toast.error(`Please wait ${wait}s before scanning again`);
       } else {
@@ -319,6 +325,12 @@ export default function ImportGmail() {
             <CardContent className="flex flex-wrap gap-3 items-center pb-4">
               {!status.connected ? (
                 <Button onClick={connect}>Connect Gmail</Button>
+              ) : status.needsReconnect ? (
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+                  <p className="text-sm text-amber-300 font-medium">Your Gmail connection has expired.</p>
+                  <p className="text-xs text-amber-400">Click below to reconnect and resume scanning.</p>
+                  <Button onClick={connect} size="sm">Reconnect Gmail</Button>
+                </div>
               ) : (
                 <>
                   <Button variant="outline" onClick={scan} disabled={loading}>{loading ? 'Scanning…' : 'Scan Emails'}</Button>

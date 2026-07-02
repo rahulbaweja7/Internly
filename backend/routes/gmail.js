@@ -75,6 +75,7 @@ router.get('/oauth2callback', async (req, res) => {
         scope: tokens.scope,
         token_type: tokens.token_type,
         expiry_date: tokens.expiry_date,
+        tokenInvalid: false, // clear any previous auth error on fresh connect
       },
       { upsert: true, new: true }
     );
@@ -162,6 +163,7 @@ router.get('/status', isAuthenticated, async (req, res) => {
     const tokenDoc = await GmailToken.findOne({ userId });
     res.json({
       connected: !!tokenDoc,
+      needsReconnect: tokenDoc?.tokenInvalid ?? false,
       lastConnected: tokenDoc ? tokenDoc.updatedAt : null,
       lastSyncAt: tokenDoc ? tokenDoc.lastSyncAt : null,
     });
@@ -223,9 +225,18 @@ router.post('/scan', isAuthenticated, async (req, res) => {
     const tokenDoc = await GmailToken.findOne({ userId });
     if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
 
-    // P6: per-user rate limit — 60s cooldown between scans
+    // Fast-fail if the token is known to be invalid — no point enqueuing
+    if (tokenDoc.tokenInvalid) {
+      return res.status(401).json({
+        error: 'Your Gmail connection has expired. Please reconnect.',
+        requiresReconnect: true,
+      });
+    }
+
+    // P6: rate limit — 60s between successful scans; 10s between any attempts (spam guard)
+    const now = Date.now();
     if (tokenDoc.lastSyncAt) {
-      const elapsed = Date.now() - new Date(tokenDoc.lastSyncAt).getTime();
+      const elapsed = now - new Date(tokenDoc.lastSyncAt).getTime();
       if (elapsed < SCAN_COOLDOWN_MS) {
         const retryAfter = Math.ceil((SCAN_COOLDOWN_MS - elapsed) / 1000);
         return res.status(429).json({
@@ -263,9 +274,6 @@ router.post('/scan', isAuthenticated, async (req, res) => {
       return res.json({ scanId: null, state: 'completed', applications: parsed, count: parsed.length });
     }
 
-    // Mark lastSyncAt immediately so rapid re-clicks get rate-limited
-    await GmailToken.findOneAndUpdate({ userId }, { lastSyncAt: new Date() });
-
     const job = await scanQueue.add('scan', { userId, showAll, limit });
     logger.info({ jobId: job.id, userId }, 'Gmail scan enqueued');
     res.json({ scanId: job.id });
@@ -292,12 +300,21 @@ router.get('/scan/:scanId', isAuthenticated, async (req, res) => {
     const state = await job.getState(); // 'waiting' | 'active' | 'completed' | 'failed'
 
     if (state === 'failed') {
-      return res.json({ scanId, state: 'failed', error: job.failedReason });
+      // Check Redis for auth-error metadata written by the worker
+      const raw = await redis.get(`gmail_scan_result:${scanId}`);
+      const meta = raw ? JSON.parse(raw) : {};
+      return res.json({
+        scanId,
+        state: 'failed',
+        error: job.failedReason,
+        requiresReconnect: !!meta.authError,
+      });
     }
 
     if (state === 'completed') {
       const raw = await redis.get(`gmail_scan_result:${scanId}`);
-      const applications = raw ? JSON.parse(raw) : [];
+      const meta = raw ? JSON.parse(raw) : {};
+      const applications = meta.applications || [];
       return res.json({ scanId, state: 'completed', applications, count: applications.length });
     }
 
