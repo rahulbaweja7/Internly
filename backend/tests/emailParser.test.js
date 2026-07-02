@@ -252,3 +252,173 @@ describe('parseJobEmail — output shape', () => {
     expect(parseJobEmail(known).confidence).toBeGreaterThan(parseJobEmail(unknown).confidence);
   });
 });
+
+describe('parseJobEmail — display name company extraction', () => {
+  it('extracts company from "Google Careers <noreply@greenhouse.io>" display name', () => {
+    const email = makeEmail({
+      subject: 'Thank you for your application',
+      from: 'Google Careers <no-reply@greenhouse.io>',
+      body: 'We have received your application and will be in touch.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Google');
+  });
+
+  it('extracts company from "Stripe Recruiting <jobs@greenhouse.io>" display name', () => {
+    const email = makeEmail({
+      subject: 'Application received',
+      from: 'Stripe Recruiting <jobs@greenhouse.io>',
+      body: 'Thank you for applying.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Stripe');
+  });
+
+  it('extracts company from "Meta | Careers <noreply@lever.co>" display name', () => {
+    const email = makeEmail({
+      subject: 'Your application status',
+      from: 'Meta | Careers <noreply@lever.co>',
+      body: 'We received your application for the Software Engineer role.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Meta');
+  });
+
+  it('does not use generic sender name as company', () => {
+    const email = makeEmail({
+      subject: 'Your application',
+      from: 'Careers <noreply@greenhouse.io>',
+      body: 'Thank you for applying.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Unknown Company');
+  });
+
+  it('does not use person name as company from display name', () => {
+    const email = makeEmail({
+      subject: 'Following up on your application',
+      from: 'Jane Smith <jane.smith@google.com>',
+      body: 'I wanted to follow up on your application for the Software Engineer role at Google.',
+    });
+    // Should fall back to domain (Google) not treat "Jane Smith" as company
+    const result = parseJobEmail(email);
+    expect(result.company).not.toBe('Jane Smith');
+  });
+});
+
+describe('parseJobEmail — rejection takes priority over interview stages', () => {
+  it('returns Rejected when email mentions technical interview but rejects candidate', () => {
+    const email = makeEmail({
+      subject: 'Update on your application',
+      body: 'Unfortunately, you have not been selected for a technical interview at this time.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Rejected');
+  });
+
+  it('returns Rejected when email mentions assessment but candidate was not selected', () => {
+    const email = makeEmail({
+      subject: 'Application update',
+      body: 'After careful review of your online assessment, we have decided to move forward with other candidates.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Rejected');
+  });
+
+  it('returns Rejected for "going in a different direction" phrase', () => {
+    const email = makeEmail({
+      subject: 'Your application at Acme',
+      body: 'We have decided to go in a different direction and will not be moving forward with your candidacy.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Rejected');
+  });
+
+  it('returns Accepted for clear offer letter (no rejection signals)', () => {
+    const email = makeEmail({
+      subject: 'Your offer from Acme Corp',
+      body: 'We are extending an offer of employment for the Software Engineer position. Please find your offer letter attached.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Accepted');
+  });
+
+  it('does NOT return Accepted for "pleased to offer you an interview"', () => {
+    const email = makeEmail({
+      subject: 'Interview Invitation',
+      body: 'We are pleased to offer you an interview for the Software Engineer role next week.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).not.toBe('Accepted');
+  });
+});
+
+describe('parseJobEmail — role extraction improvements', () => {
+  it('extracts role from "Role - Interview" subject format', () => {
+    const email = makeEmail({
+      subject: 'Software Engineer - Interview Invitation',
+      body: 'We would like to invite you to interview.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.position.toLowerCase()).toContain('engineer');
+  });
+
+  it('extracts role from "role:" label in body', () => {
+    const email = makeEmail({
+      subject: 'Application update',
+      from: 'noreply@greenhouse.io',
+      body: 'Role: Senior Software Engineer\nWe have reviewed your application.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.position.toLowerCase()).toContain('engineer');
+  });
+
+  it('extracts role from "the [ROLE] position" body pattern', () => {
+    const email = makeEmail({
+      subject: 'Thank you for applying',
+      body: 'Thank you for your interest in the Data Scientist position at our company.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.position.toLowerCase()).toContain('scientist');
+  });
+
+  it('preserves dots in role names like "Sr. Software Engineer"', () => {
+    const email = makeEmail({
+      subject: 'Application received',
+      from: 'noreply@greenhouse.io',
+      body: 'Role: Sr. Software Engineer\nThank you for applying.',
+    });
+    const result = parseJobEmail(email);
+    // Should not mangle "Sr." to "Sr.." or strip the dot
+    expect(result.position).not.toMatch(/\.\./);
+  });
+});
+
+describe('parseJobEmail — noise gate additions', () => {
+  it('flags job alert emails as non-application', () => {
+    const email = makeEmail({
+      subject: 'Job Alert: Software Engineer roles near you',
+      body: 'New jobs you might like based on your profile.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.isLikelyNonApplication).toBe(true);
+  });
+
+  it('flags salary insights emails as non-application', () => {
+    const email = makeEmail({
+      subject: 'Salary insights for Software Engineers',
+      body: 'Check out salary insights for your role on Glassdoor.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.isLikelyNonApplication).toBe(true);
+  });
+
+  it('flags "people you may know" notifications as non-application', () => {
+    const email = makeEmail({
+      subject: 'Connect with people you may know',
+      body: 'People you may know are waiting to connect with you.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.isLikelyNonApplication).toBe(true);
+  });
+});
