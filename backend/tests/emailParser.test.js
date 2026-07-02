@@ -46,13 +46,13 @@ describe('parseJobEmail — status inference', () => {
     expect(result.status).toBe('Online Assessment');
   });
 
-  it('returns Interview for interview invite', () => {
+  it('returns Technical Interview for technical interview invite', () => {
     const email = makeEmail({
       subject: 'Interview Invitation — Technical Interview',
       body: 'We would like to invite you to a phone interview for the Software Engineer role.',
     });
     const result = parseJobEmail(email);
-    expect(result.status).toBe('Interview');
+    expect(result.status).toBe('Technical Interview');
   });
 
   it('returns Accepted for offer letter', () => {

@@ -5,32 +5,17 @@ const GmailToken = require('../models/GmailToken');
 const ProcessedEmail = require('../models/ProcessedEmail');
 
 // Mock the entire gmailAuth module before app.js loads it.
-// This prevents any real Google API calls and lets us control return values per test.
+// createGmailService now returns a per-request service object — the mock
+// returns a shared `mockGmailService` that individual tests can control.
 jest.mock('../gmailAuth', () => ({
   generateAuthUrl: jest.fn(() => 'https://accounts.google.com/o/oauth2/auth?mock=true'),
   getTokensFromCode: jest.fn(),
-  setCredentials: jest.fn(),
-  fetchJobApplicationEmails: jest.fn(),
-  fetchNewJobApplicationEmails: jest.fn(),
+  createGmailService: jest.fn(),
   parseJobApplicationFromEmail: jest.fn(),
-  gmail: {
-    users: {
-      messages: {
-        delete: jest.fn(),
-      },
-    },
-  },
 }));
 
 const app = require('../app');
-const {
-  generateAuthUrl,
-  getTokensFromCode,
-  fetchJobApplicationEmails,
-  fetchNewJobApplicationEmails,
-  parseJobApplicationFromEmail,
-  gmail,
-} = require('../gmailAuth');
+const { generateAuthUrl, getTokensFromCode, createGmailService, parseJobApplicationFromEmail } = require('../gmailAuth');
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -82,13 +67,21 @@ async function connectGmail(userId, extra = {}) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('Gmail OAuth flow', () => {
+  // Shared mock service — reset per test so each test controls its own responses
+  let mockGmailService;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    // Default: getTokensFromCode resolves with fake tokens
+
+    // Build a fresh mock service object for each test
+    mockGmailService = {
+      fetchJobApplicationEmails: jest.fn().mockResolvedValue({ emails: [], historyId: 'h_001' }),
+      fetchNewJobApplicationEmails: jest.fn().mockResolvedValue({ emails: [], historyId: 'h_001', stats: {} }),
+      deleteEmail: jest.fn().mockResolvedValue(undefined),
+    };
+    createGmailService.mockReturnValue(mockGmailService);
+
     getTokensFromCode.mockResolvedValue(FAKE_TOKENS);
-    // Default: fetch functions return empty
-    fetchNewJobApplicationEmails.mockResolvedValue({ emails: [], historyId: 'h_001', stats: {} });
-    fetchJobApplicationEmails.mockResolvedValue({ emails: [], historyId: 'h_001' });
     parseJobApplicationFromEmail.mockReturnValue(null);
   });
 
@@ -175,9 +168,7 @@ describe('Gmail OAuth flow', () => {
       const { user } = await createUser();
       const state = jwt.sign({ id: String(user._id) }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-      // Connect once
       await request(app).get('/api/gmail/oauth2callback').query({ code: 'code1', state });
-      // Connect again (new tokens)
       const newTokens = { ...FAKE_TOKENS, access_token: 'ya29.new-access-token' };
       getTokensFromCode.mockResolvedValueOnce(newTokens);
       await request(app).get('/api/gmail/oauth2callback').query({ code: 'code2', state });
@@ -191,14 +182,14 @@ describe('Gmail OAuth flow', () => {
       const state = jwt.sign({ id: 'some-id' }, process.env.JWT_SECRET, { expiresIn: '10m' });
       const res = await request(app)
         .get('/api/gmail/oauth2callback')
-        .query({ state }); // no code
+        .query({ state });
       expect(res.status).toBe(400);
     });
 
     it('returns 400 when state is missing', async () => {
       const res = await request(app)
         .get('/api/gmail/oauth2callback')
-        .query({ code: 'auth-code' }); // no state
+        .query({ code: 'auth-code' });
       expect(res.status).toBe(400);
     });
 
@@ -221,7 +212,6 @@ describe('Gmail OAuth flow', () => {
 
       expect(res.status).toBe(302);
       expect(res.headers.location).toContain('gmail_error=true');
-      // No token should be stored
       const stored = await GmailToken.findOne({ userId: String(user._id) });
       expect(stored).toBeNull();
     });
@@ -286,7 +276,7 @@ describe('Gmail OAuth flow', () => {
       const { user, token } = await createUser();
       await connectGmail(user._id);
 
-      fetchNewJobApplicationEmails.mockResolvedValueOnce({
+      mockGmailService.fetchNewJobApplicationEmails.mockResolvedValueOnce({
         emails: [FAKE_EMAIL_OBJ],
         historyId: 'h_new',
         stats: { mode: 'full', total: 1, known: 0, toFetch: 1 },
@@ -301,14 +291,14 @@ describe('Gmail OAuth flow', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.count).toBe(1);
       expect(res.body.applications[0].company).toBe('Acme Corp');
-      expect(fetchNewJobApplicationEmails).toHaveBeenCalledTimes(1);
+      expect(mockGmailService.fetchNewJobApplicationEmails).toHaveBeenCalledTimes(1);
     });
 
     it('persists the returned historyId for the next incremental sync', async () => {
       const { user, token } = await createUser();
       await connectGmail(user._id);
 
-      fetchNewJobApplicationEmails.mockResolvedValueOnce({
+      mockGmailService.fetchNewJobApplicationEmails.mockResolvedValueOnce({
         emails: [],
         historyId: 'h_saved',
         stats: {},
@@ -328,28 +318,38 @@ describe('Gmail OAuth flow', () => {
       const { user, token } = await createUser();
       await connectGmail(user._id, { historyId: 'h_existing' });
 
-      fetchNewJobApplicationEmails.mockResolvedValueOnce({ emails: [], historyId: 'h_existing', stats: {} });
+      mockGmailService.fetchNewJobApplicationEmails.mockResolvedValueOnce({
+        emails: [],
+        historyId: 'h_existing',
+        stats: {},
+      });
 
       await request(app)
         .get('/api/gmail/fetch-emails')
         .set('Authorization', `Bearer ${token}`);
 
-      expect(fetchNewJobApplicationEmails).toHaveBeenCalledWith(expect.any(Number), 'h_existing');
+      expect(mockGmailService.fetchNewJobApplicationEmails).toHaveBeenCalledWith(
+        expect.any(Number),
+        'h_existing'
+      );
     });
 
     it('uses full sync when ?all=1', async () => {
       const { user, token } = await createUser();
       await connectGmail(user._id);
 
-      fetchJobApplicationEmails.mockResolvedValueOnce({ emails: [], historyId: 'h_full' });
+      mockGmailService.fetchJobApplicationEmails.mockResolvedValueOnce({
+        emails: [],
+        historyId: 'h_full',
+      });
 
       await request(app)
         .get('/api/gmail/fetch-emails?all=1')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(fetchJobApplicationEmails).toHaveBeenCalledTimes(1);
-      expect(fetchNewJobApplicationEmails).not.toHaveBeenCalled();
+      expect(mockGmailService.fetchJobApplicationEmails).toHaveBeenCalledTimes(1);
+      expect(mockGmailService.fetchNewJobApplicationEmails).not.toHaveBeenCalled();
     });
 
     it('dedupes emails in the same thread — keeps only latest', async () => {
@@ -359,13 +359,12 @@ describe('Gmail OAuth flow', () => {
       const older = { ...FAKE_EMAIL_OBJ, id: 'msg_old', internalDate: '1000000000000' };
       const newer = { ...FAKE_EMAIL_OBJ, id: 'msg_new', internalDate: '2000000000000' };
 
-      fetchNewJobApplicationEmails.mockResolvedValueOnce({
+      mockGmailService.fetchNewJobApplicationEmails.mockResolvedValueOnce({
         emails: [older, newer], // same threadId
         historyId: 'h_001',
         stats: {},
       });
-      parseJobApplicationFromEmail
-        .mockReturnValueOnce({ ...FAKE_PARSED_APP, emailId: 'msg_new' });
+      parseJobApplicationFromEmail.mockReturnValueOnce({ ...FAKE_PARSED_APP, emailId: 'msg_new' });
 
       const res = await request(app)
         .get('/api/gmail/fetch-emails')
@@ -465,7 +464,6 @@ describe('Gmail OAuth flow', () => {
     it('returns 200 even when not connected (idempotent)', async () => {
       const { token } = await createUser();
 
-      // Never connected — disconnect should still succeed
       const res = await request(app)
         .delete('/api/gmail/disconnect')
         .set('Authorization', `Bearer ${token}`);
@@ -512,7 +510,7 @@ describe('Gmail OAuth flow', () => {
       expect(statusRes.body.connected).toBe(true);
 
       // 5. Fetch emails
-      fetchNewJobApplicationEmails.mockResolvedValueOnce({
+      mockGmailService.fetchNewJobApplicationEmails.mockResolvedValueOnce({
         emails: [FAKE_EMAIL_OBJ],
         historyId: 'h_e2e',
         stats: {},

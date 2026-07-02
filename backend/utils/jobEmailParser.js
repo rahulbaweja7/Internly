@@ -42,9 +42,13 @@ const NOISE_TERMS = [
 const STATUS_RANK = {
   'Applied': 1,
   'Online Assessment': 2,
-  'Interview': 3,
-  'Accepted': 4,
-  'Rejected': 4,
+  'Phone Interview': 3,
+  'Technical Interview': 4,
+  'Final Interview': 5,
+  'Accepted': 6,
+  'Rejected': 6,
+  'Waitlisted': 2,
+  'Withdrawn': 0,
 };
 
 const decodeHeader = (v = '') => {
@@ -168,8 +172,10 @@ const inferStatus = (text) => {
   // Avoid false positives from marketing "offer"
   const marketing = NOISE_TERMS.some((w) => t.includes(w)) || /(discount|coupon|reward|free|music|sale)/i.test(t);
   if (!marketing && /(offer letter|extend(ed)? an offer|congratulations[^\n]*offer)/i.test(t)) return 'Accepted';
-  if (/(final interview|onsite|technical interview|tech interview|phone interview|screening call|phone screen)/i.test(t)) return 'Interview';
-  if (/(online assessment|assessment|hackerrank|coding challenge|oa)/i.test(t)) return 'Online Assessment';
+  if (/(final interview|onsite interview|final round)/i.test(t)) return 'Final Interview';
+  if (/(technical interview|tech interview|technical screen|coding interview|virtual onsite)/i.test(t)) return 'Technical Interview';
+  if (/(phone interview|phone screen|screening call|recruiter call|initial interview)/i.test(t)) return 'Phone Interview';
+  if (/(online assessment|assessment|hackerrank|coding challenge|codesignal|take.home|\boa\b)/i.test(t)) return 'Online Assessment';
   if (/(regret to inform|unfortunately|not moving forward|rejected)/i.test(t)) return 'Rejected';
   if (/(thank you for applying|application received|we received your application|successfully submitted|your application)/i.test(t)) return 'Applied';
   return 'Applied';

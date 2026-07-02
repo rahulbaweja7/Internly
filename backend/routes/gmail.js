@@ -2,20 +2,14 @@ const express = require('express');
 const logger = require('../utils/logger').child({ module: 'gmail-routes' });
 const jwt = require('jsonwebtoken');
 const { isAuthenticated } = require('../middleware/auth');
-const {
-  generateAuthUrl,
-  getTokensFromCode,
-  setCredentials,
-  fetchJobApplicationEmails,
-  fetchNewJobApplicationEmails,
-  parseJobApplicationFromEmail,
-  gmail,
-} = require('../gmailAuth');
+const { generateAuthUrl, getTokensFromCode, createGmailService, parseJobApplicationFromEmail } = require('../gmailAuth');
 const GmailToken = require('../models/GmailToken');
 
 const router = express.Router();
 
-// Step 1: Start OAuth – use JWT from Authorization header or HttpOnly cookie; do not accept query token
+// Step 1: Start OAuth
+// Reads the user's JWT from the Authorization header or HttpOnly cookie,
+// embeds their userId in a short-lived state token, then redirects to Google.
 router.get('/auth', async (req, res) => {
   try {
     let token = null;
@@ -38,15 +32,14 @@ router.get('/auth', async (req, res) => {
     }
 
     const state = jwt.sign({ id: userId }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '10m' });
-    const url = generateAuthUrl(state);
-    res.redirect(url);
+    res.redirect(generateAuthUrl(state));
   } catch (e) {
     logger.error({ err: e }, 'Gmail /auth error');
     res.status(500).json({ error: 'Failed to start OAuth' });
   }
 });
 
-// Step 2: OAuth callback
+// Step 2: OAuth callback — exchange code for tokens, persist to DB
 router.get('/oauth2callback', async (req, res) => {
   try {
     const { code, state } = req.query;
@@ -56,7 +49,7 @@ router.get('/oauth2callback', async (req, res) => {
     try {
       const decoded = jwt.verify(state, process.env.JWT_SECRET || 'your-secret-key');
       userId = String(decoded.id);
-    } catch (e) {
+    } catch (_) {
       return res.status(401).json({ error: 'Invalid auth state' });
     }
 
@@ -74,50 +67,44 @@ router.get('/oauth2callback', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const frontendUrl = rawUrl.replace(/\/$/, '');
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_connected=true`);
   } catch (error) {
     logger.error({ err: error }, 'Gmail OAuth callback error');
-    const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const frontendUrl = rawUrl.replace(/\/$/, '');
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
     res.redirect(`${frontendUrl}/dashboard?gmail_error=true`);
   }
 });
 
 // Step 3: Fetch job emails
+// Each request creates an isolated OAuth2Client via createGmailService(),
+// eliminating the race condition where concurrent users shared one global client.
 router.get('/fetch-emails', isAuthenticated, async (req, res) => {
   try {
     const userId = String(req.user._id);
-    const full = req.query.full === '1' || req.query.mode === 'full';
-    const showAll = req.query.all === '1';
+    const showAll = req.query.all === '1' || req.query.full === '1' || req.query.mode === 'full';
     const limit = Math.min(parseInt(req.query.limit || '200', 10) || 200, 1000);
 
     const tokenDoc = await GmailToken.findOne({ userId });
     if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
 
-    setCredentials({
-      access_token: tokenDoc.access_token,
-      refresh_token: tokenDoc.refresh_token,
-      scope: tokenDoc.scope,
-      token_type: tokenDoc.token_type,
-      expiry_date: tokenDoc.expiry_date,
-    });
+    // Per-request isolated client — no shared mutable state between users
+    const gmailService = createGmailService(tokenDoc, userId);
 
     let rawEmails;
     let newHistoryId;
 
-    if (showAll || full) {
-      ({ emails: rawEmails, historyId: newHistoryId } = await fetchJobApplicationEmails(limit));
+    if (showAll) {
+      ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit));
     } else {
-      ({ emails: rawEmails, historyId: newHistoryId } = await fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
+      ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
     }
 
-    // Persist the updated historyId cursor so the next sync can be incremental
+    // Persist updated historyId cursor for next incremental sync
     if (newHistoryId && newHistoryId !== tokenDoc.historyId) {
       await GmailToken.findOneAndUpdate(
         { userId },
-        { historyId: newHistoryId, lastSyncAt: new Date() },
+        { historyId: newHistoryId, lastSyncAt: new Date() }
       );
     }
 
@@ -131,8 +118,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     }
     const latestEmails = Array.from(byThread.values()).sort((a, b) => b.ts - a.ts);
 
-    // Parse — no per-email DB query needed here since fetchNewJobApplicationEmails
-    // already filtered out known IDs before fetching content
+    // Parse in chunks — yield to event loop between chunks to avoid blocking
     const CHUNK = 15;
     const parsed = [];
     for (let i = 0; i < latestEmails.length; i += CHUNK) {
@@ -148,16 +134,16 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     const gStatus = error?.response?.status || error?.code;
     const gBody = error?.response?.data;
     logger.error({ err: error, googleStatus: gStatus, googleError: gBody }, 'Error fetching emails');
-    res.status(500).json({ 
-      error: 'Failed to fetch emails', 
-      details: error?.message, 
+    res.status(500).json({
+      error: 'Failed to fetch emails',
+      details: error?.message,
       googleStatus: gStatus,
       googleError: gBody,
     });
   }
 });
 
-// Step 4: Status
+// Step 4: Connection status
 router.get('/status', isAuthenticated, async (req, res) => {
   try {
     const userId = String(req.user._id);
@@ -173,7 +159,7 @@ router.get('/status', isAuthenticated, async (req, res) => {
   }
 });
 
-// Step 5: Mark processed
+// Step 5: Mark email as processed (won't appear in future scans)
 const validate = require('../middleware/validate');
 const { markProcessedSchema } = require('../schemas/gmail');
 
@@ -198,16 +184,14 @@ router.delete('/delete-email/:emailId', isAuthenticated, async (req, res) => {
   try {
     const emailId = req.params.emailId;
     const userId = String(req.user._id);
+
     const tokenDoc = await GmailToken.findOne({ userId });
-    if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
-    setCredentials({
-      access_token: tokenDoc.access_token,
-      refresh_token: tokenDoc.refresh_token,
-      scope: tokenDoc.scope,
-      token_type: tokenDoc.token_type,
-      expiry_date: tokenDoc.expiry_date,
-    });
-    await gmail.users.messages.delete({ userId: 'me', id: emailId });
+    if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected.' });
+
+    // Per-request isolated client
+    const gmailService = createGmailService(tokenDoc, userId);
+    await gmailService.deleteEmail(emailId);
+
     res.json({ success: true, emailId });
   } catch (error) {
     logger.error({ err: error }, 'Error deleting email from Gmail');
@@ -228,5 +212,3 @@ router.delete('/disconnect', isAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
-
-
