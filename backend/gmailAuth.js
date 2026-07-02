@@ -302,6 +302,8 @@ const { parseJobEmail } = require('./utils/jobEmailParser');
 const parseJobApplicationFromEmail = (email) => {
   try {
     const parsed = parseJobEmail(email);
+    // Drop noise emails and emails with no extractable signal
+    if (parsed.isLikelyNonApplication || parsed.confidence < 0.2) return null;
     return {
       company: parsed.company,
       position: parsed.position,

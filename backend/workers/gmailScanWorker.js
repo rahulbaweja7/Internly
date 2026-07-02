@@ -69,11 +69,9 @@ function startGmailScanWorker() {
           }
         }
 
-        // Filter noise and zero-confidence results before storing
-        const filtered = parsed.filter((p) => !p.isLikelyNonApplication && p.confidence >= 0.2);
-
         // Store results in Redis with 5-min TTL for polling endpoint
-        await connection.set(`gmail_scan_result:${job.id}`, JSON.stringify({ applications: filtered }), 'EX', 300);
+        // (parseJobApplicationFromEmail already applies noise + confidence filtering)
+        await connection.set(`gmail_scan_result:${job.id}`, JSON.stringify({ applications: parsed }), 'EX', 300);
 
         logger.info({ jobId: job.id, userId, count: parsed.length }, 'Gmail scan complete');
         return { count: parsed.length };

@@ -278,8 +278,7 @@ router.post('/scan', isAuthenticated, async (req, res) => {
         .sort((a, b) => b.ts - a.ts)
         .map(({ email }) => parseJobApplicationFromEmail(email))
         .filter(Boolean);
-      const filtered = parsed.filter((p) => !p.isLikelyNonApplication && p.confidence >= 0.2);
-      return res.json({ scanId: null, state: 'completed', applications: filtered, count: filtered.length });
+      return res.json({ scanId: null, state: 'completed', applications: parsed, count: parsed.length });
     }
 
     const job = await scanQueue.add('scan', { userId, showAll, limit, startDate: startDate || null, endDate: endDate || null });
