@@ -66,9 +66,20 @@ export function LandingPage() {
       <main>
 
         {/* ── Page 1: Hero ──────────────────────────────────────────── */}
-        <Page className="border-t-0">
-          <section className="max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center w-full">
+        <Page className="border-t-0 relative overflow-hidden">
+          {/* Subtle dot grid — light mode only */}
+          <div
+            className="absolute inset-0 pointer-events-none dark:opacity-0"
+            style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.07) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}
+          />
+          {/* Soft blue glow top-right */}
+          <div className="absolute -top-48 -right-48 w-[540px] h-[540px] rounded-full bg-blue-50 dark:bg-blue-950/20 blur-3xl pointer-events-none" />
+          <section className="relative max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center w-full">
             <FadeIn>
+              <div className="inline-flex items-center gap-2 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 mb-6 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Free for students · 300+ using it
+              </div>
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
                 Stop tracking
                 <br />
@@ -173,54 +184,138 @@ export function LandingPage() {
         <Page>
           <section className="max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">No setup. No spreadsheet.</h2>
-                <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">Connect Gmail. We do the rest.</p>
-              </div>
+              <p className="text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 uppercase mb-3">How it works</p>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white">Three steps, then it runs itself.</h2>
             </FadeIn>
-            <div className="grid md:grid-cols-3 gap-12 relative">
-              <div className="hidden md:block absolute top-4 left-[38%] right-[38%] h-px bg-gray-100 dark:bg-gray-800" />
-              {[
-                {
-                  n: '01',
-                  title: 'Connect Gmail in 30 seconds',
-                  body: 'Read-only OAuth. We scan subject lines — we never read email bodies or store anything.',
-                  delay: 0,
-                },
-                {
-                  n: '02',
-                  title: 'Every application, found',
-                  body: 'Greenhouse, Lever, LinkedIn, Indeed, direct — we parse company, role, date, and current status.',
-                  delay: 100,
-                },
-                {
-                  n: '03',
-                  title: 'Drag to update, done',
-                  body: 'Nine pipeline stages. Move a card when your status changes. Your whole hunt in one view.',
-                  delay: 200,
-                },
-              ].map(step => (
-                <FadeIn key={step.n} delay={step.delay}>
-                  <div className="flex flex-col gap-3">
-                    <span className="text-xs font-bold text-gray-300 dark:text-gray-600 tracking-widest">{step.n}</span>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-base">{step.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{step.body}</p>
+
+            <div className="mt-10 grid md:grid-cols-3 gap-5">
+
+              {/* Step 1 */}
+              <FadeIn delay={0}>
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 flex flex-col h-full">
+                  <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center mb-5">
+                    <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                </FadeIn>
-              ))}
+                  <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">01</span>
+                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Connect Gmail in 30 seconds</h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
+                    Read-only OAuth. We scan subject lines only — never email bodies. Revoke anytime from Google.
+                  </p>
+                  <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <span className="text-[11px] font-black text-red-500">G</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300">Google OAuth</p>
+                        <p className="text-[9px] text-gray-400">gmail.readonly · revoke anytime</p>
+                      </div>
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full shrink-0">
+                        Connected
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+
+              {/* Step 2 */}
+              <FadeIn delay={80}>
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 flex flex-col h-full">
+                  <div className="h-10 w-10 rounded-xl bg-violet-50 dark:bg-violet-950/50 flex items-center justify-center mb-5">
+                    <CheckCircle className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">02</span>
+                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Every application, found</h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
+                    Greenhouse, Lever, LinkedIn, Indeed, direct — we parse company, role, date, and status automatically.
+                  </p>
+                  <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 space-y-1.5">
+                    {[
+                      { co: 'Google', role: 'SWE Intern', tag: 'Applied', tc: 'text-blue-600 dark:text-blue-400', bc: 'bg-blue-50 dark:bg-blue-900/30' },
+                      { co: 'Stripe', role: 'Backend Eng', tag: 'OA', tc: 'text-violet-600 dark:text-violet-400', bc: 'bg-violet-50 dark:bg-violet-900/30' },
+                      { co: 'Apple', role: 'iOS Intern', tag: 'Interview', tc: 'text-amber-600 dark:text-amber-400', bc: 'bg-amber-50 dark:bg-amber-900/30' },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-2.5 py-1.5 border border-gray-100 dark:border-gray-600">
+                        <div className="h-5 w-5 rounded-full bg-gray-100 dark:bg-gray-600 flex items-center justify-center shrink-0">
+                          <span className="text-[8px] font-bold text-gray-500 dark:text-gray-300">{r.co[0]}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate">{r.co}</p>
+                          <p className="text-[9px] text-gray-400 truncate">{r.role}</p>
+                        </div>
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${r.tc} ${r.bc}`}>{r.tag}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
+
+              {/* Step 3 */}
+              <FadeIn delay={160}>
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 flex flex-col h-full">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center mb-5">
+                    <Trello className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">03</span>
+                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Drag to update, done</h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
+                    Nine pipeline stages. Move a card when your status changes. Your whole hunt in one view.
+                  </p>
+                  <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 flex gap-2">
+                    {[
+                      { label: 'OA', dot: 'bg-violet-500', cards: [{ co: 'Amazon' }, { co: 'Figma' }] },
+                      { label: 'Interview', dot: 'bg-amber-500', cards: [{ co: 'Apple' }, { co: 'Meta' }] },
+                      { label: 'Offer', dot: 'bg-emerald-500', cards: [{ co: 'OpenAI', accent: true }] },
+                    ].map((col, i) => (
+                      <div key={i} className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${col.dot}`} />
+                          <span className="text-[9px] font-semibold text-gray-500 dark:text-gray-400 truncate">{col.label}</span>
+                        </div>
+                        <div className="space-y-1">
+                          {col.cards.map((c, j) => (
+                            <div key={j} className={`rounded-md border px-2 py-1.5 ${c.accent ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700'}`}>
+                              <p className={`text-[9px] font-medium truncate ${c.accent ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{c.co}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
+
             </div>
           </section>
         </Page>
 
         {/* ── Page 3: Gmail feature ─────────────────────────────────── */}
-        <Page>
-          <section className="max-w-7xl mx-auto px-6 py-16 w-full">
+        <Page className="relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none dark:opacity-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.055) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
+          <div className="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-blue-50 dark:bg-blue-950/10 blur-3xl pointer-events-none" />
+          <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
                 tag="Gmail import"
                 icon={<Mail className="h-3.5 w-3.5" />}
                 headline="Your inbox already has the data."
-                body="Connect Gmail once. We scan subject lines for application emails and build your tracker automatically — company, role, date, all filled in. No copy-pasting."
+                body={
+                  <div>
+                    <p>Connect Gmail once. We scan subject lines for application emails and build your tracker automatically — company, role, date, all filled in. No copy-pasting.</p>
+                    <ul className="mt-5 space-y-3">
+                      {[
+                        'Works with Greenhouse, Lever, Workday, LinkedIn, Indeed, and direct emails',
+                        'Read-only access — we never store email content, only metadata',
+                        'Syncs automatically — new emails appear within seconds of arriving',
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                }
                 visual={<GmailMock />}
               />
             </FadeIn>
@@ -228,14 +323,32 @@ export function LandingPage() {
         </Page>
 
         {/* ── Page 4: Kanban feature ────────────────────────────────── */}
-        <Page>
-          <section className="max-w-7xl mx-auto px-6 py-16 w-full">
+        <Page className="relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none dark:opacity-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.055) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
+          <div className="absolute -top-48 -right-48 w-[500px] h-[500px] rounded-full bg-violet-50 dark:bg-violet-950/10 blur-3xl pointer-events-none" />
+          <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
                 tag="Kanban board"
                 icon={<Trello className="h-3.5 w-3.5" />}
                 headline="Drag it to where it actually is."
-                body="Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected — nine stages that map to reality. Drag a card and the status saves instantly."
+                body={
+                  <div>
+                    <p>Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected — nine stages that map to reality. Drag a card and the status saves instantly.</p>
+                    <ul className="mt-5 space-y-3">
+                      {[
+                        'Nine pipeline stages built for the real internship / new-grad process',
+                        'Drag a card to update status — no forms, no friction',
+                        'Every change syncs instantly across devices',
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                }
                 visual={<BoardMock />}
                 flip
               />
@@ -244,14 +357,32 @@ export function LandingPage() {
         </Page>
 
         {/* ── Page 5: Analytics feature ─────────────────────────────── */}
-        <Page>
-          <section className="max-w-7xl mx-auto px-6 py-16 w-full">
+        <Page className="relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none dark:opacity-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.055) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
+          <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] rounded-full bg-emerald-50 dark:bg-emerald-950/10 blur-3xl pointer-events-none" />
+          <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
                 tag="Analytics"
                 icon={<BarChart3 className="h-3.5 w-3.5" />}
                 headline="See where your funnel leaks."
-                body="Response rate, interview conversion, weekly pace. Charts that show where applications go quiet so you can fix it before the semester ends."
+                body={
+                  <div>
+                    <p>Response rate, interview conversion, weekly pace. Charts that show where applications go quiet so you can fix it before the semester ends.</p>
+                    <ul className="mt-5 space-y-3">
+                      {[
+                        'Response rate, interview conversion, and offer rate at a glance',
+                        'Weekly application pace so you never fall behind',
+                        'See exactly where in the funnel your applications stall',
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                }
                 visual={<AnalyticsMock />}
               />
             </FadeIn>
@@ -315,7 +446,7 @@ function FeatureRow({ tag, icon, headline, body, visual, flip = false }) {
           {tag}
         </div>
         <h2 className="text-3xl font-bold tracking-tight leading-tight text-gray-900 dark:text-white">{headline}</h2>
-        <p className="mt-4 text-gray-500 dark:text-gray-400 leading-relaxed">{body}</p>
+        <div className="mt-4 text-gray-500 dark:text-gray-400 leading-relaxed">{body}</div>
       </div>
       <div className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900">
         {visual}
@@ -350,22 +481,46 @@ function GmailMock() {
     { from: 'Meta Careers', sub: 'We received your application', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
     { from: 'Stripe', sub: 'Next steps: Online Assessment', tag: 'OA', color: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
     { from: 'Apple HR', sub: 'Interview invitation — iOS Intern', tag: 'Interview', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
+    { from: 'Figma', sub: 'Application received — Frontend Engineer', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+    { from: 'Amazon', sub: 'Action required: Complete your assessment', tag: 'OA', color: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
   ];
   return (
-    <div className="p-4 space-y-2">
-      <p className="text-[11px] font-medium text-gray-400 mb-3">Detected in your inbox</p>
-      {emails.map((e, i) => (
-        <div key={i} className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-2">
-          <div className="h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
-            <span className="text-[10px] font-bold text-gray-500">{e.from[0]}</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate">{e.from}</p>
-            <p className="text-[9px] text-gray-400 truncate">{e.sub}</p>
-          </div>
-          <span className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${e.color}`}>{e.tag}</span>
+    <div>
+      {/* Browser chrome */}
+      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+        <span className="h-2 w-2 rounded-full bg-red-400" />
+        <span className="h-2 w-2 rounded-full bg-yellow-400" />
+        <span className="h-2 w-2 rounded-full bg-green-400" />
+        <span className="ml-3 text-[11px] text-gray-400">Applycation — Gmail sync</span>
+      </div>
+      {/* Email rows */}
+      <div className="p-4 space-y-2">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Detected in your inbox</p>
+          <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{emails.length} found</span>
         </div>
-      ))}
+        {emails.map((e, i) => (
+          <div key={i} className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-2">
+            <div className="h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300">{e.from[0]}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate">{e.from}</p>
+              <p className="text-[9px] text-gray-400 truncate">{e.sub}</p>
+            </div>
+            <span className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${e.color}`}>{e.tag}</span>
+          </div>
+        ))}
+      </div>
+      {/* Stats footer */}
+      <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 flex items-center gap-3 bg-white dark:bg-gray-950/60">
+        <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Synced just now
+        </span>
+        <span className="text-gray-200 dark:text-gray-700">·</span>
+        <span className="text-[10px] text-gray-400">read-only · no email content stored</span>
+      </div>
     </div>
   );
 }
