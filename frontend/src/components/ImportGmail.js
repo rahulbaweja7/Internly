@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'sonner';
 import config from '../config/config';
 import { Navbar } from './Navbar';
 import { Button } from './ui/button';
@@ -13,6 +14,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Mail } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
+import { JOB_STATUSES } from '../constants/jobStatuses';
+
+const POLL_INTERVAL_MS = 2000;
+const POLL_TIMEOUT_MS = 120_000;
 
 export default function ImportGmail() {
   const navigate = useNavigate();
@@ -30,6 +35,8 @@ export default function ImportGmail() {
   const [editing, setEditing] = useState(null);
   const [layout, setLayout] = useState(() => (params.get('layout') === 'grid' ? 'grid' : 'list'));
   const [jumpPage, setJumpPage] = useState('');
+  const pollTimerRef = useRef(null);
+  const pollStartRef = useRef(null);
 
   const storageKey = (suffix) => {
     const uid = (user?.id || user?._id || 'default').toString();
@@ -54,7 +61,6 @@ export default function ImportGmail() {
   };
 
   const connect = () => {
-    // Auth is via HttpOnly cookie; no token query parameter
     window.location.href = `${config.API_BASE_URL}/api/gmail/auth`;
   };
 
@@ -83,21 +89,67 @@ export default function ImportGmail() {
     } catch (_) {}
   };
 
+  const pollScan = async (scanId) => {
+    if (Date.now() - pollStartRef.current > POLL_TIMEOUT_MS) {
+      setLoading(false);
+      toast.error('Scan timed out — please try again');
+      return;
+    }
+    try {
+      const res = await axios.get(`${config.API_BASE_URL}/api/gmail/scan/${scanId}`);
+      const { state, applications, error: scanError } = res.data;
+
+      if (state === 'completed') {
+        const list = applications || [];
+        setApps(list);
+        saveCache(list);
+        trackEvent('gmail_scan_completed', { email_count: list.length });
+        if (list.length === 0) toast.info('No new applications found');
+        setLoading(false);
+      } else if (state === 'failed') {
+        setLoading(false);
+        toast.error(scanError || 'Scan failed — please try again');
+      } else {
+        pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
+      }
+    } catch {
+      setLoading(false);
+      toast.error('Scan failed — please try again');
+    }
+  };
+
   const scan = async () => {
     setLoading(true);
+    clearTimeout(pollTimerRef.current);
     try {
-      const res = await axios.get(`${config.API_BASE_URL}/api/gmail/fetch-emails`, {
-        params: { limit: 500, all: showAll ? 1 : 0 },
+      const res = await axios.post(`${config.API_BASE_URL}/api/gmail/scan`, {
+        limit: 500,
+        all: showAll ? 1 : 0,
       });
-      const list = res.data.applications || [];
-      setApps(list);
-      saveCache(list);
-      trackEvent('gmail_scan_completed', { email_count: list.length });
+
+      const { scanId, state, applications } = res.data;
+
+      // No Redis (dev) — synchronous response
+      if (state === 'completed') {
+        const list = applications || [];
+        setApps(list);
+        saveCache(list);
+        trackEvent('gmail_scan_completed', { email_count: list.length });
+        if (list.length === 0) toast.info('No new applications found');
+        setLoading(false);
+        return;
+      }
+
+      pollStartRef.current = Date.now();
+      pollTimerRef.current = setTimeout(() => pollScan(scanId), POLL_INTERVAL_MS);
     } catch (e) {
-      const msg = e?.response?.data?.error || e.message || 'Failed to fetch emails';
-      alert(msg);
-    } finally {
       setLoading(false);
+      if (e.response?.status === 429) {
+        const wait = e.response.data.retryAfter || 60;
+        toast.error(`Please wait ${wait}s before scanning again`);
+      } else {
+        toast.error(e?.response?.data?.error || 'Failed to fetch emails');
+      }
     }
   };
 
@@ -152,20 +204,44 @@ export default function ImportGmail() {
       });
       await fetchJobs();
     } catch (e) {
-      alert(e?.response?.data?.error || 'Failed to add application');
+      toast.error(e?.response?.data?.error || 'Failed to add application');
     } finally {
       setAdding(false);
     }
   };
 
+  // Single POST /api/jobs/bulk replaces N sequential requests
   const addAll = async () => {
-    if (!apps.length) return;
+    if (!filtered.length) return;
     setAdding(true);
     try {
-      for (const a of filtered) {
-        // eslint-disable-next-line no-await-in-loop
-        await addOne(a);
-      }
+      const jobs = filtered.map((a) => ({
+        company: a.company,
+        role: a.position,
+        location: a.location || '',
+        status: a.status,
+        stipend: '',
+        dateApplied: a.appliedDate,
+        notes: `Imported from Gmail\nSubject: ${a.subject || ''}\nSnippet: ${a.snippet || ''}`,
+        emailId: a.emailId,
+        subject: a.subject,
+      }));
+
+      const res = await axios.post(`${config.API_BASE_URL}/api/jobs/bulk`, { jobs });
+      const { created, updated, skipped } = res.data;
+
+      trackEvent('gmail_bulk_imported', { created, updated, skipped });
+      setApps([]);
+      saveCache([]);
+      await fetchJobs();
+
+      const parts = [];
+      if (created > 0) parts.push(`${created} added`);
+      if (updated > 0) parts.push(`${updated} updated`);
+      if (skipped > 0) parts.push(`${skipped} already tracked`);
+      toast.success(parts.join(', ') || 'Done');
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Failed to import applications');
     } finally {
       setAdding(false);
     }
@@ -175,6 +251,7 @@ export default function ImportGmail() {
     refreshStatus();
     fetchJobs();
     loadCache();
+    return () => clearTimeout(pollTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -203,7 +280,6 @@ export default function ImportGmail() {
     <>
     <div className="min-h-screen relative bg-slate-950">
       <Navbar />
-      {/* Aurora background accents */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -right-32 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 blur-3xl" />
         <div className="absolute -bottom-40 -left-24 h-[460px] w-[460px] rounded-full bg-gradient-to-br from-purple-500/15 to-blue-500/15 blur-3xl" />
@@ -257,7 +333,7 @@ export default function ImportGmail() {
                     className="w-72"
                   />
                   <Button onClick={addAll} disabled={adding || filtered.length === 0}>
-                    Add All ({filtered.length})
+                    {adding ? 'Adding…' : `Add All (${filtered.length})`}
                   </Button>
                   <Button variant="outline" onClick={disconnect}>Disconnect</Button>
                 </>
@@ -270,15 +346,12 @@ export default function ImportGmail() {
           {filtered.length === 0 ? (
             <Card className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md">
               <CardContent className="py-10 text-center text-slate-300">
-                {loading ? 'Scanning…' : 'No detected applications yet. Click Scan Emails to begin.'}
+                {loading ? 'Scanning your inbox…' : 'No detected applications yet. Click Scan Emails to begin.'}
               </CardContent>
             </Card>
           ) : (
             <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3' : 'space-y-3'}>
-              {loading && (layout === 'grid' ?
-                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`s-${i}`} />) :
-                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`s-${i}`} />)
-              )}
+              {loading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`s-${i}`} />)}
               {!loading && pageItems.map((a) => {
                 const already = jobsEmailIds.has(a.emailId);
                 return (
@@ -293,9 +366,7 @@ export default function ImportGmail() {
                           {a.subject && <div className="text-xs text-slate-300 mt-1 clamp-1">Subject: {a.subject}</div>}
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => setEditing(a)}>
-                            Edit
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditing(a)}>Edit</Button>
                           {already ? (
                             <Badge variant="outline">Already added</Badge>
                           ) : (
@@ -303,18 +374,16 @@ export default function ImportGmail() {
                           )}
                         </div>
                       </div>
-                      {/* Spacer to ensure consistent bottom padding */}
                       <div className="mt-2" />
                     </CardContent>
                   </Card>
                 );
               })}
 
-              {/* Pagination */}
               <div className="rounded-md p-[1px] bg-gradient-to-r from-cyan-500/30 via-emerald-500/30 to-violet-500/30">
                 <div className="flex items-center justify-between py-3 rounded-md border border-white/10 bg-white/[0.04] backdrop-blur-md px-3">
                   <div className="text-sm text-slate-300">
-                    Showing <span className="text-foreground font-medium">{start + 1}-{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
+                    Showing <span className="text-foreground font-medium">{start + 1}–{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1} className="h-8 px-2"><ChevronsLeft className="h-4 w-4"/></Button>
@@ -345,7 +414,7 @@ export default function ImportGmail() {
         </div>
       </div>
     </div>
-    {/* Edit Modal */}
+
     {editing && (
       <Dialog open={true} onOpenChange={() => setEditing(null)}>
         <DialogContent className="sm:max-w-[840px]">
@@ -369,15 +438,11 @@ export default function ImportGmail() {
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={editing.status} onValueChange={(v) => setEditing((p) => ({ ...p, status: v }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Applied">Applied</SelectItem>
-                    <SelectItem value="Online Assessment">Online Assessment</SelectItem>
-                    <SelectItem value="Interview">Interview</SelectItem>
-                    <SelectItem value="Accepted">Accepted</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    {JOB_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -395,12 +460,12 @@ export default function ImportGmail() {
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>
-                <Input placeholder="Optional" value={editing.notes || ''} onChange={(e) => setEditing((p) => ({ ...p, notes: e.target.value }))} />
+                <Input placeholder="Optional" value={editing.notes || ''}
+                  onChange={(e) => setEditing((p) => ({ ...p, notes: e.target.value }))} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => {
-                // Persist edits locally and close
                 setApps((prev) => {
                   const next = prev.map((x) => x.emailId === editing.emailId ? editing : x);
                   saveCache(next);
@@ -421,5 +486,3 @@ export default function ImportGmail() {
     </>
   );
 }
-
-
