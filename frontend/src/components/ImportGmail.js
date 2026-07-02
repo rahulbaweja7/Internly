@@ -29,6 +29,8 @@ export default function ImportGmail() {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [showAll, setShowAll] = useState(params.get('all') === '1');
+  const [startDate, setStartDate] = useState(params.get('from') || '');
+  const [endDate, setEndDate] = useState(params.get('to') || '');
   const [query, setQuery] = useState(params.get('q') || '');
   const pageSize = 25;
   const page = Math.max(1, parseInt(params.get('page') || '1', 10));
@@ -126,10 +128,10 @@ export default function ImportGmail() {
     setLoading(true);
     clearTimeout(pollTimerRef.current);
     try {
-      const res = await axios.post(`${config.API_BASE_URL}/api/gmail/scan`, {
-        limit: 500,
-        all: showAll ? 1 : 0,
-      });
+      const body = { limit: 500, all: showAll ? 1 : 0 };
+      if (startDate) body.startDate = startDate;
+      if (endDate) body.endDate = endDate;
+      const res = await axios.post(`${config.API_BASE_URL}/api/gmail/scan`, body);
 
       const { scanId, state, applications } = res.data;
 
@@ -332,23 +334,55 @@ export default function ImportGmail() {
                   <Button onClick={connect} size="sm">Reconnect Gmail</Button>
                 </div>
               ) : (
-                <>
-                  <Button variant="outline" onClick={scan} disabled={loading}>{loading ? 'Scanning…' : 'Scan Emails'}</Button>
-                  <label className="text-xs text-slate-300 inline-flex items-center gap-2">
-                    <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
-                    Show all
-                  </label>
-                  <Input
-                    placeholder="Search detected applications…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-72"
-                  />
-                  <Button onClick={addAll} disabled={adding || filtered.length === 0}>
-                    {adding ? 'Adding…' : `Add All (${filtered.length})`}
-                  </Button>
-                  <Button variant="outline" onClick={disconnect}>Disconnect</Button>
-                </>
+                <div className="w-full space-y-3">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-400 whitespace-nowrap">From</span>
+                      <input
+                        type="date"
+                        value={startDate}
+                        max={endDate || undefined}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="text-xs border border-white/10 rounded px-2 py-1 bg-white/5 text-slate-200 w-36"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-400 whitespace-nowrap">To</span>
+                      <input
+                        type="date"
+                        value={endDate}
+                        min={startDate || undefined}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="text-xs border border-white/10 rounded px-2 py-1 bg-white/5 text-slate-200 w-36"
+                      />
+                    </div>
+                    {(startDate || endDate) && (
+                      <button
+                        onClick={() => { setStartDate(''); setEndDate(''); }}
+                        className="text-xs text-slate-400 underline"
+                      >
+                        Clear dates
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <Button variant="outline" onClick={scan} disabled={loading}>{loading ? 'Scanning…' : 'Scan Emails'}</Button>
+                    <label className="text-xs text-slate-300 inline-flex items-center gap-2">
+                      <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+                      Show all
+                    </label>
+                    <Input
+                      placeholder="Search detected applications…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="w-72"
+                    />
+                    <Button onClick={addAll} disabled={adding || filtered.length === 0}>
+                      {adding ? 'Adding…' : `Add All (${filtered.length})`}
+                    </Button>
+                    <Button variant="outline" onClick={disconnect}>Disconnect</Button>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

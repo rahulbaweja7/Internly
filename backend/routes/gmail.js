@@ -222,6 +222,13 @@ router.post('/scan', isAuthenticated, async (req, res) => {
     const showAll = req.body.all === 1 || req.body.all === '1' || req.body.mode === 'full';
     const limit = Math.min(parseInt(req.body.limit || '200', 10) || 200, 1000);
 
+    // Optional date range — both or neither; YYYY-MM-DD
+    const { startDate, endDate } = req.body;
+    const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+    if (startDate && !ISO_DATE.test(startDate)) return res.status(400).json({ error: 'startDate must be YYYY-MM-DD' });
+    if (endDate && !ISO_DATE.test(endDate)) return res.status(400).json({ error: 'endDate must be YYYY-MM-DD' });
+    if (startDate && endDate && startDate > endDate) return res.status(400).json({ error: 'startDate must be before endDate' });
+
     const tokenDoc = await GmailToken.findOne({ userId });
     if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
 
@@ -252,8 +259,8 @@ router.post('/scan', isAuthenticated, async (req, res) => {
       // No Redis — fall back to synchronous scan (dev only)
       const gmailService = createGmailService(tokenDoc, userId);
       let rawEmails, newHistoryId;
-      if (showAll) {
-        ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit));
+      if (showAll || startDate || endDate) {
+        ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit, startDate, endDate));
       } else {
         ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
       }
@@ -271,11 +278,12 @@ router.post('/scan', isAuthenticated, async (req, res) => {
         .sort((a, b) => b.ts - a.ts)
         .map(({ email }) => parseJobApplicationFromEmail(email))
         .filter(Boolean);
-      return res.json({ scanId: null, state: 'completed', applications: parsed, count: parsed.length });
+      const filtered = parsed.filter((p) => !p.isLikelyNonApplication && p.confidence >= 0.2);
+      return res.json({ scanId: null, state: 'completed', applications: filtered, count: filtered.length });
     }
 
-    const job = await scanQueue.add('scan', { userId, showAll, limit });
-    logger.info({ jobId: job.id, userId }, 'Gmail scan enqueued');
+    const job = await scanQueue.add('scan', { userId, showAll, limit, startDate: startDate || null, endDate: endDate || null });
+    logger.info({ jobId: job.id, userId, startDate, endDate }, 'Gmail scan enqueued');
     res.json({ scanId: job.id });
   } catch (error) {
     logger.error({ err: error }, 'Failed to enqueue Gmail scan');

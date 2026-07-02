@@ -15,13 +15,46 @@ const bootstrapClient = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIREC
 
 logger.debug({ redirectUri: REDIRECT_URI }, 'Gmail OAuth bootstrap client initialised');
 
-// Single source of truth for the Gmail search query
-const GMAIL_SEARCH_QUERY =
-  'category:primary -in:chats newer_than:1y ' +
-  '((subject:("application" OR "applied" OR "your application" OR "thank you for applying" OR "we received your application") ' +
-  'OR ("applied to" OR "you applied to" OR "thanks for applying"))) ' +
-  '-subject:("apply to similar jobs" OR "job matches" OR recommendations OR newsletter OR digest ' +
-  'OR webinar OR "office hours" OR "hiring event" OR "virtual fair" OR "virtual event")';
+// Subject-based keyword filters — date-independent portion of the Gmail search query.
+const GMAIL_SUBJECT_FILTER =
+  '(' +
+    'subject:(' +
+      '"application" OR "applied" OR "your application" OR "thank you for applying" OR ' +
+      '"we received your application" OR "interview" OR "offer letter" OR "online assessment" OR ' +
+      '"coding challenge" OR "take-home" OR "hackerrank" OR "codesignal" OR "hirevue" OR ' +
+      '"phone screen" OR "screening call" OR "next steps" OR "moving forward" OR ' +
+      '"unfortunately" OR "not selected" OR "other candidates" OR ' +
+      '"internship" OR "new grad" OR "campus recruit"' +
+    ') OR ' +
+    '("applied to" OR "you applied to" OR "thanks for applying" OR "your candidacy")' +
+  ') ' +
+  '-subject:(' +
+    '"apply to similar jobs" OR "job matches" OR recommendations OR newsletter OR digest OR ' +
+    'webinar OR "office hours" OR "hiring event" OR "virtual fair" OR "virtual event" OR ' +
+    '"is hiring" OR "we are hiring" OR "jobs you may like" OR ' +
+    '"has been added to your account" OR "added to your account" OR ' +
+    '"assignment graded" OR "graded:" OR "course grade" OR ' +
+    '"verify your email" OR "confirm your email" OR "reset your password" OR ' +
+    '"security alert" OR "account activity" OR "sign-in attempt"' +
+  ')';
+
+/**
+ * Builds the full Gmail search query, injecting a date range or the default 1-year window.
+ * @param {string} [startDate] ISO date string YYYY-MM-DD
+ * @param {string} [endDate]   ISO date string YYYY-MM-DD
+ */
+const buildGmailQuery = (startDate, endDate) => {
+  let dateFilter;
+  if (startDate || endDate) {
+    const parts = [];
+    if (startDate) parts.push(`after:${startDate.replace(/-/g, '/')}`);
+    if (endDate) parts.push(`before:${endDate.replace(/-/g, '/')}`);
+    dateFilter = parts.join(' ');
+  } else {
+    dateFilter = 'newer_than:1y';
+  }
+  return `category:primary -in:chats ${dateFilter} ${GMAIL_SUBJECT_FILTER}`;
+};
 
 // ── OAuth helpers (use bootstrapClient — no user tokens involved) ─────────────
 
@@ -88,13 +121,16 @@ const createGmailService = (storedTokens, userId) => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   /**
-   * Returns message IDs matching the search query + historyId cursor.
+   * Returns message IDs matching the search query.
+   * @param {number} maxResults
+   * @param {string} [startDate] YYYY-MM-DD
+   * @param {string} [endDate]   YYYY-MM-DD
    * @returns {{ ids: string[], historyId: string }}
    */
-  const listJobEmailIds = async (maxResults = 200) => {
+  const listJobEmailIds = async (maxResults = 200, startDate, endDate) => {
     const res = await gmailApi.users.messages.list({
       userId: 'me',
-      q: GMAIL_SEARCH_QUERY,
+      q: buildGmailQuery(startDate, endDate),
       maxResults,
     });
     if (!res?.data) throw new Error('Empty response from Gmail API (messages.list)');
@@ -174,11 +210,14 @@ const createGmailService = (storedTokens, userId) => {
 
   /**
    * Full sync — fetches content for all emails matching the search query.
-   * Use for "show all" / "force refresh" modes.
+   * Use for "show all" / "force refresh" / date-range modes.
+   * @param {number} maxResults
+   * @param {string} [startDate] YYYY-MM-DD
+   * @param {string} [endDate]   YYYY-MM-DD
    * @returns {{ emails: object[], historyId: string }}
    */
-  const fetchJobApplicationEmails = async (maxResults = 200) => {
-    const { ids, historyId } = await listJobEmailIds(maxResults);
+  const fetchJobApplicationEmails = async (maxResults = 200, startDate, endDate) => {
+    const { ids, historyId } = await listJobEmailIds(maxResults, startDate, endDate);
     const emails = await getEmailsByIds(ids);
     return { emails, historyId };
   };
@@ -187,14 +226,20 @@ const createGmailService = (storedTokens, userId) => {
    * Incremental sync — only fetches content for emails not already imported.
    *
    * Strategy:
-   *   1. If a historyId cursor exists, use history.list to get only new IDs (1 API call).
-   *   2. Otherwise (first sync or expired cursor) fall back to messages.list.
+   *   1. If a historyId cursor exists AND no date range, use history.list to get only new IDs.
+   *   2. Otherwise (first sync, expired cursor, or date range) fall back to messages.list.
    *   3. Filter IDs against already-seen emails in DB BEFORE calling messages.get,
    *      so we only download content for genuinely new emails.
    *
+   * Note: date range always forces a full scan because the history API has no date filter.
+   *
+   * @param {number} maxResults
+   * @param {string|null} storedHistoryId
+   * @param {string} [startDate] YYYY-MM-DD — forces full scan when set
+   * @param {string} [endDate]   YYYY-MM-DD — forces full scan when set
    * @returns {{ emails: object[], historyId: string, stats: object }}
    */
-  const fetchNewJobApplicationEmails = async (maxResults = 200, storedHistoryId = null) => {
+  const fetchNewJobApplicationEmails = async (maxResults = 200, storedHistoryId = null, startDate, endDate) => {
     const Job = require('./models/Job');
     const ProcessedEmail = require('./models/ProcessedEmail');
 
@@ -202,7 +247,9 @@ const createGmailService = (storedTokens, userId) => {
     let historyId;
     let mode;
 
-    if (storedHistoryId) {
+    const hasDateRange = !!(startDate || endDate);
+
+    if (storedHistoryId && !hasDateRange) {
       const result = await listNewEmailIdsSince(storedHistoryId);
       if (result) {
         candidateIds = result.ids;
@@ -213,8 +260,8 @@ const createGmailService = (storedTokens, userId) => {
         mode = 'full-fallback';
       }
     } else {
-      ({ ids: candidateIds, historyId } = await listJobEmailIds(maxResults));
-      mode = 'full';
+      ({ ids: candidateIds, historyId } = await listJobEmailIds(maxResults, startDate, endDate));
+      mode = hasDateRange ? 'date-range' : 'full';
     }
 
     // Load all known email IDs from DB in parallel (2 queries, not N)

@@ -21,8 +21,8 @@ function startGmailScanWorker() {
   worker = new Worker(
     'gmail-scan',
     async (job) => {
-      const { userId, showAll, limit } = job.data;
-      logger.info({ jobId: job.id, userId, showAll, limit }, 'Gmail scan started');
+      const { userId, showAll, limit, startDate, endDate } = job.data;
+      logger.info({ jobId: job.id, userId, showAll, limit, startDate, endDate }, 'Gmail scan started');
 
       const tokenDoc = await GmailToken.findOne({ userId });
       if (!tokenDoc) throw new Error('Gmail not connected');
@@ -31,8 +31,8 @@ function startGmailScanWorker() {
         const gmailService = createGmailService(tokenDoc, userId);
 
         let rawEmails, newHistoryId;
-        if (showAll) {
-          ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit));
+        if (showAll || startDate || endDate) {
+          ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit, startDate, endDate));
         } else {
           ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
         }
@@ -69,8 +69,11 @@ function startGmailScanWorker() {
           }
         }
 
+        // Filter noise and zero-confidence results before storing
+        const filtered = parsed.filter((p) => !p.isLikelyNonApplication && p.confidence >= 0.2);
+
         // Store results in Redis with 5-min TTL for polling endpoint
-        await connection.set(`gmail_scan_result:${job.id}`, JSON.stringify({ applications: parsed }), 'EX', 300);
+        await connection.set(`gmail_scan_result:${job.id}`, JSON.stringify({ applications: filtered }), 'EX', 300);
 
         logger.info({ jobId: job.id, userId, count: parsed.length }, 'Gmail scan complete');
         return { count: parsed.length };

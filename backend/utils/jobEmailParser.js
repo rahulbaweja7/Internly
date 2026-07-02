@@ -12,6 +12,16 @@ const ATS_DOMAINS = [
   'bamboohr.com',
   'successfactors.com',
   'icims.com',
+  // Job boards — sender domain ≠ hiring company
+  'linkedin.com',
+  'indeedemail.com',
+  'indeed.com',
+  'glassdoor.com',
+  'ziprecruiter.com',
+  'joinhandshake.com',
+  'handshake.com',
+  'simplyhired.com',
+  'wellfound.com',
 ];
 
 const ROLE_KEYWORDS = [
@@ -31,6 +41,8 @@ const COMPANY_STOPPHRASES = new Set([
   'home', 'this time', 'any time', 'time of order', 'you were added', 'works best', 'your earliest convenience',
   'involves equity and', 'after reviewing your', 'was only the', 'have impacted and', 'best match you', 'search and future endeavors',
   'weekend', 'opens up', 'opened up', 'no additional positions', 'descriptions', 'insights',
+  // Non-company strings that pattern-match as company names
+  'your account', 'your profile', 'your email', 'your inbox', 'the team', 'our team', 'the role', 'the position',
 ]);
 
 const NOISE_TERMS = [
@@ -171,12 +183,12 @@ const inferStatus = (text) => {
   const t = text.toLowerCase();
   // Avoid false positives from marketing "offer"
   const marketing = NOISE_TERMS.some((w) => t.includes(w)) || /(discount|coupon|reward|free|music|sale)/i.test(t);
-  if (!marketing && /(offer letter|extend(ed)? an offer|congratulations[^\n]*offer)/i.test(t)) return 'Accepted';
+  if (!marketing && /(offer letter|extend(ed)? an offer|congratulations[^\n]*offer|excited to (?:extend|offer)|happy to (?:extend|offer)|pleased to (?:extend|offer)|you(?:'ve| have) been selected)/i.test(t)) return 'Accepted';
   if (/(final interview|onsite interview|final round)/i.test(t)) return 'Final Interview';
-  if (/(technical interview|tech interview|technical screen|coding interview|virtual onsite)/i.test(t)) return 'Technical Interview';
-  if (/(phone interview|phone screen|screening call|recruiter call|initial interview)/i.test(t)) return 'Phone Interview';
-  if (/(online assessment|assessment|hackerrank|coding challenge|codesignal|take.home|\boa\b)/i.test(t)) return 'Online Assessment';
-  if (/(regret to inform|unfortunately|not moving forward|rejected)/i.test(t)) return 'Rejected';
+  if (/(technical interview|tech interview|technical screen|coding interview|virtual onsite|hirevue|video interview|video screen|take.?home (?:project|assignment|test))/i.test(t)) return 'Technical Interview';
+  if (/(phone interview|phone screen|screening call|recruiter call|initial interview|we(?:'d| would) like to (?:connect|chat|speak|schedule)|move(?:d)? (?:you )?(?:to the )?next (?:round|step))/i.test(t)) return 'Phone Interview';
+  if (/(online assessment|assessment|hackerrank|coding challenge|codesignal|take.home|\boa\b|please complete (?:the )?(?:following|this)|complete (?:your|the) assessment)/i.test(t)) return 'Online Assessment';
+  if (/(regret to inform|unfortunately|not moving forward|rejected|no longer (?:being considered|under consideration)|position has been filled|we(?:'ve| have) (?:decided|chosen) to (?:move forward with|pursue) other)/i.test(t)) return 'Rejected';
   if (/(thank you for applying|application received|we received your application|successfully submitted|your application)/i.test(t)) return 'Applied';
   return 'Applied';
 };
@@ -242,6 +254,10 @@ const parseJobEmail = (email) => {
   // Company extraction
   let company = 'Unknown Company';
   const subjCompanyPatterns = [
+    // Job-board specific (LinkedIn, Indeed) — must come first to override generic patterns
+    /application (?:was sent|was submitted) to ([^!,\n·]+)/i,  // LinkedIn: "Your application was sent to Google"
+    /applied to ([^·\n]+?)\s*·/i,                               // Indeed: "Applied to Google · Software Engineer"
+    // Standard patterns
     /you applied to ([^!,\n]+)/i,
     /thank you for applying to ([^!,\n]+)/i,
     /thank you for your application to ([^!,\n]+)/i,
@@ -256,6 +272,21 @@ const parseJobEmail = (email) => {
   if (company === 'Unknown Company') {
     const atMatch = combined.match(/(?:internship|position|role|offer|application)\s+at\s+([A-Z][A-Za-z0-9&.\-\s]+?)(?:\s+on\s+[A-Za-z]+|\s+\.|\.|,|!|\?|$)/i);
     if (atMatch) company = atMatch[1].trim();
+  }
+  // ATS & job-board body patterns (Greenhouse, Lever, Workday, Ashby, SmartRecruiters, LinkedIn, Indeed)
+  if (company === 'Unknown Company') {
+    const atsBodyPatterns = [
+      /your application (?:to|at|with)\s+([A-Z][A-Za-z0-9&.\- ]+?)(?:\s+(?:for|has|is)|\.|,|!|\?|$)/i,
+      /applying (?:to|at|with)\s+([A-Z][A-Za-z0-9&.\- ]+?)(?:\s+(?:for|as)|\.|,|!|\?|$)/i,
+      /application (?:was sent|was submitted) to\s+([A-Z][A-Za-z0-9&.\- ]+?)(?:\s+(?:for|via)|\.|,|!|\?|$)/i,
+      /team at\s+([A-Z][A-Za-z0-9&.\- ]+?)(?:'s?|\s+(?:and|is|has)|\.|,|!|\?|$)/i,
+      /interest in (?:joining\s+)?([A-Z][A-Za-z0-9&.\- ]+?)(?:'s?|\s+(?:and|as|for)|\.|,|!|\?|$)/i,
+      /welcome to\s+([A-Z][A-Za-z0-9&.\- ]+?)(?:'s?\s+(?:team|recruiting|hiring)|\.|,|!|\?|$)/i,
+    ];
+    for (const re of atsBodyPatterns) {
+      const m = combined.match(re);
+      if (m) { company = m[1].trim(); break; }
+    }
   }
   if (company === 'Unknown Company') {
     const domCompany = extractDomainCompany(from);
@@ -296,6 +327,11 @@ const parseJobEmail = (email) => {
   // Remove leading company name from position if present (e.g., "Old Mission's ...")
   position = stripCompanyFromRole(position, company);
 
+  // Reject positions that are clearly not job titles (course names, academic content, etc.)
+  if (/(course|essay|graded|homework|assignment|syllabus|lecture|quiz|exam|module|academic)/i.test(position)) {
+    position = 'Unknown Position';
+  }
+
   // Status
   const status = inferStatus(combined);
 
@@ -310,7 +346,7 @@ const parseJobEmail = (email) => {
   if (ATS_DOMAINS.some((d) => from.toLowerCase().includes(d))) confidence += 0.2;
 
   // Filter out likely non-application emails even if matched above
-  const nonApplicationSignals = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations)/i.test(combinedLower);
+  const nonApplicationSignals = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations|oauth application|has been added to your account|security alert|account activity|account notification|assignment graded|course grade|academic integrity|graded:|unsubscribe from|verify your email|confirm your email|reset your password|your receipt|your order|your invoice)/i.test(combinedLower);
 
   return {
     company,

@@ -72,6 +72,51 @@ describe('parseJobEmail — status inference', () => {
     const result = parseJobEmail(email);
     expect(result.status).not.toBe('Accepted');
   });
+
+  it('returns Phone Interview for "next steps" recruiter email', () => {
+    const email = makeEmail({
+      subject: 'Next steps for your application',
+      body: "We'd like to schedule a quick call to discuss the role further.",
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Phone Interview');
+  });
+
+  it('returns Technical Interview for HireVue invite', () => {
+    const email = makeEmail({
+      subject: 'Complete your HireVue interview',
+      body: 'Please complete your video interview at your earliest convenience.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Technical Interview');
+  });
+
+  it('returns Rejected for "no longer being considered" email', () => {
+    const email = makeEmail({
+      subject: 'Update regarding your application',
+      body: 'After careful consideration, you are no longer being considered for this position.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Rejected');
+  });
+
+  it('returns Accepted for "excited to extend an offer" email', () => {
+    const email = makeEmail({
+      subject: 'Great news from Acme',
+      body: 'We are excited to extend an offer for the Software Engineer role.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Accepted');
+  });
+
+  it('returns Online Assessment for "please complete the following" email', () => {
+    const email = makeEmail({
+      subject: 'Action required: assessment',
+      body: 'Please complete the following assessment to move forward in the process.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.status).toBe('Online Assessment');
+  });
 });
 
 describe('parseJobEmail — company extraction', () => {
@@ -111,6 +156,36 @@ describe('parseJobEmail — company extraction', () => {
     });
     const result = parseJobEmail(email);
     expect(result.company).not.toBe('Greenhouse');
+  });
+
+  it('does not use LinkedIn as company name', () => {
+    const email = makeEmail({
+      subject: 'Your application was sent to Google',
+      from: 'jobs-noreply@linkedin.com',
+      body: 'Your application was sent to Google.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).not.toBe('Linkedin');
+  });
+
+  it('extracts company from LinkedIn-style "application was sent to" subject', () => {
+    const email = makeEmail({
+      subject: 'Your application was sent to Stripe',
+      from: 'jobs-noreply@linkedin.com',
+      body: 'Your application has been sent.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Stripe');
+  });
+
+  it('extracts company from Greenhouse body when ATS domain used', () => {
+    const email = makeEmail({
+      subject: 'Thank you for your application',
+      from: 'noreply@greenhouse.io',
+      body: 'Thank you for your application to Stripe for the Software Engineer Intern role.',
+    });
+    const result = parseJobEmail(email);
+    expect(result.company).toBe('Stripe');
   });
 });
 

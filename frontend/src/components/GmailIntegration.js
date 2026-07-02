@@ -15,6 +15,8 @@ export function GmailIntegration({ onApplicationsFound }) {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const pollTimerRef = useRef(null);
   const pollStartRef = useRef(null);
 
@@ -79,10 +81,10 @@ export function GmailIntegration({ onApplicationsFound }) {
     clearTimeout(pollTimerRef.current);
 
     try {
-      const res = await axios.post(`${config.API_BASE_URL}/api/gmail/scan`, {
-        limit: 300,
-        all: showAll ? 1 : 0,
-      });
+      const body = { limit: 300, all: showAll ? 1 : 0 };
+      if (startDate) body.startDate = startDate;
+      if (endDate) body.endDate = endDate;
+      const res = await axios.post(`${config.API_BASE_URL}/api/gmail/scan`, body);
 
       const { scanId, state, applications } = res.data;
 
@@ -187,20 +189,52 @@ export function GmailIntegration({ onApplicationsFound }) {
             <Button onClick={connect} size="sm">Reconnect Gmail</Button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2 items-center">
-            <Button variant="outline" onClick={scan} disabled={loading}>
-              {loading ? 'Scanning…' : 'Scan Emails'}
-            </Button>
-            <label className="text-xs text-muted-foreground inline-flex items-center gap-2" title="Show all matches (including previously seen)">
-              <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
-              Show all
-            </label>
-            <Button variant="outline" onClick={disconnect}>Disconnect</Button>
-            {apps.length > 0 && (
-              <Button onClick={addAll} disabled={adding}>
-                {adding ? 'Adding…' : `Add All (${apps.length})`}
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">From</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="text-xs border rounded px-2 py-1 bg-background text-foreground w-36"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">To</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="text-xs border rounded px-2 py-1 bg-background text-foreground w-36"
+                />
+              </div>
+              {(startDate || endDate) && (
+                <button
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="text-xs text-muted-foreground underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button variant="outline" onClick={scan} disabled={loading}>
+                {loading ? 'Scanning…' : 'Scan Emails'}
               </Button>
-            )}
+              <label className="text-xs text-muted-foreground inline-flex items-center gap-2" title="Show all matches (including previously seen)">
+                <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+                Show all
+              </label>
+              <Button variant="outline" onClick={disconnect}>Disconnect</Button>
+              {apps.length > 0 && (
+                <Button onClick={addAll} disabled={adding}>
+                  {adding ? 'Adding…' : `Add All (${apps.length})`}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
