@@ -288,10 +288,9 @@ const parseJobEmail = (email) => {
       if (m) { company = m[1].trim(); break; }
     }
   }
-  let companyFromDomain = false;
   if (company === 'Unknown Company') {
     const domCompany = extractDomainCompany(from);
-    if (domCompany) { company = domCompany; companyFromDomain = true; }
+    if (domCompany) company = domCompany;
   }
   company = cleanCompany(company);
   if (!company || COMPANY_STOPPHRASES.has(company.toLowerCase())) company = 'Unknown Company';
@@ -346,34 +345,10 @@ const parseJobEmail = (email) => {
   if (position !== 'Unknown Position') confidence += 0.4;
   if (ATS_DOMAINS.some((d) => from.toLowerCase().includes(d))) confidence += 0.2;
 
-  // Explicit noise signals — always block these
-  const hasNoiseSignal = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations|oauth application|has been added to your account|security alert|account activity|account notification|assignment graded|course grade|academic integrity|graded:|unsubscribe from|verify your email|confirm your email|reset your password|your receipt|your order|your invoice|you have a promo|promotional offer|exclusive offer|limited time offer|special offer)/i.test(combinedLower);
-
-  // Positive application signals — phrases that prove this email is about the user's own application.
-  // Only used when the company name was pulled from the sender domain (not from email content),
-  // because domain-name extraction is the main source of false positives: promo emails from Uber
-  // get company="Uber", newsletters from Beehiiv get company="Beehiiv", etc. A real job email
-  // from those senders would mention "your application", "interview", etc. A promo won't.
-  const POSITIVE_SIGNALS = [
-    /your application/i,
-    /thank you for apply/i,
-    /thanks for apply/i,
-    /applied (to|for)/i,
-    /interview/i,
-    /(offer letter|job offer|extend.{0,20}offer)/i,
-    /(hackerrank|codesignal|hirevue|online assessment|coding (challenge|test)|take.?home)/i,
-    /(phone screen|screening call)/i,
-    /(regret|unfortunately|not moving forward|no longer being considered|not selected)/i,
-    /your candidacy/i,
-    /next steps/i,
-    /we.{0,30}(like to|want to|would like to).{0,20}(connect|chat|schedule|interview)/i,
-  ];
-  const hasPositiveSignal = POSITIVE_SIGNALS.some((re) => re.test(combined));
-
-  // Only apply the positive-signal gate when company came from the domain.
-  // If company was extracted from email content (subject/body patterns), the email already
-  // contained a phrase like "you applied to X" or "your application to X" — no extra check needed.
-  const isLikelyNonApplication = hasNoiseSignal || (companyFromDomain && company !== 'Unknown Company' && !hasPositiveSignal);
+  // Block emails that are clearly not job applications.
+  // Covers newsletters, promos, system notifications, and account emails.
+  // The Gmail query already filters heavily by subject; this catches what slips through.
+  const isLikelyNonApplication = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations|oauth application|has been added to your account|security alert|account activity|account notification|assignment graded|course grade|academic integrity|graded:|unsubscribe from this|verify your email|confirm your email|reset your password|your receipt|your order|your invoice|you have a promo|promotional offer|exclusive offer|limited.?time offer|special offer|hiring channel)/i.test(combinedLower);
 
   return {
     company,
