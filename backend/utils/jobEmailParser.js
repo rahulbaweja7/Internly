@@ -48,7 +48,7 @@ const COMPANY_STOPPHRASES = new Set([
 const NOISE_TERMS = [
   'discount', 'free rewards', 'reward', 'receipt', 'invoice', 'order', 'cart', 'shipping', 'delivery', 'coupon', 'sale',
   'unsubscribe', 'insurance', 'policy', 'payment', 'bank', 'facebook', 'instagram', 'twitter', 'linkedin notifications',
-  'amazon music', 'spotify', 'youtube premium', 'netflix',
+  'amazon music', 'spotify', 'youtube premium', 'netflix', 'promo', 'promotional', 'exclusive deal',
 ];
 
 const STATUS_RANK = {
@@ -345,8 +345,32 @@ const parseJobEmail = (email) => {
   if (position !== 'Unknown Position') confidence += 0.4;
   if (ATS_DOMAINS.some((d) => from.toLowerCase().includes(d))) confidence += 0.2;
 
-  // Filter out likely non-application emails even if matched above
-  const nonApplicationSignals = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations|oauth application|has been added to your account|security alert|account activity|account notification|assignment graded|course grade|academic integrity|graded:|unsubscribe from|verify your email|confirm your email|reset your password|your receipt|your order|your invoice)/i.test(combinedLower);
+  // Explicit noise signals — block even if a positive signal also matches
+  const hasNoiseSignal = /(newsletter|digest|webinar|virtual event|office hours|meet the team|hiring event|we are hiring|is hiring|job matches|recommendations|oauth application|has been added to your account|security alert|account activity|account notification|assignment graded|course grade|academic integrity|graded:|unsubscribe from|verify your email|confirm your email|reset your password|your receipt|your order|your invoice|you have a promo|promotional offer|exclusive offer|limited time offer|special offer)/i.test(combinedLower);
+
+  // Require at least one positive signal that the email is specifically about THIS user's job application.
+  // Newsletters, promos, and hiring-market content discuss jobs in general — they won't have
+  // "we received your application", "interview invitation", "your candidacy", etc.
+  const POSITIVE_SIGNALS = [
+    /thank you for (applying|your application|your interest in applying)/i,
+    /thanks for (applying|your application)/i,
+    /(we|i) received your application/i,
+    /your application (has been|was) (received|submitted|sent|reviewed|updated)/i,
+    /application (was sent|was submitted) to/i,
+    /(interview invitation|schedule.{0,20}(an? )?interview|your (phone|technical|final|video|on.?site) interview)/i,
+    /(offer letter|extend.{0,20}(an? )?offer|we.{0,30}offer you|job offer)/i,
+    /(online assessment|coding (challenge|test)|hackerrank|codesignal|hirevue|take.?home (test|challenge|assignment|project))/i,
+    /(phone screen|screening call|recruiter (call|screen|reach))/i,
+    /(regret to inform|unfortunately.{0,60}(position|role|candidacy|application|moving forward)|not moving forward|no longer (being considered|under consideration)|not selected for|position has been filled)/i,
+    /your candidacy/i,
+    /(you applied|applied (to|for)) .{3,}/i,
+    /(final round|onsite interview|virtual onsite)/i,
+    /we.{0,40}(like to|want to|would like to).{0,30}(schedule|connect|chat|speak|interview)/i,
+    /next steps in your (application|candidacy|process)/i,
+    /move (you|forward) to the next (round|step)/i,
+    /your application to .{3,}/i,
+  ];
+  const hasPositiveSignal = POSITIVE_SIGNALS.some((re) => re.test(combined));
 
   return {
     company,
@@ -357,7 +381,7 @@ const parseJobEmail = (email) => {
     subject,
     snippet,
     confidence,
-    isLikelyNonApplication: nonApplicationSignals,
+    isLikelyNonApplication: hasNoiseSignal || !hasPositiveSignal,
   };
 };
 
