@@ -398,6 +398,122 @@ app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, re
   }
 });
 
+// Bulk import from Gmail — accepts up to 200 jobs in one request.
+// Uses 2 DB queries (find candidates + bulkWrite) regardless of batch size,
+// replacing N sequential POST /api/jobs calls from the browser.
+app.post('/api/jobs/bulk', isAuthenticated, async (req, res) => {
+  try {
+    const { jobs } = req.body;
+    if (!Array.isArray(jobs) || jobs.length === 0) {
+      return res.status(400).json({ error: 'jobs must be a non-empty array' });
+    }
+    if (jobs.length > 200) {
+      return res.status(400).json({ error: 'Maximum 200 jobs per bulk import' });
+    }
+
+    const userId = req.user._id;
+
+    const normalizeKey = (v) => (v || '').toString().toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+    // Normalize each incoming job and build a lookup key
+    const normalized = jobs.map((j) => {
+      const nc = normalizeKey(j.company || '');
+      const nr = normalizeKey(j.role || j.position || '');
+      return { ...j, _nc: nc, _nr: nr, _key: `${nc}::${nr}` };
+    });
+
+    // Single query to find all existing jobs that could match by company
+    const nCompanies = [...new Set(normalized.map((j) => j._nc))];
+    const existing = await Job.find({ userId, normalizedCompany: { $in: nCompanies } }).lean();
+
+    // Build map: "normalizedCompany::normalizedRole" → existing job
+    const existingMap = new Map();
+    for (const job of existing) {
+      existingMap.set(`${job.normalizedCompany}::${job.normalizedRole}`, job);
+    }
+
+    const ops = [];
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    for (const j of normalized) {
+      const existingJob = existingMap.get(j._key);
+      const incomingStatus = j.status || 'Applied';
+
+      if (!existingJob) {
+        ops.push({
+          insertOne: {
+            document: {
+              userId,
+              company: j.company || 'Unknown Company',
+              role: j.role || j.position || 'Unknown Position',
+              location: j.location || '',
+              status: incomingStatus,
+              stipend: j.stipend || '',
+              dateApplied: j.dateApplied ? new Date(j.dateApplied) : new Date(),
+              notes: j.notes || '',
+              emailId: j.emailId || null,
+              subject: j.subject || null,
+              normalizedCompany: j._nc,
+              normalizedRole: j._nr,
+              statusHistory: [{
+                status: incomingStatus,
+                at: new Date(j.dateApplied || Date.now()),
+                source: 'gmail',
+                emailId: j.emailId || null,
+                subject: j.subject || null,
+              }],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          },
+        });
+        created++;
+      } else {
+        const currentRank = statusRank[existingJob.status] || 0;
+        const incomingRank = statusRank[incomingStatus] || 0;
+        if (incomingRank <= currentRank) {
+          skipped++;
+          continue;
+        }
+        // Promote status and record in history
+        ops.push({
+          updateOne: {
+            filter: { _id: existingJob._id },
+            update: {
+              $set: { status: incomingStatus, updatedAt: new Date() },
+              $push: {
+                statusHistory: {
+                  status: incomingStatus,
+                  at: new Date(),
+                  source: 'gmail',
+                  ...(j.emailId ? { emailId: j.emailId } : {}),
+                  ...(j.subject ? { subject: j.subject } : {}),
+                },
+              },
+            },
+          },
+        });
+        updated++;
+      }
+    }
+
+    if (ops.length > 0) {
+      await Job.bulkWrite(ops, { ordered: false });
+    }
+
+    res.json({ success: true, created, updated, skipped });
+  } catch (error) {
+    logger.error({ err: error }, 'Bulk import error');
+    res.status(500).json({ error: 'Failed to import jobs' });
+  }
+});
+
 app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
   try {
     // Whitelist updatable fields

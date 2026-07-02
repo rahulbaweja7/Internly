@@ -5,6 +5,18 @@ const { isAuthenticated } = require('../middleware/auth');
 const { generateAuthUrl, getTokensFromCode, createGmailService, parseJobApplicationFromEmail } = require('../gmailAuth');
 const GmailToken = require('../models/GmailToken');
 
+// Lazy-load queue so tests that don't set REDIS_URL still run
+const getScanQueue = () => {
+  if (!process.env.REDIS_URL) return null;
+  return require('../queues/gmailScanQueue');
+};
+const getRedis = () => {
+  if (!process.env.REDIS_URL) return null;
+  return require('../queues/connection');
+};
+
+const SCAN_COOLDOWN_MS = 60 * 1000; // 1 minute between scans per user
+
 const router = express.Router();
 
 // Step 1: Start OAuth
@@ -196,6 +208,105 @@ router.delete('/delete-email/:emailId', isAuthenticated, async (req, res) => {
   } catch (error) {
     logger.error({ err: error }, 'Error deleting email from Gmail');
     res.status(500).json({ error: 'Failed to delete email from Gmail' });
+  }
+});
+
+// Step 8: Async scan — enqueues a BullMQ job and returns immediately.
+// Replaces the blocking GET /fetch-emails for production traffic.
+// Falls back to synchronous scan when Redis is not available (dev/staging).
+router.post('/scan', isAuthenticated, async (req, res) => {
+  try {
+    const userId = String(req.user._id);
+    const showAll = req.body.all === 1 || req.body.all === '1' || req.body.mode === 'full';
+    const limit = Math.min(parseInt(req.body.limit || '200', 10) || 200, 1000);
+
+    const tokenDoc = await GmailToken.findOne({ userId });
+    if (!tokenDoc) return res.status(401).json({ error: 'Gmail not connected. Please authenticate first.' });
+
+    // P6: per-user rate limit — 60s cooldown between scans
+    if (tokenDoc.lastSyncAt) {
+      const elapsed = Date.now() - new Date(tokenDoc.lastSyncAt).getTime();
+      if (elapsed < SCAN_COOLDOWN_MS) {
+        const retryAfter = Math.ceil((SCAN_COOLDOWN_MS - elapsed) / 1000);
+        return res.status(429).json({
+          error: `Please wait ${retryAfter}s before scanning again`,
+          retryAfter,
+        });
+      }
+    }
+
+    const scanQueue = getScanQueue();
+
+    if (!scanQueue) {
+      // No Redis — fall back to synchronous scan (dev only)
+      const gmailService = createGmailService(tokenDoc, userId);
+      let rawEmails, newHistoryId;
+      if (showAll) {
+        ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchJobApplicationEmails(limit));
+      } else {
+        ({ emails: rawEmails, historyId: newHistoryId } = await gmailService.fetchNewJobApplicationEmails(limit, tokenDoc.historyId || null));
+      }
+      if (newHistoryId && newHistoryId !== tokenDoc.historyId) {
+        await GmailToken.findOneAndUpdate({ userId }, { historyId: newHistoryId, lastSyncAt: new Date() });
+      }
+      const byThread = new Map();
+      for (const email of rawEmails) {
+        const ts = Number(email.internalDate || 0);
+        const key = email.threadId || email.id;
+        const prev = byThread.get(key);
+        if (!prev || ts > prev.ts) byThread.set(key, { email, ts });
+      }
+      const parsed = Array.from(byThread.values())
+        .sort((a, b) => b.ts - a.ts)
+        .map(({ email }) => parseJobApplicationFromEmail(email))
+        .filter(Boolean);
+      return res.json({ scanId: null, state: 'completed', applications: parsed, count: parsed.length });
+    }
+
+    // Mark lastSyncAt immediately so rapid re-clicks get rate-limited
+    await GmailToken.findOneAndUpdate({ userId }, { lastSyncAt: new Date() });
+
+    const job = await scanQueue.add('scan', { userId, showAll, limit });
+    logger.info({ jobId: job.id, userId }, 'Gmail scan enqueued');
+    res.json({ scanId: job.id });
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to enqueue Gmail scan');
+    res.status(500).json({ error: 'Failed to start scan' });
+  }
+});
+
+// Step 9: Poll scan status — returns state + results when complete
+router.get('/scan/:scanId', isAuthenticated, async (req, res) => {
+  try {
+    const { scanId } = req.params;
+    const scanQueue = getScanQueue();
+    const redis = getRedis();
+
+    if (!scanQueue || !redis) {
+      return res.status(404).json({ error: 'Queue not available' });
+    }
+
+    const job = await scanQueue.getJob(scanId);
+    if (!job) return res.status(404).json({ error: 'Scan not found or expired' });
+
+    const state = await job.getState(); // 'waiting' | 'active' | 'completed' | 'failed'
+
+    if (state === 'failed') {
+      return res.json({ scanId, state: 'failed', error: job.failedReason });
+    }
+
+    if (state === 'completed') {
+      const raw = await redis.get(`gmail_scan_result:${scanId}`);
+      const applications = raw ? JSON.parse(raw) : [];
+      return res.json({ scanId, state: 'completed', applications, count: applications.length });
+    }
+
+    // Still in progress
+    const progress = job.progress || 0;
+    res.json({ scanId, state, progress });
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to poll scan status');
+    res.status(500).json({ error: 'Failed to check scan status' });
   }
 });
 

@@ -42,9 +42,12 @@ async function startReminders() {
     if (process.env.REDIS_URL) {
       const reminderQueue = require('./queues/reminderQueue');
       const { startReminderWorker } = require('./workers/reminderWorker');
+      const { startGmailScanWorker } = require('./workers/gmailScanWorker');
       startReminderWorker();
+      startGmailScanWorker();
       await reminderQueue.add('daily-reminder', {}, { repeat: { every: REMINDER_INTERVAL_MS } });
       logger.info('[reminders] BullMQ worker + repeatable job registered');
+      logger.info('[gmail-scan] BullMQ worker registered');
     } else {
       logger.info('[reminders] No REDIS_URL — using in-process scheduler');
       startFallbackSchedule();
