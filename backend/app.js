@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === 'production') {
 // Security and basic middleware
 setupSecurity(app);
 app.use(compression()); // gzip all responses > 1KB
-app.use(express.json());
+app.use(express.json({ limit: '512kb' }));
 
 // Session configuration (kept for passport compatibility); no auth data stored here
 (() => {
@@ -310,7 +310,8 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 });
 
 const validate = require('./middleware/validate');
-const { createJobSchema } = require('./schemas/job');
+const { createJobSchema, updateJobSchema, bulkJobSchema } = require('./schemas/job');
+const { createRateLimiter } = require('./middleware/security');
 
 app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, res) => {
   try {
@@ -401,15 +402,9 @@ app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, re
 // Bulk import from Gmail — accepts up to 200 jobs in one request.
 // Uses 2 DB queries (find candidates + bulkWrite) regardless of batch size,
 // replacing N sequential POST /api/jobs calls from the browser.
-app.post('/api/jobs/bulk', isAuthenticated, async (req, res) => {
+app.post('/api/jobs/bulk', isAuthenticated, validate(bulkJobSchema), async (req, res) => {
   try {
     const { jobs } = req.body;
-    if (!Array.isArray(jobs) || jobs.length === 0) {
-      return res.status(400).json({ error: 'jobs must be a non-empty array' });
-    }
-    if (jobs.length > 200) {
-      return res.status(400).json({ error: 'Maximum 200 jobs per bulk import' });
-    }
 
     const userId = req.user._id;
 
@@ -514,7 +509,7 @@ app.post('/api/jobs/bulk', isAuthenticated, async (req, res) => {
   }
 });
 
-app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
+app.put('/api/jobs/:id', isAuthenticated, validate(updateJobSchema), async (req, res) => {
   try {
     // Whitelist updatable fields
     const { company, role, status, dateApplied, interviewDate, notes, location, stipend } = req.body || {};
@@ -550,8 +545,12 @@ app.delete('/api/jobs/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-// Delete all jobs for a user
-app.delete('/api/jobs/delete-all', isAuthenticated, async (req, res) => {
+// Delete all jobs for a user — requires explicit confirmation body to prevent accidental wipes
+const deleteAllLimiter = createRateLimiter(10 * 60 * 1000, 1, 'Too many delete requests — wait 10 minutes');
+app.delete('/api/jobs/delete-all', isAuthenticated, deleteAllLimiter, async (req, res) => {
+  if (req.body?.confirm !== 'delete-all') {
+    return res.status(400).json({ error: 'Send { "confirm": "delete-all" } in the request body to confirm' });
+  }
   try {
     const result = await Job.deleteMany({ userId: req.user._id });
     res.json({

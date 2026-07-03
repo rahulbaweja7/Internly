@@ -4,7 +4,8 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/security');
+const { authLimiter, createRateLimiter } = require('../middleware/security');
+const contactLimiter = createRateLimiter(60 * 60 * 1000, 5, 'Too many messages — try again in an hour');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 const { createTransport } = require('nodemailer');
@@ -424,7 +425,7 @@ router.put('/password', isAuthenticated, async (req, res) => {
 });
 
 // Lightweight contact endpoint – sends message to a fixed inbox
-router.post('/contact', validate(contactSchema), async (req, res) => {
+router.post('/contact', contactLimiter, validate(contactSchema), async (req, res) => {
   try {
     const { name, email, message } = req.body;
 

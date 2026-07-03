@@ -22,6 +22,8 @@ gmailTokenSchema.pre('save', function (next) {
   next();
 });
 
+gmailTokenSchema.index({ userId: 1, tokenInvalid: 1 });
+
 module.exports = mongoose.model('GmailToken', gmailTokenSchema);
 
 

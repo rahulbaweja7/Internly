@@ -193,7 +193,7 @@ export function InternshipDashboard() {
   const handleDeleteAll = async () => {
     setDeleting(true);
     try {
-      await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`);
+      await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`, { data: { confirm: 'delete-all' } });
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsDeleteAllDialogOpen(false);

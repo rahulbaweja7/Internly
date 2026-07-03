@@ -58,6 +58,19 @@ async function startReminders() {
   }
 }
 
+// ── Production env guard ──────────────────────────────────────────────────
+// Refuse to boot if critical secrets are missing or still at their insecure
+// defaults — a misconfigured deployment should fail loudly, not silently.
+if (process.env.NODE_ENV === 'production') {
+  const REQUIRED = ['JWT_SECRET', 'SESSION_SECRET', 'MONGO_URI'];
+  for (const key of REQUIRED) {
+    if (!process.env[key] || process.env[key] === 'your-secret-key') {
+      logger.fatal({ key }, `[boot] ${key} is missing or default — refusing to start`);
+      process.exit(1);
+    }
+  }
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────
 // Start Express first so Render's health check passes immediately.
 // Connect to MongoDB in the background with retries — a slow Atlas cold-start

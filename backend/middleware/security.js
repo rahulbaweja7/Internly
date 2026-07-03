@@ -128,5 +128,6 @@ module.exports = {
   apiLimiter,
   authLimiter,
   gmailLimiter,
-  corsOptions
+  corsOptions,
+  createRateLimiter,
 };
