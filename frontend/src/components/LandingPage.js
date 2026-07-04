@@ -291,9 +291,7 @@ export function LandingPage() {
           <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
-                tag="Gmail import"
-                icon={<Mail className="h-3.5 w-3.5" />}
-                headline="Your inbox already has the data."
+                headline={<>Your inbox <span className="bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">already has the data.</span></>}
                 body={
                   <div>
                     <p>Connect Gmail once. We scan subject lines for application emails and build your tracker automatically. Company, role, date, all filled in. No copy-pasting.</p>
@@ -324,9 +322,7 @@ export function LandingPage() {
           <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
-                tag="Kanban board"
-                icon={<Trello className="h-3.5 w-3.5" />}
-                headline="Drag it to where it actually is."
+                headline={<>Drag it to <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">where it actually is.</span></>}
                 body={
                   <div>
                     <p>Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected. Nine stages that map to reality. Drag a card and the status saves instantly.</p>
@@ -358,9 +354,7 @@ export function LandingPage() {
           <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
             <FadeIn>
               <FeatureRow
-                tag="Analytics"
-                icon={<BarChart3 className="h-3.5 w-3.5" />}
-                headline="See where your funnel leaks."
+                headline={<>See where <span className="bg-gradient-to-r from-violet-500 to-pink-500 bg-clip-text text-transparent">your funnel leaks.</span></>}
                 body={
                   <div>
                     <p>Response rate, interview conversion, weekly pace. Charts that show where applications go quiet so you can fix it before the semester ends.</p>
@@ -436,10 +430,12 @@ function FeatureRow({ tag, icon, headline, body, visual, flip = false }) {
   return (
     <div className={`grid lg:grid-cols-2 gap-12 items-center ${flip ? 'lg:[&>*:first-child]:order-2' : ''}`}>
       <div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 mb-4 bg-blue-50 dark:bg-blue-950/60 rounded-full px-3 py-1">
-          {icon}
-          {tag}
-        </div>
+        {tag && (
+          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 mb-4 bg-blue-50 dark:bg-blue-950/60 rounded-full px-3 py-1">
+            {icon}
+            {tag}
+          </div>
+        )}
         <h2 className="text-3xl font-bold tracking-tight leading-tight text-gray-900 dark:text-white">{headline}</h2>
         <div className="mt-4 text-gray-500 dark:text-gray-400 leading-relaxed">{body}</div>
       </div>
@@ -522,25 +518,25 @@ function GmailMock() {
 
 function BoardMock() {
   return (
-    <div className="relative overflow-hidden select-none" style={{ minHeight: 178 }}>
+    <div className="relative overflow-hidden select-none">
       <style>{`
         @keyframes bm-cursor {
-          0%,10%   { left:50%; top:80px;  opacity:0; }
-          13%      { left:50%; top:80px;  opacity:1; }
-          21%      { left:50%; top:96px;  opacity:1; }
-          26%      { left:50%; top:92px;  opacity:1; }
-          52%      { left:82%; top:80px;  opacity:1; }
-          56%      { left:82%; top:84px;  opacity:1; }
-          63%      { left:85%; top:64px;  opacity:1; }
-          70%,100% { left:85%; top:64px;  opacity:0; }
+          0%,10%   { left:50%; top:108px; opacity:0; }
+          13%      { left:50%; top:108px; opacity:1; }
+          21%      { left:50%; top:124px; opacity:1; }
+          26%      { left:50%; top:120px; opacity:1; }
+          52%      { left:82%; top:108px; opacity:1; }
+          56%      { left:82%; top:112px; opacity:1; }
+          63%      { left:85%; top:92px;  opacity:1; }
+          70%,100% { left:85%; top:92px;  opacity:0; }
         }
         @keyframes bm-drag {
-          0%,24%   { left:34%; top:86px;  opacity:0; transform:rotate(0deg) scale(1);    box-shadow:none; }
-          28%      { left:34%; top:82px;  opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 8px 24px rgba(0,0,0,.22); }
-          52%      { left:66%; top:74px;  opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 8px 24px rgba(0,0,0,.22); }
-          57%      { left:66%; top:78px;  opacity:1; transform:rotate(0deg) scale(1);    box-shadow:none; }
-          65%      { left:66%; top:78px;  opacity:0; }
-          100%     { left:66%; top:78px;  opacity:0; }
+          0%,24%   { left:34%; top:114px; opacity:0; transform:rotate(0deg) scale(1);    box-shadow:none; }
+          28%      { left:34%; top:110px; opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 12px 32px rgba(0,0,0,.18); }
+          52%      { left:66%; top:102px; opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 12px 32px rgba(0,0,0,.18); }
+          57%      { left:66%; top:106px; opacity:1; transform:rotate(0deg) scale(1);    box-shadow:none; }
+          65%      { left:66%; top:106px; opacity:0; }
+          100%     { left:66%; top:106px; opacity:0; }
         }
         @keyframes bm-ghost {
           0%,26%   { opacity:0; }
@@ -548,7 +544,7 @@ function BoardMock() {
           93%,100% { opacity:0; }
         }
         @keyframes bm-recv {
-          0%,57%   { opacity:0; transform:translateY(5px); }
+          0%,57%   { opacity:0; transform:translateY(6px); }
           62%,87%  { opacity:1; transform:translateY(0);   }
           93%,100% { opacity:0; transform:translateY(0);   }
         }
@@ -558,41 +554,61 @@ function BoardMock() {
         .bm-recv   { animation:bm-recv   9s ease-in-out infinite; }
       `}</style>
 
+      {/* Window chrome */}
+      <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+        <span className="h-2 w-2 rounded-full bg-red-400/80" />
+        <span className="h-2 w-2 rounded-full bg-amber-400/80" />
+        <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
+        <span className="ml-2.5 text-[9px] font-medium text-gray-400 dark:text-gray-500">My Applications</span>
+      </div>
+
       {/* Board columns */}
-      <div className="p-4 flex gap-2.5">
+      <div className="p-3 flex gap-2 bg-gray-50 dark:bg-gray-900/60">
 
         {/* Applied */}
         <div className="flex-1 min-w-0">
-          <BoardColHeader label="Applied" dot="bg-blue-500" n={8} />
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="h-1 w-3 rounded-full bg-blue-500" />
+            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Applied</span>
+            <span className="ml-auto text-[8px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full px-1.5 py-0.5">8</span>
+          </div>
           <div className="space-y-1.5">
-            <BoardCard role="SWE Intern" co="Google" />
-            <BoardCard role="Software Engineer" co="Stripe" />
-            <BoardCard role="iOS Intern" co="Apple" />
+            <BoardCard role="SWE Intern"      co="Google" avatar="G" avatarColor="bg-blue-500" />
+            <BoardCard role="Software Eng"    co="Stripe" avatar="S" avatarColor="bg-violet-500" />
+            <BoardCard role="iOS Intern"      co="Apple"  avatar="A" avatarColor="bg-gray-700 dark:bg-gray-600" />
           </div>
         </div>
 
         {/* OA — ghost overlay animates over Amazon card during drag */}
         <div className="flex-1 min-w-0">
-          <BoardColHeader label="OA" dot="bg-violet-500" n={3} />
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="h-1 w-3 rounded-full bg-violet-500" />
+            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">OA</span>
+            <span className="ml-auto text-[8px] font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/50 rounded-full px-1.5 py-0.5">3</span>
+          </div>
           <div className="space-y-1.5">
-            <BoardCard role="Frontend Dev" co="Figma" />
+            <BoardCard role="Frontend Dev" co="Figma"  avatar="F" avatarColor="bg-purple-500" />
             <div className="relative">
-              <BoardCard role="SWE Intern" co="Amazon" />
+              <BoardCard role="SWE Intern"  co="Amazon" avatar="A" avatarColor="bg-orange-500" />
               <div
-                className="bm-ghost absolute inset-0 rounded-md border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900"
+                className="bm-ghost absolute inset-0 rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/30"
                 style={{ opacity: 0 }}
               />
             </div>
           </div>
         </div>
 
-        {/* Offer — card appears here after drop */}
+        {/* Interview — received card appears here after drop */}
         <div className="flex-1 min-w-0">
-          <BoardColHeader label="Interview" dot="bg-amber-500" n={2} />
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="h-1 w-3 rounded-full bg-amber-500" />
+            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Interview</span>
+            <span className="ml-auto text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 rounded-full px-1.5 py-0.5">2</span>
+          </div>
           <div className="space-y-1.5">
-            <BoardCard role="PM Intern" co="Meta" />
+            <BoardCard role="PM Intern"  co="Meta"   avatar="M" avatarColor="bg-blue-600" />
             <div className="bm-recv" style={{ opacity: 0 }}>
-              <BoardCard role="SWE Intern" co="Amazon" />
+              <BoardCard role="SWE Intern" co="Amazon" avatar="A" avatarColor="bg-orange-500" />
             </div>
           </div>
         </div>
@@ -619,36 +635,32 @@ function BoardMock() {
       {/* Floating card that follows cursor during drag */}
       <div
         className="bm-drag absolute pointer-events-none z-10"
-        style={{ top: 0, left: 0, opacity: 0, width: 90 }}
+        style={{ top: 0, left: 0, opacity: 0, width: 96 }}
       >
-        <div className="rounded-md border border-amber-300 dark:border-amber-600 bg-white dark:bg-gray-800 p-1.5">
-          <p className="text-[9px] font-semibold text-gray-800 dark:text-gray-200 leading-tight">SWE Intern</p>
-          <p className="text-[9px] text-gray-400">Amazon</p>
+        <div className="rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 p-2">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="h-4 w-4 rounded-md bg-orange-500 flex items-center justify-center shrink-0">
+              <span className="text-[7px] font-bold text-white">A</span>
+            </div>
+            <p className="text-[8px] font-bold text-gray-700 dark:text-gray-300 truncate">Amazon</p>
+          </div>
+          <p className="text-[8px] text-gray-400 truncate">SWE Intern</p>
         </div>
       </div>
-
-      <p className="absolute bottom-2 left-0 right-0 text-center text-[9px] text-gray-300 dark:text-gray-600">
-        drag cards between stages
-      </p>
     </div>
   );
 }
 
-function BoardColHeader({ label, dot, n }) {
+function BoardCard({ role, co, avatar, avatarColor }) {
   return (
-    <div className="flex items-center gap-1.5 mb-2">
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 truncate">{label}</span>
-      <span className="ml-auto text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-full px-1.5">{n}</span>
-    </div>
-  );
-}
-
-function BoardCard({ role, co }) {
-  return (
-    <div className="rounded-md border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5">
-      <p className="text-[9px] font-semibold text-gray-700 dark:text-gray-300 leading-tight truncate">{role}</p>
-      <p className="text-[9px] text-gray-400 truncate">{co}</p>
+    <div className="rounded-lg border border-gray-100 dark:border-gray-700/60 bg-white dark:bg-gray-800 p-2 shadow-sm">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <div className={`h-4 w-4 rounded-md ${avatarColor} flex items-center justify-center shrink-0`}>
+          <span className="text-[7px] font-bold text-white">{avatar}</span>
+        </div>
+        <p className="text-[8px] font-bold text-gray-700 dark:text-gray-300 truncate">{co}</p>
+      </div>
+      <p className="text-[8px] text-gray-400 dark:text-gray-500 truncate pl-[22px]">{role}</p>
     </div>
   );
 }
