@@ -391,9 +391,7 @@ export function LandingPage() {
               <div className="relative max-w-2xl mx-auto text-center">
                 <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
                   Your next offer<br />
-                  <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
-                    starts here.
-                  </span>
+                  starts here.
                 </h2>
                 <p className="mt-5 text-gray-400 text-base leading-relaxed">
                   Connect Gmail in 30 seconds. Every application lands on your board automatically.
