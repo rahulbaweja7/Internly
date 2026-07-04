@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight, Mail, BarChart3, Trello, CheckCircle } from 'lucide-react';
+import { ArrowRight, Mail, Trello, CheckCircle } from 'lucide-react';
 import { Navbar } from './Navbar';
 
 // Wraps children and fades/slides them up when they enter the viewport.
@@ -378,46 +378,56 @@ export function LandingPage() {
           </section>
         </Page>
 
-        {/* ── Page 6: CTA + Footer ──────────────────────────────────── */}
-        <Page>
-          <section className="max-w-7xl mx-auto px-6 py-16 w-full">
+        {/* ── CTA + Footer ───────────────────────────────────────────── */}
+        <div className="border-t border-gray-100 dark:border-gray-800">
+          {/* CTA */}
+          <div className="relative overflow-hidden bg-gray-950 py-24 px-6">
+            {/* Decorative glows */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-[400px] h-[400px] rounded-full bg-emerald-600/10 blur-3xl pointer-events-none" />
+
             <FadeIn>
-              <div className="rounded-2xl bg-gray-900 dark:bg-gray-800 px-10 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Start tracking for free.</h2>
-                  <p className="mt-1.5 text-gray-400 text-sm">Connect Gmail in 30 seconds. No manual entry, ever.</p>
-                </div>
+              <div className="relative max-w-2xl mx-auto text-center">
+                <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+                  Your next offer<br />
+                  <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
+                    starts here.
+                  </span>
+                </h2>
+                <p className="mt-5 text-gray-400 text-base leading-relaxed">
+                  Connect Gmail in 30 seconds. Every application lands on your board automatically.
+                </p>
                 <button
                   onClick={() => navigate(user ? '/dashboard' : '/register')}
-                  className="shrink-0 group flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="mt-8 group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-gray-900 text-sm font-bold hover:bg-gray-100 transition-colors cursor-pointer shadow-lg"
                 >
                   {user ? 'Open Dashboard' : 'Create free account'}
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </FadeIn>
-          </section>
-          <footer className="border-t border-gray-100 dark:border-gray-800 px-6 py-8">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">Applycation</span>
-                <p className="text-xs text-gray-400 mt-0.5">Your job hunt, organised.</p>
-              </div>
-              <div className="flex items-center gap-6 text-xs text-gray-400">
+          </div>
+
+          {/* Footer */}
+          <footer className="bg-gray-950 border-t border-white/5 px-6 py-6">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-gray-500">Applycation</span>
+              <div className="flex items-center gap-6 text-xs text-gray-600">
                 {user && (
                   <button
                     onClick={() => navigate('/dashboard')}
-                    className="flex items-center gap-1 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer font-medium"
+                    className="flex items-center gap-1 hover:text-gray-400 transition-colors cursor-pointer"
                   >
                     Dashboard <ArrowRight className="h-3 w-3" />
                   </button>
                 )}
-                <a href="/privacy" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Privacy</a>
-                <a href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Terms</a>
+                <a href="/privacy" className="hover:text-gray-400 transition-colors">Privacy</a>
+                <a href="/terms" className="hover:text-gray-400 transition-colors">Terms</a>
               </div>
             </div>
           </footer>
-        </Page>
+        </div>
 
       </main>
     </div>
