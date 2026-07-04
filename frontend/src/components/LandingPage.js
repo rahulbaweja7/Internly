@@ -379,7 +379,7 @@ export function LandingPage() {
         </Page>
 
         {/* ── CTA + Footer ───────────────────────────────────────────── */}
-        <div className="border-t border-gray-100 dark:border-gray-800">
+        <div className="border-t border-gray-100 dark:border-gray-800" style={{ scrollSnapAlign: 'start' }}>
           {/* CTA */}
           <div className="relative overflow-hidden bg-gray-950 py-24 px-6">
             {/* Decorative glows */}
