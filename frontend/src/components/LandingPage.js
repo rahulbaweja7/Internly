@@ -76,10 +76,6 @@ export function LandingPage() {
           <div className="absolute -top-48 -right-48 w-[540px] h-[540px] rounded-full bg-blue-50 dark:bg-blue-950/20 blur-3xl pointer-events-none" />
           <section className="relative max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center w-full">
             <FadeIn>
-              <div className="inline-flex items-center gap-2 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 mb-6 shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Free for students · 300+ using it
-              </div>
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-[1.05]">
                 Stop tracking
                 <br />
@@ -87,7 +83,7 @@ export function LandingPage() {
               </h1>
 
               <p className="mt-5 text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
-                Connect Gmail once. Every application email you've ever sent — company, role, status — pulled in automatically and laid out on a Kanban board.
+                Connect Gmail once. Every application email you've ever sent, company, role, and status, pulled in automatically and laid out on a Kanban board.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -116,7 +112,6 @@ export function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-sm text-gray-400 dark:text-gray-500">300+ students have their whole pipeline here</p>
               </div>
 
               <div className="mt-10 grid grid-cols-3 gap-4 pt-8 border-t border-gray-100 dark:border-gray-800">
@@ -143,7 +138,7 @@ export function LandingPage() {
                     <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
                     <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
                     <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-                    <span className="ml-3 text-xs text-gray-400">Applycation — Dashboard</span>
+                    <span className="ml-3 text-xs text-gray-400">Applycation · Dashboard</span>
                   </div>
                   <div className="p-4 flex gap-2 overflow-hidden">
                     <KanbanColMock label="Applied" dot="bg-blue-500" count={8} cards={[
@@ -199,7 +194,7 @@ export function LandingPage() {
                   <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">01</span>
                   <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Connect Gmail in 30 seconds</h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    Read-only OAuth. We scan subject lines only — never email bodies. Revoke anytime from Google.
+                    Read-only OAuth. We scan subject lines only, never email bodies. Revoke anytime from Google.
                   </p>
                   <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-3">
                     <div className="flex items-center gap-2.5">
@@ -227,7 +222,7 @@ export function LandingPage() {
                   <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">02</span>
                   <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Every application, found</h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    Greenhouse, Lever, LinkedIn, Indeed, direct — we parse company, role, date, and status automatically.
+                    Greenhouse, Lever, LinkedIn, Indeed, direct. We parse company, role, date, and status automatically.
                   </p>
                   <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 space-y-1.5">
                     {[
@@ -301,12 +296,12 @@ export function LandingPage() {
                 headline="Your inbox already has the data."
                 body={
                   <div>
-                    <p>Connect Gmail once. We scan subject lines for application emails and build your tracker automatically — company, role, date, all filled in. No copy-pasting.</p>
+                    <p>Connect Gmail once. We scan subject lines for application emails and build your tracker automatically. Company, role, date, all filled in. No copy-pasting.</p>
                     <ul className="mt-5 space-y-3">
                       {[
                         'Works with Greenhouse, Lever, Workday, LinkedIn, Indeed, and direct emails',
-                        'Read-only access — we never store email content, only metadata',
-                        'Syncs automatically — new emails appear within seconds of arriving',
+                        'Read-only access. We never store email content, only metadata',
+                        'Syncs automatically. New emails appear within seconds of arriving',
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm">
                           <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -334,11 +329,11 @@ export function LandingPage() {
                 headline="Drag it to where it actually is."
                 body={
                   <div>
-                    <p>Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected — nine stages that map to reality. Drag a card and the status saves instantly.</p>
+                    <p>Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected. Nine stages that map to reality. Drag a card and the status saves instantly.</p>
                     <ul className="mt-5 space-y-3">
                       {[
                         'Nine pipeline stages built for the real internship / new-grad process',
-                        'Drag a card to update status — no forms, no friction',
+                        'Drag a card to update status. No forms, no friction',
                         'Every change syncs instantly across devices',
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm">
@@ -480,8 +475,8 @@ function GmailMock() {
     { from: 'Google Recruiting', sub: 'Your application to Software Engineer', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
     { from: 'Meta Careers', sub: 'We received your application', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
     { from: 'Stripe', sub: 'Next steps: Online Assessment', tag: 'OA', color: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
-    { from: 'Apple HR', sub: 'Interview invitation — iOS Intern', tag: 'Interview', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
-    { from: 'Figma', sub: 'Application received — Frontend Engineer', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+    { from: 'Apple HR', sub: 'Interview invitation: iOS Intern', tag: 'Interview', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
+    { from: 'Figma', sub: 'Application received: Frontend Engineer', tag: 'Applied', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
     { from: 'Amazon', sub: 'Action required: Complete your assessment', tag: 'OA', color: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
   ];
   return (
@@ -491,7 +486,7 @@ function GmailMock() {
         <span className="h-2 w-2 rounded-full bg-red-400" />
         <span className="h-2 w-2 rounded-full bg-yellow-400" />
         <span className="h-2 w-2 rounded-full bg-green-400" />
-        <span className="ml-3 text-[11px] text-gray-400">Applycation — Gmail sync</span>
+        <span className="ml-3 text-[11px] text-gray-400">Applycation · Gmail sync</span>
       </div>
       {/* Email rows */}
       <div className="p-4 space-y-2">
