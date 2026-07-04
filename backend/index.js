@@ -97,10 +97,34 @@ async function connectWithRetry(uri, attempt = 1) {
 
 async function boot() {
   // 1. Start HTTP server immediately so health checks pass during DB cold-start
-  app.listen(PORT, () => logger.info({ port: PORT }, '[boot] Server running'));
+  const server = app.listen(PORT, () => logger.info({ port: PORT }, '[boot] Server running'));
 
   // 2. Connect to MongoDB in background (retries, never kills the process)
   connectWithRetry(process.env.MONGO_URI).then(() => startReminders());
+
+  // 3. Graceful shutdown — Render sends SIGTERM before replacing the instance.
+  //    Stop accepting new connections, let in-flight requests finish (10s cap),
+  //    then close the DB and exit so no user request is hard-killed mid-flight.
+  const shutdown = (signal) => {
+    logger.info({ signal }, '[shutdown] Signal received — draining connections');
+    server.close(async () => {
+      try {
+        await mongoose.disconnect();
+        logger.info('[shutdown] MongoDB disconnected — exiting cleanly');
+      } catch (e) {
+        logger.error({ err: e }, '[shutdown] Error during MongoDB disconnect');
+      }
+      process.exit(0);
+    });
+    // Force-exit if requests don't drain within 10 s
+    setTimeout(() => {
+      logger.warn('[shutdown] Drain timeout exceeded — forcing exit');
+      process.exit(1);
+    }, 10_000).unref();
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT',  () => shutdown('SIGINT'));
 }
 
 boot();
