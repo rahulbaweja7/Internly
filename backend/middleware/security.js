@@ -4,8 +4,8 @@ const cors = require('cors');
 
 // Rate limiting middleware
 const createRateLimiter = (windowMs, max, message) => {
-  // Disable rate limiting entirely in development or when explicitly disabled
-  if (process.env.NODE_ENV === 'development' || process.env.RATE_LIMIT_DISABLED === 'true') {
+  // Disable rate limiting in development, test, or when explicitly disabled
+  if (['development', 'test'].includes(process.env.NODE_ENV) || process.env.RATE_LIMIT_DISABLED === 'true') {
     return (req, res, next) => next();
   }
   const common = {

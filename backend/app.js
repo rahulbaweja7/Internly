@@ -535,17 +535,7 @@ app.put('/api/jobs/:id', isAuthenticated, validate(updateJobSchema), async (req,
   }
 });
 
-app.delete('/api/jobs/:id', isAuthenticated, async (req, res) => {
-  try {
-    const job = await Job.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
-    if (!job) return res.status(404).json({ message: 'Job not found' });
-    res.sendStatus(204);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Delete all jobs for a user — requires explicit confirmation body to prevent accidental wipes
+// delete-all must be registered before /:id so Express doesn't match 'delete-all' as an ID
 const deleteAllLimiter = createRateLimiter(10 * 60 * 1000, 1, 'Too many delete requests — wait 10 minutes');
 app.delete('/api/jobs/delete-all', isAuthenticated, deleteAllLimiter, async (req, res) => {
   if (req.body?.confirm !== 'delete-all') {
@@ -559,6 +549,16 @@ app.delete('/api/jobs/delete-all', isAuthenticated, deleteAllLimiter, async (req
     });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete all internships' });
+  }
+});
+
+app.delete('/api/jobs/:id', isAuthenticated, async (req, res) => {
+  try {
+    const job = await Job.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
