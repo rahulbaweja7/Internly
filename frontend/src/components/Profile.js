@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import config from '../config/config';
 
-export function Profile() {
+export default function Profile() {
   const { user, updateUser } = useAuth();
   const { jobs, loading } = useData();
   const [bio, setBio] = useState(user?.bio || '');
@@ -400,7 +400,7 @@ export function Profile() {
                            {job.status}
                          </Badge>
                         <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                          {new Date(job.dateApplied).toLocaleDateString()}
+                          {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString() : '—'}
                         </span>
                       </div>
                     </div>
