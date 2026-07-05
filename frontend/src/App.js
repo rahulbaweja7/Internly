@@ -1,11 +1,13 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'sonner';
+
 import './App.css';
 
 // ── Eager — needed on first load for unauthenticated visitors ─────────────────
@@ -25,6 +27,17 @@ const Settings    = lazy(() => import('./components/Settings'));
 const Profile     = lazy(() => import('./components/Profile'));
 const ImportGmail = lazy(() => import('./components/ImportGmail'));
 const Activity    = lazy(() => import('./components/Activity'));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      retry: 1,
+      refetchOnWindowFocus: true,
+    },
+  },
+});
 
 // Shown while a lazy chunk is downloading
 function PageSpinner() {
@@ -77,6 +90,7 @@ function AppRoutes() {
 function App() {
   return (
     <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Toaster richColors position="bottom-right" />
         <AuthProvider>
@@ -90,6 +104,7 @@ function App() {
           </DataProvider>
         </AuthProvider>
       </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }
