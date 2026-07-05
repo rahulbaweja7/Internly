@@ -5,24 +5,12 @@ import { useData } from '../contexts/DataContext';
 import ContributionHeatmap from './ContributionHeatmap';
 import { Navbar } from './Navbar';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { 
-  MapPin, 
-  User, 
-  Target, 
-  Trophy, 
-  Flame, 
-  Edit3, 
-  Save,
-  TrendingUp,
-  Activity,
-  Briefcase,
-  Mail
-} from 'lucide-react';
+import { MapPin, Edit3, Save, Mail } from 'lucide-react';
 import config from '../config/config';
 
 export default function Profile() {
@@ -32,56 +20,49 @@ export default function Profile() {
   const [location, setLocation] = useState(user?.location || '');
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  // Gentle entrance animation flag
   const [mounted, setMounted] = useState(false);
 
-  // Trigger entrance animations after first paint
   useEffect(() => {
     const r = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(r);
   }, []);
 
-  // Calculate stats from jobs data
   const stats = useMemo(() => {
     const countLastNDays = (days) => {
       const since = Date.now() - days * 24 * 60 * 60 * 1000;
       return jobs.reduce((acc, j) => {
         const t = new Date(j.dateApplied || j.appliedDate || j.createdAt).getTime();
-        return acc + (isNaN(t) ? 0 : (t >= since ? 1 : 0));
+        return acc + (isNaN(t) ? 0 : t >= since ? 1 : 0);
       }, 0);
     };
 
     const total = jobs.length;
     const last7 = countLastNDays(7);
-    const last30 = countLastNDays(30);
 
-    // Calculate streak
     const dates = new Set();
-    const format = (d) => {
-      const dt = new Date(d); dt.setHours(0,0,0,0);
-      const y = dt.getFullYear();
-      const m = String(dt.getMonth()+1).padStart(2,'0');
-      const da = String(dt.getDate()).padStart(2,'0');
-      return `${y}-${m}-${da}`;
+    const fmt = (d) => {
+      const dt = new Date(d);
+      dt.setHours(0, 0, 0, 0);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
     };
     jobs.forEach((j) => {
       const raw = j.dateApplied || j.appliedDate || j.createdAt;
-      if (raw) dates.add(format(raw));
+      if (raw) dates.add(fmt(raw));
     });
-    
+
     let streak = 0;
     if (dates.size > 0) {
-      const probe = new Date(); probe.setHours(0,0,0,0);
-      while (true) {
-        const key = format(probe);
-        if (dates.has(key)) { streak += 1; probe.setDate(probe.getDate()-1); }
+      const probe = new Date();
+      probe.setHours(0, 0, 0, 0);
+      for (let i = 0; i < 400; i++) {
+        if (dates.has(fmt(probe))) { streak++; probe.setDate(probe.getDate() - 1); }
         else break;
       }
     }
 
     const accepted = jobs.filter(j => j.status === 'Accepted').length;
     const acceptRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
-    return { total, last7, last30, streak, acceptRate };
+    return { total, last7, streak, acceptRate };
   }, [jobs]);
 
   const onSaveProfile = async () => {
@@ -92,14 +73,13 @@ export default function Profile() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ bio, location })
+        body: JSON.stringify({ bio, location }),
       });
       setIsEditing(false);
-    } catch (_) { /* noop */ } finally { setSaving(false); }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
+    } catch (_) {
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -112,330 +92,228 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-slate-600 dark:text-slate-400">Loading your profile...</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className={`mb-12 transition-all duration-[2200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-4">
-            Your Profile
-          </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400">
-            Track your progress and manage your career journey
-          </p>
-        </div>
 
-        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 transition-all duration-[2200ms] delay-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          {/* Left Column - Profile Overview */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Profile Header Card */}
-            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden transition-all duration-[2200ms] delay-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
-              <CardContent className="relative p-8">
-                <div className="flex items-start space-x-8">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-20"></div>
-                    <Avatar className="relative h-24 w-24 border-4 border-white dark:border-slate-700 shadow-xl">
+      <div
+        className={`max-w-6xl mx-auto px-4 sm:px-6 py-10 transition-all duration-300 ${
+          mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+        }`}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* ── Left column ───────────────────────────────────── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Profile card */}
+            <Card className="overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-violet-500" />
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 shrink-0">
                       <AvatarImage
-                        src={user.picture && (user.picture.startsWith('data:image') || user.picture.startsWith('https://')) ? user.picture : undefined}
+                        src={
+                          user.picture &&
+                          (user.picture.startsWith('data:image') || user.picture.startsWith('https://'))
+                            ? user.picture
+                            : undefined
+                        }
                         alt={user.name ?? ''}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-violet-500 text-white text-lg font-semibold">
                         {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                       </AvatarFallback>
                     </Avatar>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+
+                    <div>
+                      <h1 className="text-lg font-semibold text-foreground leading-tight">
                         {user.name}
-                      </h2>
-                      {!isEditing ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 px-4 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"
-                          onClick={handleEdit}
-                        >
-                          <Edit3 className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      ) : (
-                        <div className="flex items-center space-x-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-4 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
-                            onClick={onSaveProfile}
-                            disabled={saving}
-                          >
-                            {saving ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <Save className="h-4 w-4 mr-2" />
-                                Save
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-4 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"
-                            onClick={handleCancel}
-                            disabled={saving}
-                          >
-                            Cancel
-                          </Button>
+                      </h1>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-sm mt-0.5">
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        <span>{user.email}</span>
+                      </div>
+                      {location && !isEditing && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground text-sm mt-0.5">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{location}</span>
                         </div>
                       )}
                     </div>
-                    
-                    <div className="flex items-center space-x-6 text-slate-600 dark:text-slate-400 mb-6">
-                      <div className="flex items-center space-x-2">
-                        <Mail className="h-5 w-5" />
-                        <span className="text-lg">{user.email}</span>
-                      </div>
-                      {isEditing ? (
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-5 w-5" />
-                          <Input
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="City, Country"
-                            className="h-8 w-40 text-sm bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg"
-                          />
-                        </div>
-                      ) : (
-                        location && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-5 w-5" />
-                            <span className="text-lg">{location}</span>
-                          </div>
-                        )
-                      )}
+                  </div>
+
+                  {/* Edit / Save / Cancel */}
+                  {!isEditing ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                      className="shrink-0 text-muted-foreground"
+                    >
+                      <Edit3 className="h-4 w-4 mr-1.5" />
+                      Edit
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onSaveProfile}
+                        disabled={saving}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                      >
+                        <Save className="h-4 w-4 mr-1.5" />
+                        {saving ? 'Saving…' : 'Save'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancel}
+                        disabled={saving}
+                        className="text-muted-foreground"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                    {isEditing ? (
-                      <div className="space-y-3">
-                        <label className="text-lg font-semibold text-slate-700 dark:text-slate-300 flex items-center space-x-2">
-                          <User className="h-5 w-5" />
-                          <span>Bio</span>
-                        </label>
-                        <Textarea
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Tell us about yourself..."
-                          rows={3}
-                          className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 resize-none rounded-lg"
-                        />
-              </div>
-                    ) : (
-                      bio && (
-                        <p className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
-                          {bio}
-                        </p>
-                      )
-                    )}
-                </div>
-                </div>
+                {/* Edit fields */}
+                {isEditing ? (
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Location
+                      </label>
+                      <Input
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="City, Country"
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Bio
+                      </label>
+                      <Textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="A short bio…"
+                        rows={3}
+                        className="mt-1.5 resize-none"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  bio && (
+                    <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{bio}</p>
+                  )
+                )}
               </CardContent>
             </Card>
 
-            {/* Stats Grid */}
-            <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-[2200ms] delay-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-                              <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="p-3 bg-white/20 rounded-xl">
-                      <Activity className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <p className="text-blue-100 text-sm font-semibold mb-1">Last 7 days</p>
-                  <p className="text-3xl font-bold">{stats.last7}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="p-3 bg-white/20 rounded-xl">
-                      <Target className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <p className="text-purple-100 text-sm font-semibold mb-1">Total</p>
-                  <p className="text-3xl font-bold">{stats.total}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="p-3 bg-white/20 rounded-xl">
-                      <Flame className="h-6 w-6" />
-                </div>
-              </div>
-                  <p className="text-orange-100 text-sm font-semibold mb-1">Streak</p>
-                  <div className="flex items-center justify-center space-x-2">
-                    <p className="text-3xl font-bold">{stats.streak}</p>
-                    <Badge className="bg-white/20 text-white border-0 rounded-full px-3 py-1">
-                      Active
-                    </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-2xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1">
-                <CardContent className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="p-3 bg-white/20 rounded-xl">
-                      <Trophy className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <p className="text-emerald-100 text-sm font-semibold mb-1">Acceptance Rate</p>
-                  <p className="text-3xl font-bold">{stats.acceptRate}%</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl transition-all duration-[2200ms] delay-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Quick Actions
-                </CardTitle>
-                <CardDescription className="text-slate-600 dark:text-slate-400 text-lg">
-                  Access your most used features
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
-                    onClick={() => window.location.href = '/dashboard?add=true'}
-                  >
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                      <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="font-semibold">Add Internship</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
-                    onClick={() => window.location.href = '/analytics'}
-                  >
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-                      <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <span className="font-semibold">Analytics</span>
-                  </Button>
-                  
-                  
-                  
-                  <Button 
-                    variant="outline" 
-                    className="h-auto p-6 flex flex-col items-center space-y-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-slate-200 dark:border-slate-600 rounded-xl transition-all duration-500 ease-out hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
-                    onClick={() => window.location.href = '/settings'}
-                  >
-                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
-                      <User className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <span className="font-semibold">Settings</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className={`border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl transition-all duration-[2200ms] delay-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Recent Activity
-                </CardTitle>
-                <CardDescription className="text-slate-600 dark:text-slate-400 text-lg">
-                  Your latest internship applications
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {jobs?.slice(0, 8).map((job) => (
-                    <div key={job._id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 hover:scale-[1.01]">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 dark:text-white text-lg truncate">
-                          {job.role}
-                        </p>
-                        <p className="text-slate-600 dark:text-slate-400 text-base truncate">
-                          {job.company} • {job.location}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-4 ml-4">
-                                                 <Badge
-                           className={[
-                             STATUS_BADGE_CLASS[job.status] || 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300',
-                             'border-0 rounded-full'
-                           ].join(' ')}
-                         >
-                           {job.status}
-                         </Badge>
-                        <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                          {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString() : '—'}
-                        </span>
-                      </div>
+            {/* Stats row */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-4 divide-x divide-border">
+                  {[
+                    { label: 'Total', value: stats.total },
+                    { label: 'Last 7 days', value: stats.last7 },
+                    { label: 'Streak', value: `${stats.streak}d` },
+                    { label: 'Acceptance', value: `${stats.acceptRate}%` },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="py-5 text-center">
+                      <p className="text-2xl font-bold text-foreground tabular-nums">{value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{label}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Recent applications */}
+            <Card>
+              <CardHeader className="pb-0">
+                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Recent Applications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 mt-3">
+                {jobs.length === 0 ? (
+                  <p className="px-6 pb-6 text-sm text-muted-foreground">No applications yet.</p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {jobs.slice(0, 8).map((job) => (
+                      <div
+                        key={job._id}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-muted/40 transition-colors duration-150"
+                      >
+                        {/* Company initial */}
+                        <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0 select-none">
+                          {job.company ? job.company.charAt(0).toUpperCase() : '?'}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{job.role}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {job.company}
+                            {job.location ? ` · ${job.location}` : ''}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <Badge
+                            className={`${
+                              STATUS_BADGE_CLASS[job.status] || 'bg-muted text-muted-foreground'
+                            } border-0 text-xs`}
+                          >
+                            {job.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground w-20 text-right tabular-nums">
+                            {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString() : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right Column - Heatmap */}
-          <div className={`space-y-8 transition-all duration-[2200ms] delay-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-            <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600">
-                <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Applications Heatmap
+          {/* ── Right column — heatmap ─────────────────────────── */}
+          <div>
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Activity
                 </CardTitle>
-                <CardDescription className="text-slate-600 dark:text-slate-400 text-lg">
-                  Daily count of applications over the past year
-                </CardDescription>
-                <div className="flex items-center space-x-2">
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 rounded-full px-3 py-1">
-                    <Flame className="h-4 w-4 mr-2" />
-                    {stats.streak}-day streak
-                  </Badge>
-                </div>
+                {stats.streak > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {stats.streak}-day streak 🔥
+                  </p>
+                )}
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="px-4 pb-5">
                 <ContributionHeatmap internships={jobs} noCard={true} weeksToShow={14} />
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
-
-
