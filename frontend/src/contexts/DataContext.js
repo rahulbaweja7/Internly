@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import config from '../config/config';
 import { useAuth } from './AuthContext';
@@ -6,6 +6,9 @@ import { useAuth } from './AuthContext';
 const DataContext = createContext();
 
 const JOBS_KEY = ['jobs'];
+// Stable reference — prevents useEffect deps from firing on every render
+// when the query hasn't returned data yet.
+const EMPTY_JOBS = [];
 
 async function fetchJobsFromApi() {
   const res = await fetch(`${config.API_BASE_URL}/api/jobs?summary=1`, {
@@ -19,11 +22,13 @@ export function DataProvider({ children }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: jobs = [], isLoading: loading, error, refetch } = useQuery({
+  const { data, isLoading: loading, error, refetch } = useQuery({
     queryKey: JOBS_KEY,
     queryFn: fetchJobsFromApi,
     enabled: !!user,
   });
+
+  const jobs = data ?? EMPTY_JOBS;
 
   const addJob = useCallback((newJob) => {
     queryClient.setQueryData(JOBS_KEY, (prev = []) => [newJob, ...prev]);
@@ -52,7 +57,11 @@ export function DataProvider({ children }) {
     else refetch();
   }, [queryClient, refetch]);
 
-  const value = {
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: JOBS_KEY });
+  }, [queryClient]);
+
+  const value = useMemo(() => ({
     jobs,
     loading,
     error,
@@ -61,8 +70,8 @@ export function DataProvider({ children }) {
     updateJob,
     deleteJob,
     deleteJobs,
-    refresh: () => queryClient.invalidateQueries({ queryKey: JOBS_KEY }),
-  };
+    refresh,
+  }), [jobs, loading, error, fetchJobs, addJob, updateJob, deleteJob, deleteJobs, refresh]);
 
   return (
     <DataContext.Provider value={value}>
