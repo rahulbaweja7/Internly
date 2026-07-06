@@ -257,81 +257,77 @@ export default function Profile() {
           ))}
         </div>
 
-        {/* ── Activity + heatmap ────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-
-          {/* Activity feed — 3 of 5 columns */}
-          <Card className="lg:col-span-3 border-border/60 shadow-sm overflow-hidden">
-            <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
+        {/* ── Heatmap — full width, 52 weeks ───────────────────── */}
+        <Card className="border-border/60 shadow-sm overflow-hidden">
+          <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-foreground">
-                Recent Applications
+                Contribution Activity
               </CardTitle>
-            </CardHeader>
-            {jobs.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-sm text-muted-foreground">No applications yet.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/50">
-                {jobs.slice(0, 8).map((job) => (
-                  <div
-                    key={job._id}
-                    className="flex items-center gap-3 px-6 py-3.5 hover:bg-muted/30 transition-colors duration-100"
-                  >
-                    {/* Company initial */}
-                    <div className="h-8 w-8 rounded-md bg-muted border border-border/60 flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 select-none">
-                      {job.company ? job.company.charAt(0).toUpperCase() : '?'}
-                    </div>
+              {stats.streak > 0 && (
+                <span className="text-xs font-semibold text-orange-500">
+                  🔥 {stats.streak}-day streak
+                </span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="px-6 pt-4 pb-5">
+            <ContributionHeatmap internships={jobs} noCard={true} weeksToShow={52} />
+          </CardContent>
+        </Card>
 
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{job.role}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {job.company}
-                        {job.location ? ` · ${job.location}` : ''}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Badge
-                        className={`${
-                          STATUS_BADGE_CLASS[job.status] || 'bg-muted text-muted-foreground'
-                        } border-0 text-xs font-medium`}
-                      >
-                        {job.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground tabular-nums hidden sm:block w-16 text-right">
-                        {job.dateApplied
-                          ? new Date(job.dateApplied).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : '—'}
-                      </span>
-                    </div>
+        {/* ── Activity feed — full width ────────────────────────── */}
+        <Card className="border-border/60 shadow-sm overflow-hidden">
+          <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
+            <CardTitle className="text-sm font-semibold text-foreground">
+              Recent Applications
+            </CardTitle>
+          </CardHeader>
+          {jobs.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-sm text-muted-foreground">No applications yet.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {jobs.slice(0, 8).map((job) => (
+                <div
+                  key={job._id}
+                  className="flex items-center gap-3 px-6 py-3.5 hover:bg-muted/30 transition-colors duration-100"
+                >
+                  <div className="h-8 w-8 rounded-md bg-muted border border-border/60 flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 select-none">
+                    {job.company ? job.company.charAt(0).toUpperCase() : '?'}
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
 
-          {/* Heatmap — 2 of 5 columns */}
-          <Card className="lg:col-span-2 border-border/60 shadow-sm overflow-hidden">
-            <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">Activity</CardTitle>
-                {stats.streak > 0 && (
-                  <span className="text-xs font-semibold text-orange-500">
-                    🔥 {stats.streak}-day streak
-                  </span>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="px-4 pt-4 pb-5">
-              <ContributionHeatmap internships={jobs} noCard={true} weeksToShow={14} />
-            </CardContent>
-          </Card>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{job.role}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {job.company}
+                      {job.location ? ` · ${job.location}` : ''}
+                    </p>
+                  </div>
 
-        </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Badge
+                      className={`${
+                        STATUS_BADGE_CLASS[job.status] || 'bg-muted text-muted-foreground'
+                      } border-0 text-xs font-medium`}
+                    >
+                      {job.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground tabular-nums hidden sm:block w-16 text-right">
+                      {job.dateApplied
+                        ? new Date(job.dateApplied).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
