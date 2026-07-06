@@ -123,7 +123,7 @@ export default function Profile() {
         <Card className="overflow-hidden border-border/60 shadow-sm">
           {/* Dark banner with subtle depth — intentional, not soup */}
           <div
-            className="h-28 relative overflow-hidden"
+            className="h-24 relative overflow-hidden"
             style={{
               background: 'linear-gradient(135deg, #0d0d1a 0%, #111127 40%, #0a0a14 100%)',
             }}
@@ -145,8 +145,9 @@ export default function Profile() {
           <CardContent className="px-6 pb-6">
             {/* Avatar + action row */}
             <div className="flex items-end justify-between -mt-9 mb-4">
-              <Avatar className="h-16 w-16 border-[3px] border-background shadow-xl ring-1 ring-border shrink-0">
+              <Avatar className="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full border-[3px] border-background shadow-xl ring-1 ring-border">
                 <AvatarImage
+                  className="aspect-square h-full w-full object-cover"
                   src={
                     user.picture &&
                     (user.picture.startsWith('data:image') || user.picture.startsWith('https://'))
@@ -155,7 +156,7 @@ export default function Profile() {
                   }
                   alt={user.name ?? ''}
                 />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-violet-600 text-white text-xl font-bold">
+                <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-white text-xl font-bold">
                   {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                 </AvatarFallback>
               </Avatar>
