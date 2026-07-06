@@ -103,8 +103,8 @@ export default function Profile() {
   const statCards = [
     { label: 'Applications', value: stats.total, accent: 'border-t-blue-500' },
     { label: 'Last 7 days',   value: stats.last7,       accent: 'border-t-violet-500' },
-    { label: 'Day streak',    value: `${stats.streak}d`, accent: 'border-t-orange-500' },
-    { label: 'Acceptance',    value: `${stats.acceptRate}%`, accent: 'border-t-emerald-500' },
+    { label: 'Day streak',    value: stats.streak > 0 ? `${stats.streak}d` : '—', accent: 'border-t-orange-500' },
+    { label: 'Acceptance',    value: stats.acceptRate > 0 ? `${stats.acceptRate}%` : '—', accent: 'border-t-emerald-500' },
   ];
 
   return (
