@@ -10,11 +10,13 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Edit3, Save, Mail, X } from 'lucide-react';
 import { toast } from 'sonner';
 import config from '../config/config';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const { jobs, loading } = useData();
   const [bio, setBio] = useState(user?.bio || '');
@@ -282,9 +284,17 @@ export default function Profile() {
         {/* ── Activity feed — full width ────────────────────────── */}
         <Card className="border-border/60 shadow-sm overflow-hidden">
           <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Recent Applications
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Recent Applications
+              </CardTitle>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                View all →
+              </button>
+            </div>
           </CardHeader>
           {jobs.length === 0 ? (
             <div className="px-6 py-12 text-center">
