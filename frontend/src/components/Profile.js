@@ -11,6 +11,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { MapPin, Edit3, Save, Mail, X } from 'lucide-react';
+import { toast } from 'sonner';
 import config from '../config/config';
 
 export default function Profile() {
@@ -72,7 +73,9 @@ export default function Profile() {
         body: JSON.stringify({ bio, location }),
       });
       setIsEditing(false);
+      toast.success('Profile updated');
     } catch (_) {
+      toast.error('Failed to save — try again');
     } finally {
       setSaving(false);
     }
