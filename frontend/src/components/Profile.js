@@ -24,10 +24,19 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [weeksToShow, setWeeksToShow] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < 640 ? 26 : 52
+  );
 
   useEffect(() => {
     const r = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(r);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setWeeksToShow(window.innerWidth < 640 ? 26 : 52);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
   }, []);
 
   const stats = useMemo(() => {
@@ -252,8 +261,8 @@ export default function Profile() {
               key={label}
               className={`border-t-2 ${accent} border-x-border/60 border-b-border/60 shadow-sm`}
             >
-              <CardContent className="px-5 py-4">
-                <p className="text-3xl font-bold tabular-nums text-foreground tracking-tight">
+              <CardContent className="px-3 py-3 sm:px-5 sm:py-4">
+                <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground tracking-tight">
                   {value}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 font-medium">{label}</p>
@@ -276,14 +285,14 @@ export default function Profile() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="px-6 pt-4 pb-5">
-            <ContributionHeatmap internships={jobs} noCard={true} weeksToShow={52} />
+          <CardContent className="px-2 sm:px-6 pt-4 pb-5">
+            <ContributionHeatmap internships={jobs} noCard={true} weeksToShow={weeksToShow} />
           </CardContent>
         </Card>
 
         {/* ── Activity feed — full width ────────────────────────── */}
         <Card className="border-border/60 shadow-sm overflow-hidden">
-          <CardHeader className="px-6 py-4 border-b border-border/60 bg-muted/30">
+          <CardHeader className="px-4 sm:px-6 py-4 border-b border-border/60 bg-muted/30">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-foreground">
                 Recent Applications
@@ -305,7 +314,7 @@ export default function Profile() {
               {jobs.slice(0, 8).map((job) => (
                 <div
                   key={job._id}
-                  className="flex items-center gap-3 px-6 py-3.5 hover:bg-muted/30 transition-colors duration-100"
+                  className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-muted/30 transition-colors duration-100"
                 >
                   <div className="h-8 w-8 rounded-md bg-muted border border-border/60 flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 select-none">
                     {job.company ? job.company.charAt(0).toUpperCase() : '?'}
