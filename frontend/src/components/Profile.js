@@ -13,13 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { MapPin, Edit3, Save, Mail, X } from 'lucide-react';
 import config from '../config/config';
 
-const STAT_ACCENTS = [
-  'after:bg-blue-500',
-  'after:bg-violet-500',
-  'after:bg-orange-500',
-  'after:bg-emerald-500',
-];
-
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const { jobs, loading } = useData();
