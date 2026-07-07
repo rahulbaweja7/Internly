@@ -9,7 +9,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck, Download } from 'lucide-react';
+import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 import KanbanBoard from './KanbanBoard';
@@ -205,10 +205,6 @@ export function InternshipDashboard() {
     }
   };
 
-  const handleExportData = () => {
-    window.location.href = `${config.API_BASE_URL}/api/auth/export`;
-  };
-
   const handleUpdateStatus = async (jobId, newStatus) => {
     updateJob(jobId, { status: newStatus });
     try {
@@ -321,18 +317,6 @@ export function InternshipDashboard() {
                 Track your internship applications and stay organized
               </p>
             </div>
-            {internships.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportData}
-                className="flex items-center gap-2 shrink-0 mt-2"
-                title="Export all your data as JSON"
-              >
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
-            )}
           </div>
         </div>
 
