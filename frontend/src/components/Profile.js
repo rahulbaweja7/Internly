@@ -149,9 +149,9 @@ export default function Profile() {
             />
           </div>
 
-          <CardContent className="px-6 pb-6">
-            {/* Avatar + action row */}
-            <div className="flex items-end justify-between -mt-9 mb-4">
+          <CardContent className="px-6 pb-6 relative">
+            {/* Avatar */}
+            <div className="-mt-9 mb-4">
               <Avatar className="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full border-[3px] border-background shadow-xl ring-1 ring-border">
                 <AvatarImage
                   className="aspect-square h-full w-full object-cover"
@@ -167,7 +167,10 @@ export default function Profile() {
                   {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                 </AvatarFallback>
               </Avatar>
+            </div>
 
+            {/* Action buttons — top-right of card content */}
+            <div className="absolute top-4 right-6">
               {!isEditing ? (
                 <Button
                   variant="outline"
