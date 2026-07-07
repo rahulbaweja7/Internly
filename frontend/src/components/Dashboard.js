@@ -300,10 +300,10 @@ export function InternshipDashboard() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-foreground">
-                Internship Tracker.
+                Job Tracker.
               </h1>
               <p className="text-muted-foreground">
-                Track your internship applications and stay organized
+                Track your job applications and stay organized
               </p>
             </div>
           </div>
