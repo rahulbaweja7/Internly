@@ -40,12 +40,14 @@ export const ThemeProvider = ({ children }) => {
     const next = !isDarkMode;
     try {
       const root = document.documentElement;
+      root.setAttribute('data-theme-transitioning', '');
       if (next) {
         root.classList.add('dark');
       } else {
         root.classList.remove('dark');
       }
       localStorage.setItem('darkMode', JSON.stringify(next));
+      setTimeout(() => root.removeAttribute('data-theme-transitioning'), 300);
     } catch (_) {}
     setIsDarkMode(next);
     setMode(next ? 'dark' : 'light');
@@ -94,14 +96,17 @@ export const ThemeProvider = ({ children }) => {
     mode,
     setMode: (nextMode) => {
       try {
+        const root = document.documentElement;
+        root.setAttribute('data-theme-transitioning', '');
         if (nextMode === 'dark') {
-          document.documentElement.classList.add('dark');
+          root.classList.add('dark');
           setIsDarkMode(true);
         } else {
-          document.documentElement.classList.remove('dark');
+          root.classList.remove('dark');
           setIsDarkMode(false);
         }
         localStorage.setItem('themeMode', nextMode);
+        setTimeout(() => root.removeAttribute('data-theme-transitioning'), 300);
       } catch (_) {}
       setMode(nextMode);
     },

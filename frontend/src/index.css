@@ -2,19 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth dark/light mode transition */
-*,
-*::before,
-*::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 200ms;
-  transition-timing-function: ease;
-}
-
-/* Don't slow down intentional UI animations */
-[class*="animate-"],
-[class*="transition-"] {
-  transition-property: all;
+/* Smooth dark/light mode transition — only active during the switch */
+html[data-theme-transitioning] *,
+html[data-theme-transitioning] *::before,
+html[data-theme-transitioning] *::after {
+  transition-property: background-color, border-color, color, fill, stroke !important;
+  transition-duration: 250ms !important;
+  transition-timing-function: ease !important;
 }
 
 @layer base {
