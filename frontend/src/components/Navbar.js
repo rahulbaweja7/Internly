@@ -205,65 +205,68 @@ export function Navbar() {
   // Landing page navbar
   if (isLanding) {
     return (
-      <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+      <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            <span
-              className="font-bold text-lg text-foreground cursor-pointer select-none"
-              onClick={() => navigate('/')}
-            >
-              Applycation
-            </span>
-
-            <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+              <div>
+                <span className="font-bold text-xl text-black dark:text-white">Applycation</span>
+                <p className="text-xs text-gray-500 -mt-1">Application Tracker</p>
+              </div>
+            </div>
+            
+            <div className="hidden md:flex items-center space-x-4">
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
+              <Button 
+                variant="ghost" 
                 onClick={() => navigate('/login')}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"
               >
-                Sign in
+                Sign In
               </Button>
-              <Button
-                size="sm"
+              <Button 
                 onClick={() => navigate('/register')}
-                className="bg-foreground text-background hover:bg-foreground/90"
+                className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90 shadow hover:shadow-md transition-colors"
               >
-                Get started
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
 
-            <div className="md:hidden flex items-center gap-1">
-              <ThemeToggle />
+            {/* Mobile menu button */}
+            <div className="md:hidden">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-9 h-9 p-0"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border/60 bg-background px-4 py-3 space-y-2">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/login')}
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
-            >
-              Sign in
-            </Button>
-            <Button
-              onClick={() => navigate('/register')}
-              className="w-full bg-foreground text-background hover:bg-foreground/90"
-            >
-              Get started
-            </Button>
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="px-4 py-2 space-y-1">
+              <div className="flex items-center justify-between px-3 py-2">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>
+                <ThemeToggle />
+              </div>
+              <Button 
+                onClick={() => navigate('/login')}
+                className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => navigate('/register')}
+                className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              >
+                Get Started
+              </Button>
+            </div>
           </div>
         )}
       </nav>
