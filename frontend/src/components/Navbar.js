@@ -208,15 +208,12 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <div
-              className="flex items-center gap-2.5 cursor-pointer select-none"
+            <span
+              className="font-bold text-lg text-foreground cursor-pointer select-none"
               onClick={() => navigate('/')}
             >
-              <div className="h-7 w-7 rounded-lg bg-foreground flex items-center justify-center shrink-0">
-                <span className="text-background text-xs font-black">A</span>
-              </div>
-              <span className="font-bold text-lg text-foreground">Applycation</span>
-            </div>
+              Applycation
+            </span>
 
             <div className="hidden md:flex items-center gap-2">
               <ThemeToggle />
