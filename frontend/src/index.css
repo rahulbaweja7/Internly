@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth dark/light mode transition */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Don't slow down intentional UI animations */
+[class*="animate-"],
+[class*="transition-"] {
+  transition-property: all;
+}
+
 @layer base {
   :root {
     /* Light mode background softened from pure white to gray-50 */
