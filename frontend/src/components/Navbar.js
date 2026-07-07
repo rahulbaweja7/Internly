@@ -157,7 +157,7 @@ export function Navbar() {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        const searchInput = document.querySelector('input[placeholder="Search internships..."]');
+        const searchInput = document.querySelector('input[placeholder="Search jobs... (⌘K)"]');
         if (searchInput) {
           searchInput.focus();
         }
@@ -324,7 +324,7 @@ export function Navbar() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 type="text"
-                placeholder="Search internships... (⌘K)"
+                placeholder="Search jobs... (⌘K)"
                 value={searchQuery}
                 onChange={(e) => {
                   const newValue = e.target.value;
@@ -416,7 +416,7 @@ export function Navbar() {
               className={`transition-colors duration-200 ${isAdd ? "bg-black text-white dark:bg-white dark:text-black" : "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"}`}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Internship
+              Add Job
             </Button>
 
             {/* User menu group */}
@@ -552,7 +552,7 @@ export function Navbar() {
                   className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Internship
+                  Add Job
                 </Button>
                 <div className="flex items-center justify-between px-3 py-2">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>

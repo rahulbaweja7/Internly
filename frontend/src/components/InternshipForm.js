@@ -299,7 +299,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
               id="description"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Describe the internship role and responsibilities..."
+              placeholder="Describe the role and responsibilities..."
               rows={2}
             />
           </div>
