@@ -12,13 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
-import KanbanBoard from './KanbanBoard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { JOB_STATUSES } from '../constants/jobStatuses';
 
 export function InternshipDashboard() {
-  const { jobs: internships, loading, addJob, updateJob } = useData();
+  const { jobs: internships, loading, addJob } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -33,8 +32,6 @@ export function InternshipDashboard() {
   const [deleting, setDeleting] = useState(false);
   // Gentle entrance animation flag
   const [mounted, setMounted] = useState(false);
-  // Layout and pagination
-  const [layout, setLayout] = useState('grid');
   const pageSize = 50;
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
@@ -202,17 +199,6 @@ export function InternshipDashboard() {
       toast.error(error.response?.data?.message || 'Failed to delete all jobs');
     } finally {
       setDeleting(false);
-    }
-  };
-
-  const handleUpdateStatus = async (jobId, newStatus) => {
-    updateJob(jobId, { status: newStatus });
-    try {
-      await axios.put(`${config.API_BASE_URL}/api/jobs/${jobId}`, { status: newStatus });
-    } catch (error) {
-      const original = internships.find(j => j._id === jobId);
-      if (original) updateJob(jobId, { status: original.status });
-      toast.error('Failed to update status');
     }
   };
 
@@ -419,35 +405,6 @@ export function InternshipDashboard() {
               </button>
             )}
           </div>
-          <div className="inline-flex rounded-lg border border-border overflow-hidden h-10 bg-background">
-            <button
-              type="button"
-              aria-pressed={layout === 'list'}
-              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'list' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
-              onClick={() => setLayout('list')}
-              title="List view"
-            >
-              List
-            </button>
-            <button
-              type="button"
-              aria-pressed={layout === 'grid'}
-              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'grid' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
-              onClick={() => setLayout('grid')}
-              title="Grid view"
-            >
-              Grid
-            </button>
-            <button
-              type="button"
-              aria-pressed={layout === 'kanban'}
-              className={`px-4 py-1.5 text-xs font-medium transition-colors ${layout === 'kanban' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-muted-foreground hover:bg-muted/10'}`}
-              onClick={() => setLayout('kanban')}
-              title="Kanban board"
-            >
-              Board
-            </button>
-          </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
               <SelectValue>Filters</SelectValue>
@@ -566,65 +523,26 @@ export function InternshipDashboard() {
           </div>
         )}
 
-        {/* Kanban Board */}
-        {layout === 'kanban' && (
-          <KanbanBoard
-            internships={filteredInternships}
-            searchTerm=""
-            onUpdateStatus={handleUpdateStatus}
-            onEdit={(job) => {
-              setEditingInternship({
-                _id: job._id,
-                company: job.company,
-                position: job.role,
-                location: job.location,
-                status: job.status,
-                salary: job.stipend,
-                appliedDate: job.dateApplied,
-                interviewDate: job.interviewDate,
-                notes: job.notes,
-              });
-              setIsFormOpen(true);
-            }}
-          />
-        )}
-
-        {/* Internship List / Grid */}
-        {layout !== 'kanban' && <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
+        {/* Internship Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            Array.from({ length: layout === 'list' ? 8 : 6 }).map((_, i) => (
-              layout === 'list' ? (
-                <div key={i} className="rounded-lg border border-border bg-background/50 animate-pulse p-4 flex items-center gap-4">
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-2/5" />
-                    <div className="h-3 bg-muted rounded w-1/4" />
-                  </div>
-                  <div className="h-3 bg-muted rounded w-20" />
-                  <div className="h-6 bg-muted rounded-full w-24" />
-                  <div className="h-8 bg-muted rounded w-14" />
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse p-5 space-y-3 min-h-[200px]">
+                <div className="flex justify-between">
+                  <div className="h-4 bg-muted rounded w-3/5" />
+                  <div className="h-6 bg-muted rounded-full w-20" />
                 </div>
-              ) : (
-                <div key={i} className="rounded-xl border border-border/70 bg-background/50 animate-pulse p-5 space-y-3 min-h-[200px]">
-                  <div className="flex justify-between">
-                    <div className="h-4 bg-muted rounded w-3/5" />
-                    <div className="h-6 bg-muted rounded-full w-20" />
-                  </div>
-                  <div className="h-3 bg-muted rounded w-2/5" />
-                  <div className="h-3 bg-muted rounded w-1/3" />
-                  <div className="h-3 bg-muted rounded w-1/4 mt-2" />
-                </div>
-              )
+                <div className="h-3 bg-muted rounded w-2/5" />
+                <div className="h-3 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-1/4 mt-2" />
+              </div>
             ))
           ) : (
             pageItems.map((internship, i) => (
               <Card
                 key={internship._id}
                 style={{ transitionDelay: `${i * 70}ms` }}
-                className={
-                  layout === 'grid'
-                    ? 'relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500'
-                    : 'relative rounded-lg border border-border bg-background hover:bg-muted/20 transition-colors'
-                }
+                className="relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500"
               >
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
@@ -642,9 +560,7 @@ export function InternshipDashboard() {
                   </div>
                 )}
 
-                {layout === 'grid' ? (
-                  <>
-                    <CardHeader className="pt-6 pb-2">
+                <CardHeader className="pt-6 pb-2">
                       <div className="flex justify-between items-start w-full">
                         <div className={isSelectionMode ? 'pr-8' : ''}>
                           <CardTitle className="text-lg clamp-1">{internship.role}</CardTitle>
@@ -721,62 +637,12 @@ export function InternshipDashboard() {
                         </Button>
                       </div>
                     </CardContent>
-                  </>
-                ) : (
-                  <div className="w-full p-3 md:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium truncate text-[15px]">{internship.role}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-3 truncate mt-0.5">
-                        <span className="flex items-center gap-1 min-w-0">
-                          <Building className="h-4 w-4" />
-                          <span className="truncate">{internship.company}</span>
-                        </span>
-                        <span className="hidden sm:inline-flex items-center gap-1 max-w-[220px] truncate">
-                          <MapPin className="h-4 w-4" />
-                          <span className="truncate">{internship.location || '-'}</span>
-                        </span>
-                      </div>
-                    </div>
-                    <div className="md:flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(internship.dateApplied).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-0.5 text-[11px]`}>{internship.status}</Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingInternship({
-                            _id: internship._id,
-                            company: internship.company,
-                            position: internship.role,
-                            location: internship.location,
-                            status: internship.status,
-                            salary: internship.stipend,
-                            appliedDate: internship.dateApplied,
-                            interviewDate: internship.interviewDate,
-                            notes: internship.notes
-                          });
-                          setIsFormOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </Card>
             ))
           )}
-        </div>}
+        </div>
 
-        {/* Pagination — hidden in kanban mode */}
-        {layout !== 'kanban' && <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
+        <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
           <div className="text-sm text-muted-foreground">
             Showing <span className="text-foreground font-medium">{filteredInternships.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredInternships.length)}</span> of <span className="text-foreground font-medium">{filteredInternships.length}</span>
           </div>
@@ -787,9 +653,9 @@ export function InternshipDashboard() {
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-8 px-2">›</Button>
             <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="h-8 px-2">»</Button>
           </div>
-        </div>}
+        </div>
 
-        {layout !== 'kanban' && filteredInternships.length === 0 && (
+        {filteredInternships.length === 0 && (
           <Card className="text-center py-16 border-dashed">
             <CardContent className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border">
