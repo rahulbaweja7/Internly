@@ -149,7 +149,7 @@ export default function Profile() {
             />
           </div>
 
-          <CardContent className="px-6 pb-6 relative">
+          <CardContent className="px-6 pb-6">
             {/* Avatar */}
             <div className="-mt-9 mb-4">
               <Avatar className="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full border-[3px] border-background shadow-xl ring-1 ring-border">
@@ -169,20 +169,21 @@ export default function Profile() {
               </Avatar>
             </div>
 
-            {/* Action buttons — top-right of card content */}
-            <div className="absolute top-4 right-6">
+            {/* Name + action buttons on same row */}
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-xl font-bold text-foreground leading-tight">{user.name}</h1>
               {!isEditing ? (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="h-8 text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 shrink-0"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Edit profile
                 </Button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -205,9 +206,6 @@ export default function Profile() {
                 </div>
               )}
             </div>
-
-            {/* Identity */}
-            <h1 className="text-xl font-bold text-foreground leading-tight">{user.name}</h1>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
