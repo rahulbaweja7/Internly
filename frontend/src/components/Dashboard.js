@@ -17,7 +17,7 @@ import { useData } from '../contexts/DataContext';
 import { JOB_STATUSES } from '../constants/jobStatuses';
 
 export function InternshipDashboard() {
-  const { jobs: internships, loading, addJob } = useData();
+  const { jobs: internships, loading, addJob, deleteJob, deleteJobs, refresh } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -160,6 +160,7 @@ export function InternshipDashboard() {
   const handleDeleteInternship = async (id) => {
     try {
       await axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`);
+      deleteJob(id);
       setSelectedJobs(prev => {
         const next = new Set(prev);
         next.delete(id);
@@ -176,6 +177,7 @@ export function InternshipDashboard() {
     try {
       const ids = Array.from(selectedJobs);
       await Promise.all(ids.map(id => axios.delete(`${config.API_BASE_URL}/api/jobs/${id}`)));
+      deleteJobs(ids);
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsBulkDeleteDialogOpen(false);
@@ -191,6 +193,7 @@ export function InternshipDashboard() {
     setDeleting(true);
     try {
       await axios.delete(`${config.API_BASE_URL}/api/jobs/delete-all`, { data: { confirm: 'delete-all' } });
+      refresh();
       setSelectedJobs(new Set());
       setIsSelectionMode(false);
       setIsDeleteAllDialogOpen(false);
