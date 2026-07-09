@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 const DataContext = createContext();
 
 const JOBS_KEY = ['jobs'];
+const GMAIL_STATUS_KEY = ['gmailStatus'];
 // Stable reference — prevents useEffect deps from firing on every render
 // when the query hasn't returned data yet.
 const EMPTY_JOBS = [];
@@ -15,6 +16,14 @@ async function fetchJobsFromApi() {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`Failed to fetch jobs: ${res.status}`);
+  return res.json();
+}
+
+async function fetchGmailStatus() {
+  const res = await fetch(`${config.API_BASE_URL}/api/gmail/status`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`Failed to fetch Gmail status: ${res.status}`);
   return res.json();
 }
 
@@ -28,7 +37,16 @@ export function DataProvider({ children }) {
     enabled: !!user,
   });
 
+  const { data: gmailStatusData, refetch: refetchGmailStatus } = useQuery({
+    queryKey: GMAIL_STATUS_KEY,
+    queryFn: fetchGmailStatus,
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+
   const jobs = data ?? EMPTY_JOBS;
+  const gmailConnected = gmailStatusData?.connected ?? false;
+  const gmailNeedsReconnect = gmailStatusData?.needsReconnect ?? false;
 
   const addJob = useCallback((newJob) => {
     queryClient.setQueryData(JOBS_KEY, (prev = []) => [newJob, ...prev]);
@@ -61,6 +79,10 @@ export function DataProvider({ children }) {
     queryClient.invalidateQueries({ queryKey: JOBS_KEY });
   }, [queryClient]);
 
+  const refreshGmailStatus = useCallback(() => {
+    refetchGmailStatus();
+  }, [refetchGmailStatus]);
+
   const value = useMemo(() => ({
     jobs,
     loading,
@@ -71,7 +93,10 @@ export function DataProvider({ children }) {
     deleteJob,
     deleteJobs,
     refresh,
-  }), [jobs, loading, error, fetchJobs, addJob, updateJob, deleteJob, deleteJobs, refresh]);
+    gmailConnected,
+    gmailNeedsReconnect,
+    refreshGmailStatus,
+  }), [jobs, loading, error, fetchJobs, addJob, updateJob, deleteJob, deleteJobs, refresh, gmailConnected, gmailNeedsReconnect, refreshGmailStatus]);
 
   return (
     <DataContext.Provider value={value}>

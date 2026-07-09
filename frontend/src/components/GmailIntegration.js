@@ -5,12 +5,13 @@ import config from '../config/config';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+import { useData } from '../contexts/DataContext';
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 120_000; // 2 min max wait
 
 export function GmailIntegration({ onApplicationsFound }) {
-  const [status, setStatus] = useState({ connected: false, lastConnected: null });
+  const { gmailConnected, gmailNeedsReconnect, refreshGmailStatus } = useData();
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -20,15 +21,7 @@ export function GmailIntegration({ onApplicationsFound }) {
   const pollTimerRef = useRef(null);
   const pollStartRef = useRef(null);
 
-  const refreshStatus = async () => {
-    try {
-      const res = await axios.get(`${config.API_BASE_URL}/api/gmail/status`);
-      setStatus(res.data);
-    } catch (_) {}
-  };
-
   useEffect(() => {
-    refreshStatus();
     return () => clearTimeout(pollTimerRef.current);
   }, []);
 
@@ -38,7 +31,7 @@ export function GmailIntegration({ onApplicationsFound }) {
 
   const disconnect = async () => {
     await axios.delete(`${config.API_BASE_URL}/api/gmail/disconnect`);
-    setStatus({ connected: false, lastConnected: null });
+    refreshGmailStatus();
     setApps([]);
   };
 
@@ -61,8 +54,7 @@ export function GmailIntegration({ onApplicationsFound }) {
       } else if (state === 'failed') {
         setLoading(false);
         if (requiresReconnect) {
-          // Refresh status so the reconnect UI renders immediately
-          await refreshStatus();
+          refreshGmailStatus();
         } else {
           toast.error('Scan failed — please try again');
         }
@@ -103,7 +95,7 @@ export function GmailIntegration({ onApplicationsFound }) {
     } catch (e) {
       setLoading(false);
       if (e.response?.data?.requiresReconnect) {
-        await refreshStatus(); // triggers reconnect UI
+        refreshGmailStatus();
       } else if (e.response?.status === 429) {
         const wait = e.response.data.retryAfter || 60;
         toast.error(`Please wait ${wait}s before scanning again`);
@@ -176,13 +168,13 @@ export function GmailIntegration({ onApplicationsFound }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Gmail Integration
-          {status.connected && <Badge variant="secondary">Connected</Badge>}
+          {gmailConnected && <Badge variant="secondary">Connected</Badge>}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {!status.connected ? (
+        {!gmailConnected ? (
           <Button onClick={connect}>Connect Gmail</Button>
-        ) : status.needsReconnect ? (
+        ) : gmailNeedsReconnect ? (
           <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 space-y-2">
             <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">Your Gmail connection has expired.</p>
             <p className="text-xs text-amber-700 dark:text-amber-300">Click below to reconnect and resume scanning.</p>

@@ -17,7 +17,7 @@ import { useData } from '../contexts/DataContext';
 import { JOB_STATUSES } from '../constants/jobStatuses';
 
 export function InternshipDashboard() {
-  const { jobs: internships, loading, addJob, deleteJob, deleteJobs, refresh } = useData();
+  const { jobs: internships, loading, addJob, deleteJob, deleteJobs, refresh, gmailConnected } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -309,8 +309,8 @@ export function InternshipDashboard() {
           </div>
         </div>
 
-        {/* Gmail Connected banner - very compact */}
-        <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* Gmail Connected banner - only shown when actually connected */}
+        {gmailConnected && <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <Card className="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 p-[1px]">
             <div className="relative rounded-xl bg-white dark:bg-gray-900 p-3">
               <div className="flex items-center justify-between gap-3">
@@ -338,7 +338,7 @@ export function InternshipDashboard() {
               </div>
             </div>
           </Card>
-        </div>
+        </div>}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
