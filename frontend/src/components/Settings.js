@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import config from '../config/config';
-import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2, Palette, Mail, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { User, Shield, Plug, Database, FileDown, Trash2, Palette, Mail, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'sonner';
 
@@ -97,7 +97,6 @@ export default function Settings() {
     { id: 'integrations', label: 'Integrations', icon: Plug },
     { id: 'privacy', label: 'Data & privacy', icon: Database },
     { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
 
   return (
