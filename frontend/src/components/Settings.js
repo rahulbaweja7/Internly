@@ -326,40 +326,93 @@ export default function Settings() {
 
           {active === 'privacy' && (
             <section className="grid gap-4">
-              <div className="rounded-md border border-input bg-background p-6">
-                <h3 className="text-lg font-semibold mb-1">Export applications</h3>
-                <p className="text-sm text-muted-foreground mb-3">Download your data as JSON.</p>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 h-10 rounded-md px-4 text-sm bg-black text-white dark:bg-white dark:text-black"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(`${config.API_BASE_URL}/api/auth/export`, { credentials: 'include' });
-                      if (!res.ok) throw new Error('Export failed');
-                      const text = await res.text();
-                      const blob = new Blob([text], { type: 'application/json' });
-                      const href = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = href; a.download = 'internly-export.json';
-                      document.body.appendChild(a); a.click(); a.remove();
-                      window.URL.revokeObjectURL(href);
-                    } catch (_) { /* noop */ }
-                  }}
-                >
-                  <FileDown className="h-4 w-4" /> Export JSON
-                </button>
+              {/* Your data */}
+              <div className="rounded-md border border-input bg-background divide-y divide-border">
+                <div className="p-6">
+                  <h2 className="text-base font-semibold">Your data</h2>
+                  <p className="text-sm text-muted-foreground mt-1">We store your name, email, job applications, and Gmail connection token. Nothing is sold or shared with third parties.</p>
+                </div>
+
+                {/* Export */}
+                <div className="flex items-center justify-between gap-4 px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Export applications</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Download all your tracked jobs as JSON.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 h-8 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-muted transition-colors shrink-0"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`${config.API_BASE_URL}/api/auth/export`, { credentials: 'include' });
+                        if (!res.ok) throw new Error('Export failed');
+                        const text = await res.text();
+                        const blob = new Blob([text], { type: 'application/json' });
+                        const href = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = href;
+                        a.download = 'applycation-export.json';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(href);
+                        toast.success('Export downloaded');
+                      } catch (_) {
+                        toast.error('Export failed — try again');
+                      }
+                    }}
+                  >
+                    <FileDown className="h-3.5 w-3.5" />
+                    Export JSON
+                  </button>
+                </div>
+
+                {/* Delete all jobs */}
+                <div className="flex items-center justify-between gap-4 px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Delete all applications</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Permanently remove all tracked jobs. Your account stays active.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 h-8 rounded-md border border-destructive/40 text-destructive px-3 text-xs font-medium hover:bg-destructive/5 transition-colors shrink-0"
+                    onClick={async () => {
+                      if (!window.confirm('Delete all applications? This cannot be undone.')) return;
+                      try {
+                        const res = await fetch(`${config.API_BASE_URL}/api/jobs/delete-all`, {
+                          method: 'DELETE',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ confirm: 'delete-all' }),
+                        });
+                        if (!res.ok) throw new Error('Failed');
+                        toast.success('All applications deleted');
+                      } catch (_) {
+                        toast.error('Failed to delete — try again');
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete all
+                  </button>
+                </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <a href="/privacy" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
-                  <h3 className="text-lg font-semibold mb-1">Privacy Policy</h3>
-                  <p className="text-sm text-muted-foreground">Understand how we collect, use, and protect your information.</p>
-                  <div className="mt-4 inline-flex items-center text-sm">Privacy →</div>
+              {/* Legal links */}
+              <div className="rounded-md border border-input bg-background divide-y divide-border">
+                <a href="/privacy" className="flex items-center justify-between px-6 py-4 hover:bg-muted/40 transition-colors group">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Privacy Policy</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">How we collect, use, and protect your information.</p>
+                  </div>
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">→</span>
                 </a>
-                <a href="/terms" className="rounded-md border border-input bg-background p-6 block hover:bg-muted/40">
-                  <h3 className="text-lg font-semibold mb-1">Terms of Service</h3>
-                  <p className="text-sm text-muted-foreground">Your rights and responsibilities when using the platform.</p>
-                  <div className="mt-4 inline-flex items-center text-sm">Terms →</div>
+                <a href="/terms" className="flex items-center justify-between px-6 py-4 hover:bg-muted/40 transition-colors group">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Terms of Service</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Your rights and responsibilities when using Applycation.</p>
+                  </div>
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">→</span>
                 </a>
               </div>
             </section>
