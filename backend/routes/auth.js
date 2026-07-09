@@ -84,8 +84,9 @@ router.get(
 
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: (process.env.FRONTEND_URL || 'http://localhost:3000') + '/login?oauth=failed' }),
-  (req, res) => {
-    // Issue JWT in HttpOnly, Secure, SameSite=Lax cookie; no token in URL
+  async (req, res) => {
+    // Stamp last login and issue JWT
+    try { req.user.lastLoginAt = new Date(); await req.user.save(); } catch (_) {}
     const token = generateToken(req.user);
     const isProd = process.env.NODE_ENV === 'production';
     const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
@@ -108,10 +109,11 @@ router.get('/google/callback',
 // Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { 
-      id: user._id, 
+    {
+      id: user._id,
       email: user.email,
-      isEmailVerified: user.isEmailVerified 
+      isEmailVerified: user.isEmailVerified,
+      tv: user.tokenVersion ?? 0,
     },
     process.env.JWT_SECRET || 'your-secret-key',
     { expiresIn: '7d' }
@@ -196,6 +198,9 @@ router.post('/login', authLimiter, isNotAuthenticated, validate(loginSchema), as
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
+
+    user.lastLoginAt = new Date();
+    await user.save();
 
     // Set JWT cookie
     const token = generateToken(user);
@@ -392,6 +397,17 @@ router.get('/logout', (req, res) => {
   res.setHeader('Set-Cookie', cookiesToSet);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/`);
+});
+
+// Invalidate all existing JWTs by bumping tokenVersion
+router.post('/logout-all', isAuthenticated, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ err: error }, 'logout-all error');
+    res.status(500).json({ error: 'Failed to invalidate sessions' });
+  }
 });
 
 // Set or change password for the current user

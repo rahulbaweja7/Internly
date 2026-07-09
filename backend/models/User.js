@@ -54,7 +54,13 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  
+
+  // Incremented to invalidate all existing JWTs (logout all sessions)
+  tokenVersion: { type: Number, default: 0 },
+
+  // Stamped on every login/OAuth
+  lastLoginAt: { type: Date },
+
   // Timestamps
   createdAt: {
     type: Date,

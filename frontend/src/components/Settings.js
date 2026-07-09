@@ -253,9 +253,76 @@ export default function Settings() {
           )}
 
           {active === 'security' && (
-            <section className="rounded-md border border-input bg-background p-6">
-              <h2 className="text-base font-semibold mb-4">Password</h2>
-              <PasswordSection />
+            <section className="grid gap-4">
+              {/* Session info */}
+              <div className="rounded-md border border-input bg-background divide-y divide-border">
+                <div className="px-6 py-4">
+                  <h2 className="text-base font-semibold">Session</h2>
+                </div>
+                <div className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Last login</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {user?.lastLoginAt
+                        ? new Date(user.lastLoginAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+                        : 'Not recorded yet — will appear after next login'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Member since</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {user?.createdAt
+                        ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                        : '—'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Sign-in method</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {user?.googleId ? 'Google OAuth' : 'Email & password'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Log out all sessions</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Invalidates all devices including this one. You'll need to sign in again.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 h-8 rounded-md border border-destructive/40 text-destructive px-3 text-xs font-medium hover:bg-destructive/5 transition-colors shrink-0"
+                    onClick={async () => {
+                      if (!window.confirm('Log out of all devices? You will need to sign in again.')) return;
+                      try {
+                        await fetch(`${config.API_BASE_URL}/api/auth/logout-all`, { method: 'POST', credentials: 'include' });
+                        await logout();
+                        window.location.href = '/login';
+                      } catch (_) {
+                        toast.error('Failed — try again');
+                      }
+                    }}
+                  >
+                    Log out all
+                  </button>
+                </div>
+              </div>
+
+              {/* Password */}
+              {!user?.googleId && (
+                <div className="rounded-md border border-input bg-background p-6">
+                  <h2 className="text-base font-semibold mb-4">Password</h2>
+                  <PasswordSection />
+                </div>
+              )}
+              {user?.googleId && (
+                <div className="rounded-md border border-input bg-background px-6 py-4">
+                  <p className="text-sm text-muted-foreground">Your account uses Google OAuth — no password is set.</p>
+                </div>
+              )}
             </section>
           )}
 

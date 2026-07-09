@@ -11,7 +11,7 @@ const isAuthenticated = async (req, res, next) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         const user = await User.findById(decoded.id);
-        if (user && user.isActive) {
+        if (user && user.isActive && (decoded.tv ?? 0) === (user.tokenVersion ?? 0)) {
           req.user = user;
           return next();
         }
@@ -30,7 +30,7 @@ const isAuthenticated = async (req, res, next) => {
         try {
           const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
           const user = await User.findById(decoded.id);
-          if (user && user.isActive) {
+          if (user && user.isActive && (decoded.tv ?? 0) === (user.tokenVersion ?? 0)) {
             req.user = user;
             return next();
           }
