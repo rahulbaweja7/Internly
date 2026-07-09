@@ -81,11 +81,11 @@ router.get('/oauth2callback', async (req, res) => {
     );
 
     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-    res.redirect(`${frontendUrl}/dashboard?gmail_connected=true`);
+    res.redirect(`${frontendUrl}/settings?tab=integrations&gmail_connected=true`);
   } catch (error) {
     logger.error({ err: error }, 'Gmail OAuth callback error');
     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-    res.redirect(`${frontendUrl}/dashboard?gmail_error=true`);
+    res.redirect(`${frontendUrl}/settings?tab=integrations&gmail_error=true`);
   }
 });
 

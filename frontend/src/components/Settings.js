@@ -2,17 +2,32 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Navbar } from './Navbar';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import config from '../config/config';
 import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2, Palette } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { GmailIntegration } from './GmailIntegration';
+import { toast } from 'sonner';
 
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
+  const { refresh } = useData();
   const { mode, setMode, setLightBackground } = useTheme();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') || 'profile';
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
+
+  // Handle Gmail OAuth redirect params
+  useEffect(() => {
+    if (params.get('gmail_connected') === 'true') {
+      toast.success('Gmail connected successfully');
+      setParams((p) => { p.delete('gmail_connected'); return p; });
+    } else if (params.get('gmail_error') === 'true') {
+      toast.error('Failed to connect Gmail — please try again');
+      setParams((p) => { p.delete('gmail_error'); return p; });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const nameInitial = useMemo(() => {
     if (!user?.name) return 'U';
@@ -248,7 +263,7 @@ export default function Settings() {
 
           {active === 'integrations' && (
             <section className="rounded-md border border-input bg-background p-2 md:p-4">
-              <GmailIntegration onApplicationsFound={() => {}} />
+              <GmailIntegration onApplicationsFound={() => refresh()} />
             </section>
           )}
 
