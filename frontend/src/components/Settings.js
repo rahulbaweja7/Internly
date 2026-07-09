@@ -4,14 +4,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import config from '../config/config';
-import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2, Palette } from 'lucide-react';
+import { User, Shield, Plug, Database, CreditCard, FileDown, Trash2, Palette, Mail, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { GmailIntegration } from './GmailIntegration';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
-  const { refresh } = useData();
+  const { gmailConnected, gmailNeedsReconnect, gmailEmail, gmailLastSyncAt, refreshGmailStatus } = useData();
   const { mode, setMode, setLightBackground } = useTheme();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') || 'profile';
@@ -262,8 +261,67 @@ export default function Settings() {
           )}
 
           {active === 'integrations' && (
-            <section className="rounded-md border border-input bg-background p-2 md:p-4">
-              <GmailIntegration onApplicationsFound={() => refresh()} />
+            <section className="rounded-md border border-input bg-background p-6 space-y-1">
+              <h2 className="text-base font-semibold mb-4">Connected accounts</h2>
+              <div className="flex items-center justify-between gap-4 py-4 border-t border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Gmail</p>
+                    {gmailConnected && gmailEmail && (
+                      <p className="text-xs text-muted-foreground">{gmailEmail}</p>
+                    )}
+                    {gmailConnected && gmailLastSyncAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Last scan {new Date(gmailLastSyncAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                    {!gmailConnected && (
+                      <p className="text-xs text-muted-foreground">Not connected</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {gmailNeedsReconnect ? (
+                    <span className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                      <AlertCircle className="h-3.5 w-3.5" /> Reconnect required
+                    </span>
+                  ) : gmailConnected ? (
+                    <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                      <XCircle className="h-3.5 w-3.5" /> Not connected
+                    </span>
+                  )}
+                  {gmailConnected ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await fetch(`${config.API_BASE_URL}/api/gmail/disconnect`, { method: 'DELETE', credentials: 'include' });
+                          refreshGmailStatus();
+                          toast.success('Gmail disconnected');
+                        } catch (_) {
+                          toast.error('Failed to disconnect');
+                        }
+                      }}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Disconnect
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { window.location.href = `${config.API_BASE_URL}/api/gmail/auth`; }}
+                      className="text-xs font-medium text-foreground underline underline-offset-2 hover:opacity-70 transition-opacity"
+                    >
+                      {gmailNeedsReconnect ? 'Reconnect' : 'Connect'}
+                    </button>
+                  )}
+                </div>
+              </div>
             </section>
           )}
 

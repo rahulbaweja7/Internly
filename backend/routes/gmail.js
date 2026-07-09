@@ -66,6 +66,21 @@ router.get('/oauth2callback', async (req, res) => {
     }
 
     const tokens = await getTokensFromCode(code);
+
+    // Fetch the Gmail address for display in Settings
+    let gmailEmail = null;
+    try {
+      const { google } = require('googleapis');
+      const authClient = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET
+      );
+      authClient.setCredentials(tokens);
+      const oauth2 = google.oauth2({ version: 'v2', auth: authClient });
+      const { data } = await oauth2.userinfo.get();
+      gmailEmail = data.email || null;
+    } catch (_) {}
+
     await GmailToken.findOneAndUpdate(
       { userId },
       {
@@ -75,7 +90,8 @@ router.get('/oauth2callback', async (req, res) => {
         scope: tokens.scope,
         token_type: tokens.token_type,
         expiry_date: tokens.expiry_date,
-        tokenInvalid: false, // clear any previous auth error on fresh connect
+        tokenInvalid: false,
+        ...(gmailEmail && { email: gmailEmail }),
       },
       { upsert: true, new: true }
     );
@@ -166,6 +182,7 @@ router.get('/status', isAuthenticated, async (req, res) => {
       needsReconnect: tokenDoc?.tokenInvalid ?? false,
       lastConnected: tokenDoc ? tokenDoc.updatedAt : null,
       lastSyncAt: tokenDoc ? tokenDoc.lastSyncAt : null,
+      email: tokenDoc?.email || null,
     });
   } catch (error) {
     logger.error({ err: error }, 'Error checking Gmail status');

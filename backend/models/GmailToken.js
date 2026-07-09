@@ -13,6 +13,7 @@ const gmailTokenSchema = new mongoose.Schema({
   // Set true when a scan fails with an auth error (expired/revoked token).
   // Cleared to false when fresh tokens are stored via OAuth reconnect.
   tokenInvalid: { type: Boolean, default: false },
+  email: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

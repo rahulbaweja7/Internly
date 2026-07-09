@@ -47,6 +47,8 @@ export function DataProvider({ children }) {
   const jobs = data ?? EMPTY_JOBS;
   const gmailConnected = gmailStatusData?.connected ?? false;
   const gmailNeedsReconnect = gmailStatusData?.needsReconnect ?? false;
+  const gmailEmail = gmailStatusData?.email ?? null;
+  const gmailLastSyncAt = gmailStatusData?.lastSyncAt ?? null;
 
   const addJob = useCallback((newJob) => {
     queryClient.setQueryData(JOBS_KEY, (prev = []) => [newJob, ...prev]);
@@ -95,8 +97,10 @@ export function DataProvider({ children }) {
     refresh,
     gmailConnected,
     gmailNeedsReconnect,
+    gmailEmail,
+    gmailLastSyncAt,
     refreshGmailStatus,
-  }), [jobs, loading, error, fetchJobs, addJob, updateJob, deleteJob, deleteJobs, refresh, gmailConnected, gmailNeedsReconnect, refreshGmailStatus]);
+  }), [jobs, loading, error, fetchJobs, addJob, updateJob, deleteJob, deleteJobs, refresh, gmailConnected, gmailNeedsReconnect, gmailEmail, gmailLastSyncAt, refreshGmailStatus]);
 
   return (
     <DataContext.Provider value={value}>
