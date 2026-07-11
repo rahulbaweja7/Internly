@@ -284,9 +284,9 @@ export function InternshipDashboard() {
       <div className="min-h-screen bg-background dark:bg-gray-900">
         <Navbar />
 
-      <div className={`container mx-auto p-6 max-w-7xl transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className={`container mx-auto p-6 max-w-7xl transition-all duration-300 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header */}
-        <div className={`relative mb-8 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
+        <div className={`relative mb-8 transition-all duration-300 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}> 
           {/* Soft background accents */}
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-10 -left-8 h-40 w-40 rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),transparent_60%)] blur-2xl" />
@@ -310,7 +310,7 @@ export function InternshipDashboard() {
         </div>
 
         {/* Gmail Connected banner - only shown when actually connected */}
-        {gmailConnected && <div className={`mb-6 transition-all duration-[1400ms] delay-[200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {gmailConnected && <div className={`mb-6 transition-all duration-300 delay-75 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <Card className="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 p-[1px]">
             <div className="relative rounded-xl bg-white dark:bg-gray-900 p-3">
               <div className="flex items-center justify-between gap-3">
@@ -389,7 +389,7 @@ export function InternshipDashboard() {
         </div>
 
         {/* Filters, Layout and Actions */}
-        <div className={`flex flex-col sm:flex-row gap-4 mb-6 relative z-50 transition-all duration-[1200ms] delay-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`flex flex-col sm:flex-row gap-4 mb-6 relative z-50 transition-all duration-300 delay-150 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
