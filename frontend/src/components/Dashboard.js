@@ -412,10 +412,10 @@ export function InternshipDashboard() {
             <SelectTrigger>
               <SelectValue>Filters</SelectValue>
             </SelectTrigger>
-            <SelectContent className="z-[1000]">
+            <SelectContent className="z-[1000] min-w-[180px]">
               <SelectItem value="all">All</SelectItem>
               {JOB_STATUSES.map(s => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s} className="whitespace-nowrap">{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
