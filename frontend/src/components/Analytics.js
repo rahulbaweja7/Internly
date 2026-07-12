@@ -49,7 +49,7 @@ export function Analytics() {
                            (statusCounts['Final Interview'] || 0);
 
       return (
-      <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <Navbar />
 
       <div className={`container mx-auto p-6 max-w-7xl relative z-10 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>

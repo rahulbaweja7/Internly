@@ -223,7 +223,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                     key={s}
                     type="button"
                     onClick={() => handleChange('status', s)}
-                    className={`px-3 py-1.5 rounded-full text-xs ring-1 ring-border transition ${formData.status === s ? 'bg-white/10 ring-white/30' : 'hover:bg-white/5'}`}
+                    className={`px-3 py-1.5 rounded-full text-xs ring-1 ring-border transition ${formData.status === s ? 'bg-accent text-accent-foreground ring-foreground/20' : 'hover:bg-accent'}`}
                   >
                     {s}
                   </button>
@@ -242,9 +242,9 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
                 onChange={(e) => handleChange('appliedDate', e.target.value)}
               />
               <div className="flex gap-3 text-xs">
-                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('today')}>Today</button>
-                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('yesterday')}>Yesterday</button>
-                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('lastweek')}>Last week</button>
+                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('today')}>Today</button>
+                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('yesterday')}>Yesterday</button>
+                <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('lastweek')}>Last week</button>
               </div>
             </div>
             <div className="space-y-2">

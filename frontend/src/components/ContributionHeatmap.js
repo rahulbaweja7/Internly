@@ -208,7 +208,7 @@ export default function ContributionHeatmap({ internships, weeksToShow = 53, noC
           {/* Tooltip positioned relative to heatmap */}
           {tooltip.visible && (
             <div
-              className="pointer-events-none absolute z-50 rounded-md bg-gray-900 text-white text-[11px] px-2 py-1 shadow-lg dark:bg-gray-800 whitespace-nowrap"
+              className="pointer-events-none absolute z-50 rounded-md bg-popover text-popover-foreground border border-border text-[11px] px-2 py-1 shadow-lg whitespace-nowrap"
               style={{ 
                 left: tooltip.x, 
                 top: tooltip.y - 30,

@@ -250,7 +250,7 @@ export function InternshipDashboard() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
@@ -266,7 +266,7 @@ export function InternshipDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
@@ -281,7 +281,7 @@ export function InternshipDashboard() {
   }
 
       return (
-      <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <Navbar />
 
       <div className={`container mx-auto p-6 max-w-7xl transition-all duration-300 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -312,21 +312,21 @@ export function InternshipDashboard() {
         {/* Gmail Connected banner - only shown when actually connected */}
         {gmailConnected && <div className={`mb-6 transition-all duration-300 delay-75 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <Card className="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 p-[1px]">
-            <div className="relative rounded-xl bg-white dark:bg-gray-900 p-3">
+            <div className="relative rounded-xl bg-card p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative">
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500">
                       <MailCheck className="h-3.5 w-3.5 text-white" />
                     </div>
-                    <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-400 border-2 border-white dark:border-gray-900" />
+                    <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-400 border-2 border-background" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-green-500" />
                       <CardTitle className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 truncate">Gmail Connected</CardTitle>
                     </div>
-                    <p className="text-[11px] text-gray-600 dark:text-gray-400 truncate">Ready to import applications</p>
+                    <p className="text-[11px] text-muted-foreground truncate">Ready to import applications</p>
                   </div>
                 </div>
                 <Button

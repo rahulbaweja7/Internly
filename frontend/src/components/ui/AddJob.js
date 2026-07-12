@@ -119,7 +119,7 @@ function AddJob() {
   };
 
   return (
-    <div className="min-h-screen bg-background dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="container mx-auto p-6 max-w-6xl pb-16">
@@ -189,7 +189,7 @@ function AddJob() {
                   <Label>Status</Label>
                   <div className="flex flex-wrap gap-2">
                     {JOB_STATUSES.map(s => (
-                      <button key={s} type="button" className={`px-3 py-1.5 rounded-full text-xs ring-1 ring-border transition ${formData.status === s ? 'bg-white/10 ring-white/30' : 'hover:bg-white/5'}`} onClick={() => handleChange('status', s)}>{s}</button>
+                      <button key={s} type="button" className={`px-3 py-1.5 rounded-full text-xs ring-1 ring-border transition ${formData.status === s ? 'bg-accent text-accent-foreground ring-foreground/20' : 'hover:bg-accent'}`} onClick={() => handleChange('status', s)}>{s}</button>
                     ))}
                   </div>
                 </div>
@@ -206,9 +206,9 @@ function AddJob() {
                     required
                   />
                   <div className="flex gap-2 text-xs">
-                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('today')}>Today</button>
-                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('yesterday')}>Yesterday</button>
-                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-white/5" onClick={() => setDateQuick('lastweek')}>Last week</button>
+                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('today')}>Today</button>
+                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('yesterday')}>Yesterday</button>
+                    <button type="button" className="px-2 py-1 rounded-md border border-border hover:bg-accent" onClick={() => setDateQuick('lastweek')}>Last week</button>
                   </div>
                 </div>
                 <div className="space-y-2">
