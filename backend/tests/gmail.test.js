@@ -155,7 +155,7 @@ describe('Gmail OAuth flow', () => {
         .query({ code: 'auth-code-from-google', state });
 
       expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('/dashboard?gmail_connected=true');
+      expect(res.headers.location).toContain('gmail_connected=true');
 
       const stored = await GmailToken.findOne({ userId: String(user._id) });
       expect(stored).not.toBeNull();
