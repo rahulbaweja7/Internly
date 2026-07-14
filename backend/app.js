@@ -282,7 +282,8 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 
     res.json(docs);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error({ err: error }, 'Failed to load jobs');
+    res.status(500).json({ error: 'Failed to load jobs' });
   }
 });
 
@@ -372,7 +373,8 @@ app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, re
     await job.save();
     res.status(200).json(job);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    logger.error({ err: error }, 'Failed to save job');
+    res.status(500).json({ error: 'Failed to save job' });
   }
 });
 
@@ -508,7 +510,8 @@ app.put('/api/jobs/:id', isAuthenticated, validate(updateJobSchema), async (req,
     if (!job) return res.status(404).json({ message: 'Job not found' });
     res.json(job);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    logger.error({ err: error }, 'Failed to update job');
+    res.status(500).json({ error: 'Failed to update job' });
   }
 });
 
