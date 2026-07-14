@@ -316,6 +316,10 @@ router.get('/scan/:scanId', isAuthenticated, async (req, res) => {
     const job = await scanQueue.getJob(scanId);
     if (!job) return res.status(404).json({ error: 'Scan not found or expired' });
 
+    if (String(job.data?.userId) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const state = await job.getState(); // 'waiting' | 'active' | 'completed' | 'failed'
 
     if (state === 'failed') {
