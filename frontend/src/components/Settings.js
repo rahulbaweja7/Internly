@@ -4,14 +4,14 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import config from '../config/config';
-import { User, Shield, Plug, Database, FileDown, Trash2, Palette, Mail, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { User, Shield, Plug, Database, FileDown, Trash2, Palette, Mail, CheckCircle2, XCircle, AlertCircle, Sun, Moon, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
   const { gmailConnected, gmailNeedsReconnect, gmailEmail, gmailLastSyncAt, refreshGmailStatus } = useData();
-  const { mode, setMode, setLightBackground } = useTheme();
+  const { mode, setMode, accentId, setAccent, ACCENT_COLORS } = useTheme();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') || 'profile';
   const setActive = (tab) => setParams((p) => { p.set('tab', tab); return p; });
@@ -486,69 +486,54 @@ export default function Settings() {
           )}
 
           {active === 'appearance' && (
-            <section className="rounded-md border border-input bg-background p-6 space-y-6">
+            <section className="rounded-md border border-input bg-background p-6 space-y-8">
               <h2 className="text-base font-semibold">Appearance</h2>
-              <div className="flex items-center gap-3">
-                <button className={`px-3 py-1.5 rounded-md border ${mode==='light'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('light')}>Light</button>
-                <button className={`px-3 py-1.5 rounded-md border ${mode==='dark'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('dark')}>Dark</button>
-                <button className={`px-3 py-1.5 rounded-md border ${mode==='custom'?'bg-muted/60':'hover:bg-muted/30'}`} onClick={() => setMode('custom')}>Custom</button>
-              </div>
-              {mode === 'custom' && (
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">Background presets</div>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { name: 'Classic White', hsl: '0 0% 100%' },
-                      { name: 'Warm Cream', hsl: '45 100% 98%' },
-                      { name: 'Cool Blue', hsl: '210 40% 98%' },
-                      { name: 'Soft Mint', hsl: '160 50% 98%' },
-                      { name: 'Lavender Mist', hsl: '270 30% 98%' },
-                      { name: 'Peach Fade', hsl: '25 100% 98%' },
-                      { name: 'Sage Green', hsl: '120 20% 98%' },
-                      { name: 'Rose Gold', hsl: '350 30% 98%' },
-                    ].map((p) => (
-                      <button 
-                        key={p.name} 
-                        className="px-3 py-1.5 rounded-md border hover:bg-muted/30 transition-colors" 
-                        onClick={() => setLightBackground(p.hsl)}
-                        style={{ 
-                          backgroundColor: `hsl(${p.hsl})`,
-                          borderColor: `hsl(${p.hsl.replace(/\d+%$/, '85%')})`
-                        }}
-                      >
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Custom background (HSL)</div>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="e.g., 210 40% 98%" 
-                        className="flex-1 border rounded px-3 py-2 bg-background" 
-                        onBlur={(e) => setLightBackground(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            setLightBackground(e.target.value);
-                          }
-                        }}
-                      />
-                      <button 
-                        className="px-3 py-2 border rounded hover:bg-muted/30 transition-colors"
-                        onClick={() => setLightBackground('0 0% 100%')}
-                      >
-                        Reset
-                      </button>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Try: <span className="cursor-pointer underline" onClick={() => setLightBackground('45 100% 98%')}>Warm Cream</span> • 
-                      <span className="cursor-pointer underline ml-1" onClick={() => setLightBackground('160 50% 98%')}>Soft Mint</span> • 
-                      <span className="cursor-pointer underline ml-1" onClick={() => setLightBackground('270 30% 98%')}>Lavender</span>
-                    </div>
-                  </div>
+
+              {/* Mode */}
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-foreground">Theme</div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setMode('light')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-colors ${mode === 'light' ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-border hover:bg-muted/40 text-muted-foreground'}`}
+                  >
+                    <Sun className="h-4 w-4" />
+                    Light
+                  </button>
+                  <button
+                    onClick={() => setMode('dark')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-colors ${mode === 'dark' ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-border hover:bg-muted/40 text-muted-foreground'}`}
+                  >
+                    <Moon className="h-4 w-4" />
+                    Dark
+                  </button>
                 </div>
-              )}
+              </div>
+
+              {/* Accent color */}
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-foreground">Accent color</div>
+                <div className="flex flex-wrap gap-3">
+                  {ACCENT_COLORS.map((accent) => (
+                    <button
+                      key={accent.id}
+                      title={accent.name}
+                      onClick={() => setAccent(accent.id)}
+                      className="relative h-8 w-8 rounded-full transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      style={{ backgroundColor: accent.hex }}
+                    >
+                      {accentId === accent.id && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Check className="h-4 w-4 text-white drop-shadow" strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Changes button and link colors across the app. Works in both light and dark mode.
+                </p>
+              </div>
             </section>
           )}
 
