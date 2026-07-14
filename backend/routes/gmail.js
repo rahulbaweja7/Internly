@@ -163,12 +163,7 @@ router.get('/fetch-emails', isAuthenticated, async (req, res) => {
     const gStatus = error?.response?.status || error?.code;
     const gBody = error?.response?.data;
     logger.error({ err: error, googleStatus: gStatus, googleError: gBody }, 'Error fetching emails');
-    res.status(500).json({
-      error: 'Failed to fetch emails',
-      details: error?.message,
-      googleStatus: gStatus,
-      googleError: gBody,
-    });
+    res.status(500).json({ error: 'Failed to fetch emails' });
   }
 });
 
