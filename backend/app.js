@@ -253,7 +253,7 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
   try {
     const isSummary = req.query.summary === '1' || req.query.summary === 'true';
     const page = parseInt(req.query.page, 10) || 0;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 0, 500);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 500, 500);
     const isPaginated = page > 0 && limit > 0;
 
     let query = Job.find({ userId: req.user._id });
