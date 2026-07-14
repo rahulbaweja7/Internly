@@ -431,7 +431,11 @@ router.post('/contact', contactLimiter, validate(contactSchema), async (req, res
   try {
     const { name, email, message } = req.body;
 
-    const to = process.env.CONTACT_TO || 'rahulbaweja2004@gmail.com';
+    const to = process.env.CONTACT_TO;
+    if (!to) {
+      logger.error('CONTACT_TO env var not set — contact form disabled');
+      return res.status(500).json({ error: 'Contact form not configured' });
+    }
     const subject = `Applycation contact form: ${name}`;
     const text = `From: ${name}${email ? ` <${email}>` : ''}\n\n${message}`;
 
