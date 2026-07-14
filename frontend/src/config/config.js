@@ -6,7 +6,7 @@ const config = {
     ANALYTICS_ID: null
   },
   production: {
-    API_BASE_URL: process.env.REACT_APP_API_URL || 'https://api.yourdomain.com',
+    API_BASE_URL: process.env.REACT_APP_API_URL || (() => { throw new Error('REACT_APP_API_URL is not set'); })(),
     GOOGLE_CLIENT_ID: process.env.REACT_APP_GOOGLE_CLIENT_ID,
     SENTRY_DSN: process.env.REACT_APP_SENTRY_DSN,
     ANALYTICS_ID: process.env.REACT_APP_ANALYTICS_ID
