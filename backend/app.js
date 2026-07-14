@@ -222,39 +222,16 @@ app.get('/healthz', (req, res) => {
 // Deep health check — verifies DB connectivity, reports uptime + memory
 app.get('/api/health', async (req, res) => {
   const start = Date.now();
-  const mem = process.memoryUsage();
-  const meta = {
-    uptimeSeconds: Math.floor(process.uptime()),
-    memoryMB: Math.round(mem.rss / 1024 / 1024),
-    time: new Date().toISOString(),
-  };
   try {
     const mongoose = require('mongoose');
     const dbState = mongoose.connection.readyState;
     if (dbState !== 1) {
-      return res.status(503).json({
-        ok: false,
-        db: 'disconnected',
-        dbState,
-        latencyMs: Date.now() - start,
-        ...meta,
-      });
+      return res.status(503).json({ ok: false, db: 'disconnected', latencyMs: Date.now() - start });
     }
     await mongoose.connection.db.admin().ping();
-    res.json({
-      ok: true,
-      db: 'connected',
-      latencyMs: Date.now() - start,
-      ...meta,
-    });
+    res.json({ ok: true, db: 'connected', latencyMs: Date.now() - start });
   } catch (err) {
-    res.status(503).json({
-      ok: false,
-      db: 'error',
-      error: err.message,
-      latencyMs: Date.now() - start,
-      ...meta,
-    });
+    res.status(503).json({ ok: false, db: 'error', latencyMs: Date.now() - start });
   }
 });
 
