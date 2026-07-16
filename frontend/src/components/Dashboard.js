@@ -374,7 +374,7 @@ export function InternshipDashboard() {
               ? Math.round(((statusCounts['Online Assessment'] || 0) + (statusCounts.Accepted || 0)) / internships.length * 100) + '%'
               : '0%'
           }].map((stat, i) => (
-            <Card key={stat.label} className="rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500">
+            <Card key={stat.label} className="rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 h-16">
                 <CardTitle className="text-sm font-medium flex items-center gap-2 leading-tight">
                   <stat.icon className={`h-4 w-4 ${stat.color?.split(' ').pop() || 'text-muted-foreground'}`} />
@@ -545,7 +545,7 @@ export function InternshipDashboard() {
               <Card
                 key={internship._id}
                 style={{ transitionDelay: `${i * 70}ms` }}
-                className="relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border/80 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/40 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-500"
+                className="relative h-full min-h-[320px] max-h-[320px] flex flex-col rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
               >
                 {/* Selection Checkbox - Only show in selection mode */}
                 {isSelectionMode && (
@@ -645,7 +645,7 @@ export function InternshipDashboard() {
           )}
         </div>
 
-        <div className="flex items-center justify-between py-3 rounded-md border border-border bg-gradient-to-b from-background/70 to-background/40 backdrop-blur px-3 mt-4">
+        <div className="flex items-center justify-between py-3 rounded-xl border border-border bg-card px-3 mt-4">
           <div className="text-sm text-muted-foreground">
             Showing <span className="text-foreground font-medium">{filteredInternships.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, filteredInternships.length)}</span> of <span className="text-foreground font-medium">{filteredInternships.length}</span>
           </div>
