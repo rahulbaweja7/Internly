@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -117,23 +117,24 @@ function JobCard({ job, onEdit, onUpdateStatus }) {
 }
 
 // ─── Column ────────────────────────────────────────────────────────────────
-function KanbanColumn({ col, jobs, onEdit, onUpdateStatus }) {
+function KanbanColumn({ col, jobs, onEdit, onUpdateStatus, displayCount }) {
   const { setNodeRef, isOver } = useDroppable({ id: col.id });
+  const count = displayCount ?? jobs.length;
 
   return (
     <div className="flex flex-col w-full min-w-0">
       <div className="flex items-center gap-2 mb-2 px-0.5">
         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${col.dot}`} aria-hidden="true" />
         <span className={`text-[13px] font-semibold truncate ${col.header}`}>{col.label}</span>
-        <span className={`ml-auto text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${col.count}`} aria-label={`${jobs.length} jobs`}>
-          {jobs.length}
+        <span className={`ml-auto text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${col.count}`} aria-label={`${count} jobs`}>
+          {count}
         </span>
       </div>
 
       <div
         ref={setNodeRef}
         role="group"
-        aria-label={`${col.label} column — ${jobs.length} job${jobs.length !== 1 ? 's' : ''}`}
+        aria-label={`${col.label} column — ${count} job${count !== 1 ? 's' : ''}`}
         className={`
           flex-1 rounded-xl border-2 border-dashed p-2 space-y-2 min-h-[200px] transition-colors duration-150
           ${isOver
@@ -162,6 +163,9 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
     useSensor(KeyboardSensor)
   );
 
+  // Track which card is being dragged and which column it's hovering over
+  const [dragState, setDragState] = useState({ activeId: null, sourceColId: null, overColId: null });
+
   const filtered = useMemo(() => {
     if (!searchTerm) return internships;
     const q = searchTerm.toLowerCase();
@@ -182,18 +186,42 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
     return map;
   }, [filtered]);
 
+  const clearDrag = useCallback(() => {
+    setDragState({ activeId: null, sourceColId: null, overColId: null });
+  }, []);
+
+  // Compute an optimistic count delta for each column while dragging
+  function getDisplayCount(colId) {
+    const { sourceColId, overColId } = dragState;
+    if (!sourceColId || !overColId || sourceColId === overColId) return null;
+    const base = (byColumn[colId] || []).length;
+    if (colId === sourceColId) return base - 1;
+    if (colId === overColId) return base + 1;
+    return null;
+  }
+
   return (
     <div>
       <DndContext
         sensors={sensors}
         collisionDetection={columnOnlyCollision}
+        onDragStart={({ active }) => {
+          const job = internships.find(j => j._id === active.id);
+          if (job) setDragState({ activeId: active.id, sourceColId: job.status, overColId: job.status });
+        }}
+        onDragOver={({ over }) => {
+          if (!over || !COL_IDS.has(over.id)) return;
+          setDragState(prev => ({ ...prev, overColId: over.id }));
+        }}
         onDragEnd={({ active, over }) => {
+          clearDrag();
           if (!over || !COL_IDS.has(over.id)) return;
           const job = internships.find(j => j._id === active.id);
           if (!job || job.status === over.id) return;
           trackEvent('job_status_changed', { from: job.status, to: over.id, method: 'kanban' });
           onUpdateStatus(active.id, over.id);
         }}
+        onDragCancel={clearDrag}
       >
         <div role="region" aria-label="Kanban board — drag cards between columns or use the status selector on each card" className="grid gap-2 pb-4 pt-1" style={{ gridTemplateColumns: 'repeat(9, minmax(0, 1fr))' }}>
           {KANBAN_COLUMNS.map(col => (
@@ -203,6 +231,7 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
               jobs={byColumn[col.id] || []}
               onEdit={onEdit}
               onUpdateStatus={onUpdateStatus}
+              displayCount={getDisplayCount(col.id)}
             />
           ))}
         </div>
@@ -213,7 +242,7 @@ export default function KanbanBoard({ internships, searchTerm, onUpdateStatus, o
         {KANBAN_COLUMNS.map(col => (
           <span key={col.id} className="text-[11px] text-muted-foreground">
             <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} mr-1`} />
-            {col.label}: <strong>{(byColumn[col.id] || []).length}</strong>
+            {col.label}: <strong>{getDisplayCount(col.id) ?? (byColumn[col.id] || []).length}</strong>
           </span>
         ))}
       </div>
