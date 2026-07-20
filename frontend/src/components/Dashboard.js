@@ -9,7 +9,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck } from 'lucide-react';
+import { Search, Calendar, Building, MapPin, Trash2, CheckSquare, Square, X, Briefcase, ClipboardList, CheckCircle2, XCircle, TrendingUp, MailCheck, Plus, Kanban, BarChart2 } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -340,8 +340,60 @@ export function InternshipDashboard() {
           </Card>
         </div>}
 
+        {/* ── Zero-state onboarding ─────────────────────────────────────── */}
+        {!loading && internships.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            {/* Icon */}
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 ring-1 ring-border">
+              <Briefcase className="h-10 w-10 text-blue-400" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-foreground mb-2">Start tracking your job search</h2>
+            <p className="text-muted-foreground max-w-sm mb-8">
+              Add applications manually or import straight from Gmail — everything in one place.
+            </p>
+
+            {/* Primary CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-12">
+              <Button
+                onClick={() => navigate('/add')}
+                className="flex items-center gap-2 px-6"
+              >
+                <Plus className="h-4 w-4" />
+                Add your first application
+              </Button>
+              {gmailConnected ? (
+                <Button variant="outline" onClick={() => navigate('/import/gmail')} className="flex items-center gap-2 px-6">
+                  <MailCheck className="h-4 w-4" />
+                  Import from Gmail
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => navigate('/settings?tab=integrations')} className="flex items-center gap-2 px-6">
+                  <MailCheck className="h-4 w-4" />
+                  Connect Gmail
+                </Button>
+              )}
+            </div>
+
+            {/* Feature hints */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full">
+              {[
+                { icon: Briefcase,  title: 'Track everything',    desc: 'Log every application with status, date, notes, and salary.' },
+                { icon: Kanban,     title: 'Visualise progress',  desc: 'Drag-and-drop Kanban board across every hiring stage.' },
+                { icon: BarChart2,  title: 'See your stats',      desc: 'Response rates, timelines, and trends — all in Analytics.' },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="rounded-xl border border-border bg-card p-4 text-left">
+                  <Icon className="h-5 w-5 text-muted-foreground mb-2" />
+                  <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+        {internships.length > 0 && <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           {[{
             label: 'Total Applications',
             icon: Briefcase,
@@ -386,9 +438,10 @@ export function InternshipDashboard() {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </div>}
 
         {/* Filters, Layout and Actions */}
+        {internships.length > 0 && <>
         <div className={`flex flex-col sm:flex-row gap-4 mb-6 relative z-50 transition-all duration-300 delay-150 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -658,35 +711,19 @@ export function InternshipDashboard() {
           </div>
         </div>
 
-        {filteredInternships.length === 0 && (
-          <Card className="text-center py-16 border-dashed">
-            <CardContent className="flex flex-col items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-border">
-                <Briefcase className="h-7 w-7 text-blue-400" />
+        {filteredInternships.length === 0 && (searchTerm || statusFilter !== 'all') && (
+          <Card className="text-center py-12 border-dashed mt-4">
+            <CardContent className="flex flex-col items-center gap-3">
+              <Search className="h-8 w-8 text-muted-foreground/40" />
+              <div>
+                <p className="font-semibold text-foreground">No results</p>
+                <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filter</p>
               </div>
-              {searchTerm || statusFilter !== 'all' ? (
-                <>
-                  <div>
-                    <p className="font-semibold text-foreground">No results</p>
-                    <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filter</p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>Clear filters</Button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <p className="font-semibold text-foreground">No applications yet</p>
-                    <p className="text-sm text-muted-foreground mt-1">Add your first job to start tracking your search</p>
-                  </div>
-                  <Button onClick={() => navigate('/add')} className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4" />
-                    Add your first job
-                  </Button>
-                </>
-              )}
+              <Button variant="outline" size="sm" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>Clear filters</Button>
             </CardContent>
           </Card>
         )}
+        </>}
       </div>
 
       {/* Add/Edit Internship Modal */}
