@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { 
@@ -20,17 +19,13 @@ import {
   Mail
 } from 'lucide-react';
 import { ThemeToggle } from './ui/ThemeToggle';
-import StreakBadge from './ui/StreakBadge';
-
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { jobs } = useData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [streakDays, setStreakDays] = useState(null);
   const [recentSearches, setRecentSearches] = useState([]);
   const [showRecentSearches, setShowRecentSearches] = useState(false);
   const userMenuRef = useRef(null);
@@ -42,69 +37,6 @@ export function Navbar() {
   const isAdd = location.pathname === '/add';
   const isLanding = location.pathname === '/';
   const isLogin = location.pathname === '/login';
-
-  // Calculate streak from global jobs data
-  useEffect(() => {
-    if (!isAuthenticated || !jobs) {
-      setStreakDays(null);
-      try { localStorage.removeItem('streakDays'); } catch (_) {}
-      return;
-    }
-
-    // Check if we have cached data that's less than 30 seconds old
-    const cached = localStorage.getItem('streakDays');
-    const cachedTime = localStorage.getItem('streakDaysTime');
-    const now = Date.now();
-    
-    if (cached && cachedTime && (now - parseInt(cachedTime)) < 30000) {
-      setStreakDays(parseInt(cached));
-      return;
-    }
-
-    const formatLocalYmd = (date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    };
-    const computeStreak = (jobs) => {
-      const dates = new Set();
-      (jobs || []).forEach((j) => {
-        const raw = j.dateApplied || j.appliedDate;
-        if (!raw) return;
-        const d = new Date(raw);
-        if (!isNaN(d)) dates.add(formatLocalYmd(d));
-      });
-      if (dates.size === 0) return 0;
-
-      // Align with heatmap: streak only counts if there's activity today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (!dates.has(formatLocalYmd(today))) return 0;
-
-      // Count consecutive days backward starting from today
-      let count = 0;
-      const probe = new Date(today);
-      // Cap loop to a reasonable window to avoid infinite loops
-      for (let i = 0; i < 400; i += 1) {
-        const key = formatLocalYmd(probe);
-        if (dates.has(key)) {
-          count += 1;
-          probe.setDate(probe.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-      return count;
-    };
-
-    const value = computeStreak(jobs);
-    setStreakDays(value);
-    try { 
-      localStorage.setItem('streakDays', String(value)); 
-      localStorage.setItem('streakDaysTime', String(now));
-    } catch (_) {}
-  }, [isAuthenticated, jobs]);
 
   // Load recent searches from localStorage and sync with URL search param
   useEffect(() => {
@@ -421,15 +353,6 @@ export function Navbar() {
 
             {/* User menu group */}
             <div className="flex items-center space-x-3 pl-4 border-l border-gray-200 dark:border-gray-700" ref={userMenuRef}>
-              {isAuthenticated && (
-                <div className="hidden md:inline-flex">
-                  <StreakBadge
-                    days={typeof streakDays === 'number' ? streakDays : 0}
-                    className="justify-center"
-                    variant="compact"
-                  />
-                </div>
-              )}
               <ThemeToggle />
               
               <div
@@ -517,12 +440,7 @@ export function Navbar() {
           <div className="px-4 py-2 space-y-1">
             {isAuthenticated && (
               <>
-                {typeof streakDays === 'number' && streakDays !== null && (
-                  <div className="w-full flex justify-start px-3">
-                    <StreakBadge days={streakDays} onClick={() => navigate('/analytics')} />
-                  </div>
-                )}
-                <Button 
+                <Button
                   variant={isDashboard ? "default" : "ghost"}
                   onClick={() => {
                     navigate('/dashboard');
