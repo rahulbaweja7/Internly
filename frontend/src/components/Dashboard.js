@@ -294,7 +294,7 @@ export function InternshipDashboard() {
           </div>
           {(
             <p className="text-sm text-muted-foreground mb-1">
-              Welcome back{firstName ? `, ${firstName}` : ''} 👋
+              Welcome back{firstName ? `, ${firstName}` : ''}
             </p>
           )}
           <div className="flex items-start justify-between gap-4">
