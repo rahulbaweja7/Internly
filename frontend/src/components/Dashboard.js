@@ -235,7 +235,7 @@ export function InternshipDashboard() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger><SelectValue>Filters</SelectValue></SelectTrigger>
-                <SelectContent className="z-[1000] min-w-[180px]">
+                <SelectContent className="z-[1000] min-w-[220px]">
                   <SelectItem value="all">All</SelectItem>
                   {JOB_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="whitespace-nowrap">{s}</SelectItem>
