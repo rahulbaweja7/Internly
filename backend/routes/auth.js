@@ -7,6 +7,7 @@ const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 const { authLimiter, createRateLimiter } = require('../middleware/security');
 const contactLimiter = createRateLimiter(60 * 60 * 1000, 5, 'Too many messages — try again in an hour');
 const passwordLimiter = createRateLimiter(60 * 60 * 1000, 5, 'Too many password change attempts — try again in an hour');
+const profileLimiter = createRateLimiter(15 * 60 * 1000, 20, 'Too many profile updates — slow down');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 const { createTransport } = require('nodemailer');
@@ -324,7 +325,7 @@ router.get('/me', isAuthenticated, (req, res) => {
 });
 
 // Update current user's profile (name/picture)
-router.put('/me', isAuthenticated, async (req, res) => {
+router.put('/me', isAuthenticated, profileLimiter, async (req, res) => {
   try {
     const { name, picture, location, bio } = req.body || {};
 
