@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 const { authLimiter, createRateLimiter } = require('../middleware/security');
 const contactLimiter = createRateLimiter(60 * 60 * 1000, 5, 'Too many messages — try again in an hour');
+const passwordLimiter = createRateLimiter(60 * 60 * 1000, 5, 'Too many password change attempts — try again in an hour');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { generateEmailVerificationToken, generatePasswordResetToken, hashToken, verifyToken } = require('../utils/tokenUtils');
 const { createTransport } = require('nodemailer');
@@ -399,7 +400,7 @@ router.post('/logout-all', isAuthenticated, async (req, res) => {
 // Set or change password for the current user
 // - If the user already has a password, currentPassword is required and must match
 // - If the account was created via Google (no password yet), currentPassword is optional
-router.put('/password', isAuthenticated, async (req, res) => {
+router.put('/password', isAuthenticated, passwordLimiter, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body || {};
 
