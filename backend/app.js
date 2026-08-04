@@ -290,8 +290,9 @@ app.get('/api/jobs', isAuthenticated, async (req, res) => {
 const validate = require('./middleware/validate');
 const { createJobSchema, updateJobSchema, bulkJobSchema } = require('./schemas/job');
 const { createRateLimiter } = require('./middleware/security');
+const jobCreateLimiter = createRateLimiter(60 * 60 * 1000, 100, 'Too many jobs created — try again in an hour');
 
-app.post('/api/jobs', isAuthenticated, validate(createJobSchema), async (req, res) => {
+app.post('/api/jobs', isAuthenticated, jobCreateLimiter, validate(createJobSchema), async (req, res) => {
   try {
     const { company, role, status, dateApplied, notes, emailId, subject, location, stipend, onlyUpdateStatusIfExists } = req.body;
 
