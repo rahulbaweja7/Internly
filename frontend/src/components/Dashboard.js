@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Search, Trash2, CheckSquare, X, Briefcase, MailCheck, Plus, Kanban, BarChart2 } from 'lucide-react';
+import { Search, Trash2, CheckSquare, X, Briefcase, MailCheck, Plus, LayoutGrid, BarChart2 } from 'lucide-react';
 import { InternshipForm } from './InternshipForm';
 import { Navbar } from './Navbar';
 import { JobCard } from './JobCard';
@@ -200,7 +200,7 @@ export function InternshipDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full">
               {[
                 { icon: Briefcase, title: 'Track everything',   desc: 'Log every application with status, date, notes, and salary.' },
-                { icon: Kanban,    title: 'Visualise progress', desc: 'Drag-and-drop Kanban board across every hiring stage.' },
+                { icon: LayoutGrid, title: 'Stay organized',    desc: 'See every application, status, and note in one clean view.' },
                 { icon: BarChart2, title: 'See your stats',     desc: 'Response rates, timelines, and trends — all in Analytics.' },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="rounded-xl border border-border bg-card p-4 text-left">

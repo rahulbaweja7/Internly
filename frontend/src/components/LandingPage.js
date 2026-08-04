@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight, Mail, Trello, CheckCircle } from 'lucide-react';
+import { ArrowRight, Mail, LayoutGrid, CheckCircle } from 'lucide-react';
 import { Navbar } from './Navbar';
 
 // Wraps children and fades/slides them up when they enter the viewport.
@@ -83,7 +83,7 @@ export function LandingPage() {
               </h1>
 
               <p className="mt-5 text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
-                Connect Gmail once. Every application email you've ever sent, company, role, and status, pulled in automatically and laid out on a Kanban board.
+                Connect Gmail once. Every application email you've ever sent, company, role, and status, pulled in automatically and organized in one place.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -130,7 +130,7 @@ export function LandingPage() {
               </div>
             </FadeIn>
 
-            {/* Kanban mock */}
+            {/* Dashboard grid mock */}
             <FadeIn delay={120}>
               <div className="relative hidden lg:block">
                 <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden shadow-xl">
@@ -140,25 +140,13 @@ export function LandingPage() {
                     <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
                     <span className="ml-3 text-xs text-gray-400">Applycation · Dashboard</span>
                   </div>
-                  <div className="p-4 flex gap-2 overflow-hidden">
-                    <KanbanColMock label="Applied" dot="bg-blue-500" count={8} cards={[
-                      { role: 'Software Engineer', co: 'Google' },
-                      { role: 'SWE Intern', co: 'Meta' },
-                      { role: 'Backend Intern', co: 'Stripe' },
-                    ]} />
-                    <KanbanColMock label="OA" dot="bg-violet-500" count={3} cards={[
-                      { role: 'SWE Intern', co: 'Amazon' },
-                      { role: 'Frontend Dev', co: 'Figma' },
-                    ]} />
-                    <KanbanColMock label="Phone Screen" dot="bg-amber-500" count={2} cards={[
-                      { role: 'iOS Intern', co: 'Apple' },
-                    ]} active />
-                    <KanbanColMock label="Accepted" dot="bg-emerald-500" count={1} cards={[
-                      { role: 'SWE Intern', co: 'OpenAI', accepted: true },
-                    ]} />
-                    <KanbanColMock label="Rejected" dot="bg-red-400" count={4} cards={[
-                      { role: 'PM Intern', co: 'Netflix' },
-                    ]} />
+                  <div className="p-4 grid grid-cols-2 gap-2.5">
+                    <GridCardMock role="Software Engineer" co="Google"  status="Applied"    statusColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30" />
+                    <GridCardMock role="SWE Intern"         co="Meta"   status="Applied"    statusColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30" />
+                    <GridCardMock role="Backend Intern"     co="Stripe" status="OA"         statusColor="text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30" />
+                    <GridCardMock role="iOS Intern"         co="Apple"  status="Interview"  statusColor="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30" />
+                    <GridCardMock role="SWE Intern"         co="OpenAI" status="Accepted"   statusColor="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" />
+                    <GridCardMock role="PM Intern"          co="Netflix" status="Rejected"  statusColor="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30" />
                   </div>
                 </div>
                 <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg px-4 py-3 flex items-center gap-3">
@@ -167,7 +155,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-900 dark:text-white">OpenAI offer!</p>
-                    <p className="text-[11px] text-gray-400">Moved to Accepted</p>
+                    <p className="text-[11px] text-gray-400">Status updated to Accepted</p>
                   </div>
                 </div>
               </div>
@@ -249,31 +237,28 @@ export function LandingPage() {
               <FadeIn delay={160}>
                 <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 flex flex-col h-full">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center mb-5">
-                    <Trello className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <LayoutGrid className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <span className="text-[11px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">03</span>
-                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Drag to update, done</h3>
+                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-white">Update status, done</h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    Nine pipeline stages. Move a card when your status changes. Your whole hunt in one view.
+                    Nine pipeline stages. Change a card's status in one click. Your whole hunt in one view.
                   </p>
-                  <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 flex gap-2">
+                  <div className="mt-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 space-y-1.5">
                     {[
-                      { label: 'OA', dot: 'bg-violet-500', cards: [{ co: 'Amazon' }, { co: 'Figma' }] },
-                      { label: 'Interview', dot: 'bg-amber-500', cards: [{ co: 'Apple' }, { co: 'Meta' }] },
-                      { label: 'Offer', dot: 'bg-emerald-500', cards: [{ co: 'OpenAI', accent: true }] },
-                    ].map((col, i) => (
-                      <div key={i} className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1 mb-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${col.dot}`} />
-                          <span className="text-[9px] font-semibold text-gray-500 dark:text-gray-400 truncate">{col.label}</span>
+                      { co: 'Amazon', role: 'SWE Intern', tag: 'OA', tc: 'text-violet-600 dark:text-violet-400', bc: 'bg-violet-50 dark:bg-violet-900/30' },
+                      { co: 'Apple', role: 'iOS Intern', tag: 'Interview', tc: 'text-amber-600 dark:text-amber-400', bc: 'bg-amber-50 dark:bg-amber-900/30' },
+                      { co: 'OpenAI', role: 'SWE Intern', tag: 'Accepted', tc: 'text-emerald-600 dark:text-emerald-400', bc: 'bg-emerald-50 dark:bg-emerald-900/30' },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-2.5 py-1.5 border border-gray-100 dark:border-gray-600">
+                        <div className="h-5 w-5 rounded-full bg-gray-100 dark:bg-gray-600 flex items-center justify-center shrink-0">
+                          <span className="text-[8px] font-bold text-gray-500 dark:text-gray-300">{r.co[0]}</span>
                         </div>
-                        <div className="space-y-1">
-                          {col.cards.map((c, j) => (
-                            <div key={j} className={`rounded-md border px-2 py-1.5 ${c.accent ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700'}`}>
-                              <p className={`text-[9px] font-medium truncate ${c.accent ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{c.co}</p>
-                            </div>
-                          ))}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate">{r.co}</p>
+                          <p className="text-[9px] text-gray-400 truncate">{r.role}</p>
                         </div>
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${r.tc} ${r.bc}`}>{r.tag}</span>
                       </div>
                     ))}
                   </div>
@@ -315,39 +300,7 @@ export function LandingPage() {
           </section>
         </Page>
 
-        {/* ── Page 4: Kanban feature ────────────────────────────────── */}
-        <Page className="relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none dark:opacity-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.055) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
-          <div className="absolute -top-48 -right-48 w-[500px] h-[500px] rounded-full bg-violet-50 dark:bg-violet-950/10 blur-3xl pointer-events-none" />
-          <section className="relative max-w-7xl mx-auto px-6 py-16 w-full">
-            <FadeIn>
-              <FeatureRow
-                headline={<>Drag it to <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">where it actually is.</span></>}
-                body={
-                  <div>
-                    <p>Applied, OA, Phone Screen, Technical, Final, Accepted, Rejected. Nine stages that map to reality. Drag a card and the status saves instantly.</p>
-                    <ul className="mt-5 space-y-3">
-                      {[
-                        'Nine pipeline stages built for the real internship / new-grad process',
-                        'Drag a card to update status. No forms, no friction',
-                        'Every change syncs instantly across devices',
-                      ].map((item, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm">
-                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                }
-                visual={<BoardMock />}
-                flip
-              />
-            </FadeIn>
-          </section>
-        </Page>
-
-        {/* ── Page 5: Analytics feature ─────────────────────────────── */}
+        {/* ── Page 4: Analytics feature ─────────────────────────────── */}
         <Page className="relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none dark:opacity-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.055) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
           <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] rounded-full bg-emerald-50 dark:bg-emerald-950/10 blur-3xl pointer-events-none" />
@@ -394,7 +347,7 @@ export function LandingPage() {
                   starts here.
                 </h2>
                 <p className="mt-5 text-gray-400 text-base leading-relaxed">
-                  Connect Gmail in 30 seconds. Every application lands on your board automatically.
+                  Connect Gmail in 30 seconds. Every application is tracked automatically.
                 </p>
                 <button
                   onClick={() => navigate(user ? '/dashboard' : '/register')}
@@ -454,22 +407,14 @@ function FeatureRow({ tag, icon, headline, body, visual, flip = false }) {
   );
 }
 
-function KanbanColMock({ label, dot, count, cards, active = false }) {
+function GridCardMock({ role, co, status, statusColor }) {
   return (
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-        <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 truncate">{label}</span>
-        <span className="ml-auto text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-full px-1">{count}</span>
+    <div className="rounded-lg border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-2.5">
+      <div className="flex items-start justify-between gap-1.5 mb-1.5">
+        <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 truncate leading-tight">{role}</p>
+        <span className={`shrink-0 text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${statusColor}`}>{status}</span>
       </div>
-      <div className={`rounded-lg border-2 border-dashed p-1.5 space-y-1.5 min-h-[140px] ${active ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20' : 'border-gray-100 dark:border-gray-800'}`}>
-        {cards.map((c, i) => (
-          <div key={i} className={`rounded-md border p-1.5 text-[9px] ${c.accepted ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}>
-            <p className="font-semibold text-gray-700 dark:text-gray-300 truncate leading-tight">{c.role}</p>
-            <p className="text-gray-400 truncate">{c.co}</p>
-          </div>
-        ))}
-      </div>
+      <p className="text-[9px] text-gray-400 truncate">{co}</p>
     </div>
   );
 }
@@ -520,155 +465,6 @@ function GmailMock() {
         <span className="text-gray-200 dark:text-gray-700">·</span>
         <span className="text-[10px] text-gray-400">read-only · no email content stored</span>
       </div>
-    </div>
-  );
-}
-
-function BoardMock() {
-  return (
-    <div className="relative overflow-hidden select-none">
-      <style>{`
-        @keyframes bm-cursor {
-          0%,10%   { left:50%; top:108px; opacity:0; }
-          13%      { left:50%; top:108px; opacity:1; }
-          21%      { left:50%; top:124px; opacity:1; }
-          26%      { left:50%; top:120px; opacity:1; }
-          52%      { left:82%; top:108px; opacity:1; }
-          56%      { left:82%; top:112px; opacity:1; }
-          63%      { left:85%; top:92px;  opacity:1; }
-          70%,100% { left:85%; top:92px;  opacity:0; }
-        }
-        @keyframes bm-drag {
-          0%,24%   { left:34%; top:114px; opacity:0; transform:rotate(0deg) scale(1);    box-shadow:none; }
-          28%      { left:34%; top:110px; opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 12px 32px rgba(0,0,0,.18); }
-          52%      { left:66%; top:102px; opacity:1; transform:rotate(2deg) scale(1.07); box-shadow:0 12px 32px rgba(0,0,0,.18); }
-          57%      { left:66%; top:106px; opacity:1; transform:rotate(0deg) scale(1);    box-shadow:none; }
-          65%      { left:66%; top:106px; opacity:0; }
-          100%     { left:66%; top:106px; opacity:0; }
-        }
-        @keyframes bm-ghost {
-          0%,26%   { opacity:0; }
-          30%,87%  { opacity:1; }
-          93%,100% { opacity:0; }
-        }
-        @keyframes bm-recv {
-          0%,57%   { opacity:0; transform:translateY(6px); }
-          62%,87%  { opacity:1; transform:translateY(0);   }
-          93%,100% { opacity:0; transform:translateY(0);   }
-        }
-        .bm-cursor { animation:bm-cursor 9s ease-in-out infinite; }
-        .bm-drag   { animation:bm-drag   9s ease-in-out infinite; }
-        .bm-ghost  { animation:bm-ghost  9s ease-in-out infinite; }
-        .bm-recv   { animation:bm-recv   9s ease-in-out infinite; }
-      `}</style>
-
-      {/* Window chrome */}
-      <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
-        <span className="h-2 w-2 rounded-full bg-red-400/80" />
-        <span className="h-2 w-2 rounded-full bg-amber-400/80" />
-        <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
-        <span className="ml-2.5 text-[9px] font-medium text-gray-400 dark:text-gray-500">My Applications</span>
-      </div>
-
-      {/* Board columns */}
-      <div className="p-3 flex gap-2 bg-gray-50 dark:bg-gray-900/60">
-
-        {/* Applied */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-2">
-            <div className="h-1 w-3 rounded-full bg-blue-500" />
-            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Applied</span>
-            <span className="ml-auto text-[8px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full px-1.5 py-0.5">8</span>
-          </div>
-          <div className="space-y-1.5">
-            <BoardCard role="SWE Intern"      co="Google" avatar="G" avatarColor="bg-blue-500" />
-            <BoardCard role="Software Eng"    co="Stripe" avatar="S" avatarColor="bg-violet-500" />
-            <BoardCard role="iOS Intern"      co="Apple"  avatar="A" avatarColor="bg-gray-700 dark:bg-gray-600" />
-          </div>
-        </div>
-
-        {/* OA — ghost overlay animates over Amazon card during drag */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-2">
-            <div className="h-1 w-3 rounded-full bg-violet-500" />
-            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">OA</span>
-            <span className="ml-auto text-[8px] font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/50 rounded-full px-1.5 py-0.5">3</span>
-          </div>
-          <div className="space-y-1.5">
-            <BoardCard role="Frontend Dev" co="Figma"  avatar="F" avatarColor="bg-purple-500" />
-            <div className="relative">
-              <BoardCard role="SWE Intern"  co="Amazon" avatar="A" avatarColor="bg-orange-500" />
-              <div
-                className="bm-ghost absolute inset-0 rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/30"
-                style={{ opacity: 0 }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Interview — received card appears here after drop */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-2">
-            <div className="h-1 w-3 rounded-full bg-amber-500" />
-            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Interview</span>
-            <span className="ml-auto text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 rounded-full px-1.5 py-0.5">2</span>
-          </div>
-          <div className="space-y-1.5">
-            <BoardCard role="PM Intern"  co="Meta"   avatar="M" avatarColor="bg-blue-600" />
-            <div className="bm-recv" style={{ opacity: 0 }}>
-              <BoardCard role="SWE Intern" co="Amazon" avatar="A" avatarColor="bg-orange-500" />
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Animated mouse cursor */}
-      <div
-        className="bm-cursor absolute pointer-events-none z-20"
-        style={{ top: 0, left: 0, opacity: 0 }}
-      >
-        <svg width="13" height="16" viewBox="0 0 13 16" fill="none">
-          <path
-            d="M1.5 1.5L1.5 12.8L4.4 9.2L6.3 14.2L8 13.5L6.1 8.8L10.5 8.8Z"
-            fill="white"
-            stroke="#111827"
-            strokeWidth="1.4"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-
-      {/* Floating card that follows cursor during drag */}
-      <div
-        className="bm-drag absolute pointer-events-none z-10"
-        style={{ top: 0, left: 0, opacity: 0, width: 96 }}
-      >
-        <div className="rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 p-2">
-          <div className="flex items-center gap-1.5 mb-1">
-            <div className="h-4 w-4 rounded-md bg-orange-500 flex items-center justify-center shrink-0">
-              <span className="text-[7px] font-bold text-white">A</span>
-            </div>
-            <p className="text-[8px] font-bold text-gray-700 dark:text-gray-300 truncate">Amazon</p>
-          </div>
-          <p className="text-[8px] text-gray-400 truncate">SWE Intern</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BoardCard({ role, co, avatar, avatarColor }) {
-  return (
-    <div className="rounded-lg border border-gray-100 dark:border-gray-700/60 bg-white dark:bg-gray-800 p-2 shadow-sm">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <div className={`h-4 w-4 rounded-md ${avatarColor} flex items-center justify-center shrink-0`}>
-          <span className="text-[7px] font-bold text-white">{avatar}</span>
-        </div>
-        <p className="text-[8px] font-bold text-gray-700 dark:text-gray-300 truncate">{co}</p>
-      </div>
-      <p className="text-[8px] text-gray-400 dark:text-gray-500 truncate pl-[22px]">{role}</p>
     </div>
   );
 }

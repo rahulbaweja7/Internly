@@ -11,7 +11,7 @@ export const JOB_STATUSES = [
   'Withdrawn',
 ];
 
-// Status metadata for consistent styling across Kanban, badges, and forms
+// Status metadata for consistent styling across badges and forms
 export const STATUS_META = {
   'Applied':             { color: 'blue',    label: 'Applied' },
   'Online Assessment':   { color: 'violet',  label: 'OA' },
