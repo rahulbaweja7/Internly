@@ -8,8 +8,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'sonner';
 
-import './App.css';
-
 // ── Eager — needed on first load for unauthenticated visitors ─────────────────
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
