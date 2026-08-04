@@ -227,7 +227,7 @@ router.post('/login', authLimiter, isNotAuthenticated, validate(loginSchema), as
 });
 
 // Verify email
-router.post('/verify-email', validate(verifyEmailSchema), async (req, res) => {
+router.post('/verify-email', authLimiter, validate(verifyEmailSchema), async (req, res) => {
   try {
     const { token } = req.body;
 
