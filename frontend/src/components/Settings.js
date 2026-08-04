@@ -36,8 +36,34 @@ export default function Settings() {
     return (cleanName[0] || 'U').toUpperCase();
   }, [user]);
   const [displayName, setDisplayName] = useState(user?.name || '');
+  const [isSavingName, setIsSavingName] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
   const fileInputRef = useRef(null);
+
+  const saveDisplayName = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+    if (trimmed === user?.name) return;
+    setIsSavingName(true);
+    try {
+      const res = await fetch(`${config.API_BASE_URL}/api/auth/me`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      updateUser({ name: trimmed });
+      toast.success('Name updated');
+    } catch (_) {
+      toast.error('Failed to save name — try again');
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   useEffect(() => {
     if (user?.picture && (
@@ -194,10 +220,11 @@ export default function Settings() {
                       />
                       <button
                         type="button"
-                        className="h-10 rounded-md px-4 text-sm bg-black text-white dark:bg-white dark:text-black"
-                        onClick={() => {/* Persist later */}}
+                        className="h-10 rounded-md px-4 text-sm bg-black text-white dark:bg-white dark:text-black disabled:opacity-60"
+                        disabled={isSavingName || displayName.trim() === (user?.name || '')}
+                        onClick={saveDisplayName}
                       >
-                        Save
+                        {isSavingName ? 'Saving…' : 'Save'}
                       </button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">Use up to 32 characters.</p>
