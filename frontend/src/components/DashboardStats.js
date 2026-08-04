@@ -6,10 +6,17 @@ import { Briefcase, ClipboardList, TrendingUp, CheckCircle2, XCircle } from 'luc
  * @param {{ internships: Array, statusCounts: object }} props
  */
 export function DashboardStats({ internships, statusCounts }) {
+  // Phone/Technical/Final Interview stay distinct everywhere else (job cards,
+  // filters, status picker) — this card just totals them for the overview.
+  const interviewCount =
+    (statusCounts['Phone Interview'] || 0) +
+    (statusCounts['Technical Interview'] || 0) +
+    (statusCounts['Final Interview'] || 0);
+
   const stats = [
     { label: 'Total Applications', icon: Briefcase,    value: internships.length,                     color: 'text-blue-300' },
     { label: 'Online Assessments', icon: ClipboardList, value: statusCounts['Online Assessment'] || 0, color: 'text-violet-300' },
-    { label: 'Interview',          icon: TrendingUp,    value: statusCounts['Interview'] || 0,         color: 'text-amber-300' },
+    { label: 'Interview',          icon: TrendingUp,    value: interviewCount,                         color: 'text-amber-300' },
     { label: 'Accepted',           icon: CheckCircle2,  value: statusCounts.Accepted || 0,             color: 'text-emerald-300' },
     { label: 'Rejected',           icon: XCircle,       value: statusCounts.Rejected || 0,             color: 'text-rose-300' },
     {
