@@ -76,6 +76,7 @@ router.delete('/delete', isAuthenticated, async (req, res) => {
 // Google OAuth routes
 router.get(
   '/google',
+  authLimiter,
   isNotAuthenticated,
   passport.authenticate('google', {
     scope: ['profile', 'email'],
