@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logger = require('../utils/logger').child({ module: 'auth-middleware' });
+const { getCookie } = require('../utils/cookies');
 
 const isAuthenticated = async (req, res, next) => {
   try {
@@ -21,22 +22,17 @@ const isAuthenticated = async (req, res, next) => {
     }
 
     // 2) HttpOnly cookie: token=<jwt>
-    const cookieHeader = req.headers.cookie || '';
-    if (cookieHeader) {
-      const parts = cookieHeader.split(';').map((p) => p.trim());
-      const tokenPart = parts.find((p) => p.startsWith('token='));
-      const token = tokenPart ? decodeURIComponent(tokenPart.split('=').slice(1).join('=')) : null;
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-          const user = await User.findById(decoded.id);
-          if (user && user.isActive && (decoded.tv ?? 0) === (user.tokenVersion ?? 0)) {
-            req.user = user;
-            return next();
-          }
-        } catch (_) {
-          // invalid cookie token
+    const token = getCookie(req, 'token');
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const user = await User.findById(decoded.id);
+        if (user && user.isActive && (decoded.tv ?? 0) === (user.tokenVersion ?? 0)) {
+          req.user = user;
+          return next();
         }
+      } catch (_) {
+        // invalid cookie token
       }
     }
 

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { isAuthenticated } = require('../middleware/auth');
 const { generateAuthUrl, getTokensFromCode, createGmailService, parseJobApplicationFromEmail } = require('../gmailAuth');
 const GmailToken = require('../models/GmailToken');
+const { getCookie } = require('../utils/cookies');
 
 // Lazy-load queue so tests that don't set REDIS_URL still run
 const getScanQueue = () => {
@@ -27,12 +28,7 @@ router.get('/auth', async (req, res) => {
     let token = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.substring(7);
-    if (!token) {
-      const cookieHeader = req.headers.cookie || '';
-      const parts = cookieHeader.split(';').map((p) => p.trim());
-      const tokenPart = parts.find((p) => p.startsWith('token='));
-      token = tokenPart ? decodeURIComponent(tokenPart.split('=').slice(1).join('=')) : null;
-    }
+    if (!token) token = getCookie(req, 'token') || null;
     if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
     let userId = null;

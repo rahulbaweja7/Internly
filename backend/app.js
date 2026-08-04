@@ -8,6 +8,7 @@ const passport = require('passport');
 const { setupSecurity } = require('./middleware/security');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const crypto = require('crypto');
+const { getCookie, setCsrfCookie } = require('./utils/cookies');
 
 const app = express();
 
@@ -170,28 +171,10 @@ app.use('/api/gmail', gmailRoutes);
 // - Client mirrors it in `X-CSRF-Token` header for state-changing requests
 const CSRF_COOKIE_NAME = 'csrf';
 const regenerateCsrfIfMissing = (req, res, next) => {
-  const cookieHeader = req.headers.cookie || '';
-  const parts = cookieHeader.split(';').map((p) => p.trim());
-  const csrfPart = parts.find((p) => p.startsWith(`${CSRF_COOKIE_NAME}=`));
-  const isProd = process.env.NODE_ENV === 'production';
-  const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
-
   // Reuse existing token if present on the request; otherwise, create a new one
-  const existingToken = csrfPart ? decodeURIComponent(csrfPart.split('=').slice(1).join('=')) : '';
+  const existingToken = getCookie(req, CSRF_COOKIE_NAME);
   const token = existingToken || crypto.randomBytes(24).toString('hex');
-
-  // Always set the CSRF cookie for the configured parent domain so the frontend can read it
-  const cookieParts = [
-    `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}`,
-    'Path=/',
-    domainPart,
-    // Not HttpOnly so client can read and echo in header
-    isProd ? 'Secure' : '',
-    'SameSite=Lax',
-    'Max-Age=1209600', // 14 days
-  ].filter(Boolean);
-  res.setHeader('Set-Cookie', [...(res.getHeader('Set-Cookie') || []), cookieParts.join('; ')]);
-
+  setCsrfCookie(res, token);
   return next();
 };
 
@@ -200,10 +183,7 @@ const verifyCsrf = (req, res, next) => {
   const method = (req.method || 'GET').toUpperCase();
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
 
-  const cookieHeader = req.headers.cookie || '';
-  const parts = cookieHeader.split(';').map((p) => p.trim());
-  const csrfPart = parts.find((p) => p.startsWith(`${CSRF_COOKIE_NAME}=`));
-  const cookieToken = csrfPart ? decodeURIComponent(csrfPart.split('=').slice(1).join('=')) : '';
+  const cookieToken = getCookie(req, CSRF_COOKIE_NAME);
   const headerToken = req.get('X-CSRF-Token') || req.get('x-csrf-token') || '';
   if (!cookieToken || !headerToken || cookieToken !== headerToken) {
     return res.status(403).json({ error: 'CSRF validation failed' });

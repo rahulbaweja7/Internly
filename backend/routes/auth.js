@@ -16,6 +16,7 @@ const {
   registerSchema, loginSchema, verifyEmailSchema,
   forgotPasswordSchema, resetPasswordSchema, contactSchema,
 } = require('../schemas/auth');
+const { setAuthCookie, clearAuthCookies } = require('../utils/cookies');
 
 const router = express.Router();
 // Export user data (jobs + basic profile) – authenticated via cookie or Authorization header
@@ -53,20 +54,7 @@ router.delete('/delete', isAuthenticated, async (req, res) => {
     ]);
     await User.deleteOne({ _id: req.user._id });
     // Also clear auth cookies just like /logout so the browser session is gone
-    const isProd = process.env.NODE_ENV === 'production';
-    const domainConfigured = process.env.COOKIE_DOMAIN || '';
-    const baseAttrs = ['Path=/', 'HttpOnly', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
-    const cookiesToSet = [];
-    cookiesToSet.push(['token=;', ...baseAttrs].join('; '));
-    if (domainConfigured) {
-      cookiesToSet.push(['token=;', `Domain=${domainConfigured}`, ...baseAttrs].join('; '));
-    }
-    const csrfBase = ['Path=/', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
-    cookiesToSet.push(['csrf=;', ...csrfBase].join('; '));
-    if (domainConfigured) {
-      cookiesToSet.push(['csrf=;', `Domain=${domainConfigured}`, ...csrfBase].join('; '));
-    }
-    res.setHeader('Set-Cookie', cookiesToSet);
+    clearAuthCookies(res);
     res.json({ success: true });
   } catch (e) {
     logger.error({ err: e, userId: req.user?._id }, 'Delete account error');
@@ -91,18 +79,7 @@ router.get('/google/callback',
     // Stamp last login and issue JWT
     try { req.user.lastLoginAt = new Date(); await req.user.save(); } catch (_) {}
     const token = generateToken(req.user);
-    const isProd = process.env.NODE_ENV === 'production';
-    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
-    const cookieParts = [
-      `token=${encodeURIComponent(token)}`,
-      `Path=/`,
-      domainPart,
-      `HttpOnly`,
-      isProd ? `Secure` : '',
-      `SameSite=Lax`,
-      `Max-Age=${7 * 24 * 60 * 60}`,
-    ].filter(Boolean);
-    res.setHeader('Set-Cookie', cookieParts.join('; '));
+    setAuthCookie(res, token);
     const rawUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const frontendUrl = rawUrl.replace(/\/$/, ''); // strip trailing slash
     res.redirect(`${frontendUrl}/dashboard`);
@@ -156,18 +133,7 @@ router.post('/register', authLimiter, isNotAuthenticated, validate(registerSchem
 
     // Set JWT cookie
     const token = generateToken(user);
-    const isProd = process.env.NODE_ENV === 'production';
-    const domainPart = process.env.COOKIE_DOMAIN ? `Domain=${process.env.COOKIE_DOMAIN}` : '';
-    const cookieParts = [
-      `token=${encodeURIComponent(token)}`,
-      `Path=/`,
-      domainPart,
-      `HttpOnly`,
-      isProd ? `Secure` : '',
-      `SameSite=Lax`,
-      `Max-Age=${7 * 24 * 60 * 60}`,
-    ].filter(Boolean);
-    res.setHeader('Set-Cookie', cookieParts.join('; '));
+    setAuthCookie(res, token);
 
     res.status(201).json({
       message: 'User registered successfully. Please check your email to verify your account.',
@@ -207,16 +173,7 @@ router.post('/login', authLimiter, isNotAuthenticated, validate(loginSchema), as
 
     // Set JWT cookie
     const token = generateToken(user);
-    const isProd = process.env.NODE_ENV === 'production';
-    const cookieParts = [
-      `token=${encodeURIComponent(token)}`,
-      `Path=/`,
-      `HttpOnly`,
-      isProd ? `Secure` : '',
-      `SameSite=Lax`,
-      `Max-Age=${7 * 24 * 60 * 60}`,
-    ].filter(Boolean);
-    res.setHeader('Set-Cookie', cookieParts.join('; '));
+    setAuthCookie(res, token);
 
     res.json({
       message: 'Login successful',
@@ -364,26 +321,7 @@ router.put('/me', isAuthenticated, profileLimiter, async (req, res) => {
 // Logout (JWT: client-side token removal)
 router.get('/logout', (req, res) => {
   // Clear auth cookies for both host-only and domain-wide scopes
-  const isProd = process.env.NODE_ENV === 'production';
-  const domainConfigured = process.env.COOKIE_DOMAIN || '';
-
-  const baseAttrs = ['Path=/', 'HttpOnly', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
-
-  const cookiesToSet = [];
-  // 1) Host-only cookie (no Domain attr): clears tokens set without Domain or with host-only scope
-  cookiesToSet.push(['token=;', ...baseAttrs].join('; '));
-  // 2) Domain-wide cookie (Domain=.applycation.net) if configured
-  if (domainConfigured) {
-    cookiesToSet.push(['token=;', `Domain=${domainConfigured}`, ...baseAttrs].join('; '));
-  }
-  // Optionally clear CSRF cookie as well so the client starts fresh
-  const csrfBase = ['Path=/', isProd ? 'Secure' : '', 'SameSite=Lax', 'Max-Age=0'].filter(Boolean);
-  cookiesToSet.push(['csrf=;', ...csrfBase].join('; '));
-  if (domainConfigured) {
-    cookiesToSet.push(['csrf=;', `Domain=${domainConfigured}`, ...csrfBase].join('; '));
-  }
-
-  res.setHeader('Set-Cookie', cookiesToSet);
+  clearAuthCookies(res);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/`);
 });
