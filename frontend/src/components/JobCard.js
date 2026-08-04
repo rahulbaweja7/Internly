@@ -3,22 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Building, Calendar, MapPin, CheckSquare, Square } from 'lucide-react';
-
-const STATUS_COLORS = {
-  'Applied':             'bg-blue-500/10 text-blue-300 ring-1 ring-blue-300/20',
-  'Online Assessment':   'bg-violet-500/10 text-violet-300 ring-1 ring-violet-300/20',
-  'Phone Interview':     'bg-amber-500/10 text-amber-300 ring-1 ring-amber-300/20',
-  'Technical Interview': 'bg-orange-500/10 text-orange-300 ring-1 ring-orange-300/20',
-  'Final Interview':     'bg-rose-500/10 text-rose-300 ring-1 ring-rose-300/20',
-  'Accepted':            'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-300/20',
-  'Rejected':            'bg-red-500/10 text-red-300 ring-1 ring-red-300/20',
-  'Waitlisted':          'bg-yellow-500/10 text-yellow-300 ring-1 ring-yellow-300/20',
-  'Withdrawn':           'bg-gray-500/10 text-gray-400 ring-1 ring-gray-400/20',
-};
-
-export function getStatusColor(status) {
-  return STATUS_COLORS[status] || 'bg-muted text-foreground/70 ring-1 ring-border/50';
-}
+import { STATUS_BADGE_CLASS } from '../constants/jobStatuses';
 
 /**
  * @param {{ internship: object, isSelectionMode: boolean, selectedJobs: Set<string>,
@@ -54,7 +39,7 @@ export function JobCard({ internship, isSelectionMode, selectedJobs, toggleJobSe
               {internship.company}
             </CardDescription>
           </div>
-          <Badge className={`${getStatusColor(internship.status)} rounded-full px-2 py-1 text-xs`}>
+          <Badge className={`${STATUS_BADGE_CLASS[internship.status] || 'bg-muted text-muted-foreground'} rounded-full px-2 py-1 text-xs`}>
             {internship.status}
           </Badge>
         </div>
