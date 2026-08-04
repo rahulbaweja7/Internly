@@ -9,7 +9,7 @@ const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref
       {/* Backdrop */}
       <div
         className="fixed inset-x-0 top-16 bottom-0 bg-black/20 z-[9998]"
-        onClick={onOpenChange}
+        onClick={() => onOpenChange(false)}
       />
       {/* Content wrapper - size to content so modal centers */}
       <div className="relative z-[9999] w-full max-w-[700px] sm:max-w-[720px] mx-auto">
