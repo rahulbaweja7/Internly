@@ -1,7 +1,56 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref) => {
+  const contentRef = React.useRef(null);
+  const previouslyFocusedRef = React.useRef(null);
+
+  // Focus trap + Escape-to-close + focus restore on close
+  React.useEffect(() => {
+    if (!open) return;
+
+    previouslyFocusedRef.current = document.activeElement;
+    const container = contentRef.current;
+
+    const focusFirst = () => {
+      const focusable = container?.querySelectorAll(FOCUSABLE_SELECTOR);
+      if (focusable && focusable.length > 0) focusable[0].focus();
+      else container?.focus();
+    };
+    const raf = requestAnimationFrame(focusFirst);
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onOpenChange(false);
+        return;
+      }
+      if (e.key === "Tab" && container) {
+        const focusable = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [open, onOpenChange]);
+
   if (!open) return null;
 
   return (
@@ -12,7 +61,12 @@ const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref
         onClick={() => onOpenChange(false)}
       />
       {/* Content wrapper - size to content so modal centers */}
-      <div className="relative z-[9999] w-full max-w-[700px] sm:max-w-[720px] mx-auto">
+      <div
+        ref={contentRef}
+        role="dialog"
+        aria-modal="true"
+        className="relative z-[9999] w-full max-w-[700px] sm:max-w-[720px] mx-auto"
+      >
         {children}
       </div>
     </div>
