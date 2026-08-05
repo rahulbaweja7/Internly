@@ -125,19 +125,20 @@ export function Login() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats — kept in sync with the landing page hero so returning
+              visitors don't see different numbers for the same claims */}
           <div className="flex items-center justify-center lg:justify-start gap-8 pt-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">500+</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Students</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">3k+</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">apps tracked</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">1000+</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Applications</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">30s</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">to set up</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">85%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">$0</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">forever free</div>
             </div>
           </div>
         </div>
