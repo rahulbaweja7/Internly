@@ -25,7 +25,10 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
     amount: ''
   });
 
-  const requiredKeys = useMemo(() => ['company', 'position', 'location', 'status', 'appliedDate', 'description'], []);
+  // Matches the fields handleSubmit actually validates (and the only two
+  // labeled with * in the form) — Location/Status/Date/Description are
+  // optional, so they don't belong in a "required fields" count.
+  const requiredKeys = useMemo(() => ['company', 'position'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {
@@ -159,7 +162,7 @@ export function InternshipForm({ internship, onSubmit, onCancel, onDelete, onDel
             </div>
           </div>
           <span className="inline-flex items-center gap-2 text-xs rounded-full border border-border px-2 py-1 text-muted-foreground">
-            <CheckCircle2 className="h-3 w-3" /> {progress}/6 complete • Streak: {streakDays}d
+            <CheckCircle2 className="h-3 w-3" /> {progress}/{requiredKeys.length} complete • Streak: {streakDays}d
           </span>
         </div>
         {/* Layout inside modal/page: single column wrapper so content centers */}
