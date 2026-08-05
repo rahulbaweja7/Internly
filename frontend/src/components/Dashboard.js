@@ -332,11 +332,11 @@ export function InternshipDashboard() {
                 <span className="text-foreground font-medium">{filteredInternships.length}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} className="h-8 px-2">«</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="h-8 px-2">‹</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} aria-label="First page" className="h-8 px-2">«</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="h-8 px-2">‹</Button>
                 <div className="text-sm">Page {page} / {totalPages}</div>
-                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-8 px-2">›</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="h-8 px-2">»</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} aria-label="Next page" className="h-8 px-2">›</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page >= totalPages} aria-label="Last page" className="h-8 px-2">»</Button>
               </div>
             </div>
 
