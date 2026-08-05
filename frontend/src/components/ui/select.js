@@ -5,10 +5,15 @@ import { ChevronDown } from "lucide-react"
 const Select = React.forwardRef(({ children, value, onValueChange, ...props }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [selectedValue, setSelectedValue] = React.useState(value || "")
-  
+  const [highlightedIndex, setHighlightedIndex] = React.useState(-1)
+  const triggerRef = React.useRef(null)
+  const listId = React.useId()
+
   const handleSelect = (newValue) => {
     setSelectedValue(newValue)
     setIsOpen(false)
+    setHighlightedIndex(-1)
+    triggerRef.current?.focus()
     if (onValueChange) {
       onValueChange(newValue)
     }
@@ -21,7 +26,7 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
   // Find SelectTrigger and SelectContent from children
   let trigger = null
   let content = null
-  
+
   React.Children.forEach(children, (child) => {
     if (React.isValidElement(child)) {
       if (child.type === SelectTrigger) {
@@ -32,11 +37,82 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
     }
   })
 
+  // Flatten items once so keyboard nav and rendering share the same order/indices
+  const items = content
+    ? React.Children.toArray(content.props.children).filter(
+        (c) => React.isValidElement(c) && c.type === SelectItem
+      )
+    : []
+
+  const openAt = (index) => {
+    setIsOpen(true)
+    setHighlightedIndex(index)
+  }
+
+  const closeAndFocusTrigger = () => {
+    setIsOpen(false)
+    setHighlightedIndex(-1)
+    triggerRef.current?.focus()
+  }
+
+  const handleTriggerKeyDown = (e) => {
+    switch (e.key) {
+      case "Enter":
+      case " ":
+        e.preventDefault()
+        if (!isOpen) {
+          const selectedIdx = items.findIndex((i) => i.props.value === selectedValue)
+          openAt(selectedIdx >= 0 ? selectedIdx : 0)
+        } else if (highlightedIndex >= 0 && items[highlightedIndex]) {
+          handleSelect(items[highlightedIndex].props.value)
+        }
+        break
+      case "ArrowDown":
+        e.preventDefault()
+        if (!isOpen) {
+          const selectedIdx = items.findIndex((i) => i.props.value === selectedValue)
+          openAt(selectedIdx >= 0 ? selectedIdx : 0)
+        } else {
+          setHighlightedIndex((i) => Math.min(items.length - 1, (i < 0 ? -1 : i) + 1))
+        }
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        if (!isOpen) {
+          openAt(items.length - 1)
+        } else {
+          setHighlightedIndex((i) => Math.max(0, (i < 0 ? items.length : i) - 1))
+        }
+        break
+      case "Escape":
+        if (isOpen) {
+          e.preventDefault()
+          closeAndFocusTrigger()
+        }
+        break
+      case "Tab":
+        if (isOpen) setIsOpen(false)
+        break
+      default:
+        break
+    }
+  }
+
+  const activeOptionId = highlightedIndex >= 0 ? `${listId}-option-${highlightedIndex}` : undefined
+
   return (
     <div className="relative" ref={ref}>
       {trigger && React.cloneElement(trigger, {
-        onClick: () => setIsOpen(!isOpen),
+        ref: triggerRef,
+        onClick: () => (isOpen ? closeAndFocusTrigger() : openAt(items.findIndex((i) => i.props.value === selectedValue))),
+        onKeyDown: handleTriggerKeyDown,
         isOpen: isOpen,
+        tabIndex: 0,
+        role: "combobox",
+        "aria-haspopup": "listbox",
+        "aria-expanded": isOpen,
+        "aria-controls": listId,
+        "aria-activedescendant": activeOptionId,
         className: cn(
           trigger.props.className,
           "cursor-pointer",
@@ -58,21 +134,30 @@ const Select = React.forwardRef(({ children, value, onValueChange, ...props }, r
           return child
         })
       })}
-      
+
       {isOpen && content && (
-        <div className="absolute top-full left-0 right-0 z-[9999] mt-1 max-h-80 overflow-auto rounded-md border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
-          {React.Children.map(content.props.children, (child) => {
-            if (React.isValidElement(child) && child.type === SelectItem) {
-              return React.cloneElement(child, {
-                onClick: () => handleSelect(child.props.value),
-                className: cn(
-                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
-                  child.props.value === selectedValue && "bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
-                )
-              })
-            }
-            return child
-          })}
+        <div
+          id={listId}
+          role="listbox"
+          className="absolute top-full left-0 right-0 z-[9999] mt-1 max-h-80 overflow-auto rounded-md border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700"
+        >
+          {items.map((child, index) =>
+            React.cloneElement(child, {
+              key: child.props.value ?? index,
+              id: `${listId}-option-${index}`,
+              role: "option",
+              "aria-selected": child.props.value === selectedValue,
+              onClick: () => handleSelect(child.props.value),
+              onMouseEnter: () => setHighlightedIndex(index),
+              className: cn(
+                "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-2 text-sm outline-none transition-colors",
+                index === highlightedIndex
+                  ? "bg-gray-100 dark:bg-gray-700"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700",
+                child.props.value === selectedValue && "bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
+              )
+            })
+          )}
         </div>
       )}
     </div>
@@ -136,4 +221,4 @@ const SelectItem = React.forwardRef(({ className, children, value, onClick, ...p
 ))
 SelectItem.displayName = "SelectItem"
 
-export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } 
+export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
