@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders hero subtitle', () => {
+test('renders landing page hero', () => {
   render(<App />);
-  expect(screen.getByText(/Free Internship Tracking Platform/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+  expect(screen.getByText(/stop tracking/i)).toBeInTheDocument();
 });
