@@ -78,14 +78,13 @@ export default function ContributionHeatmap({ internships, weeksToShow = 53, noC
   // Month labels for the top (label a week when it begins a new month)
   const monthLabels = [];
   let lastMonth = -1;
-  weeks.forEach((week, idx) => {
+  weeks.forEach((week) => {
     const month = week[0].date.getMonth();
     if (month !== lastMonth) {
       monthLabels.push(week[0].date.toLocaleString(undefined, { month: 'short' }));
       lastMonth = month;
     } else {
-      // reduce density of empty labels to keep spacing consistent across 53 columns
-      monthLabels.push(idx % 2 === 0 ? '' : '');
+      monthLabels.push('');
     }
   });
 
@@ -169,11 +168,13 @@ export default function ContributionHeatmap({ internships, weeksToShow = 53, noC
             </div>
 
             <div className="flex">
-              {/* Weekday labels */}
-              <div className="mr-2 flex flex-col justify-between text-[10px] md:text-xs text-gray-500 dark:text-gray-400 select-none">
-                <span className="h-3.5 md:h-4">Mon</span>
-                <span className="h-3.5 md:h-4">Wed</span>
-                <span className="h-3.5 md:h-4">Fri</span>
+              {/* Weekday labels — one slot per grid row (Sun..Sat) so Mon/Wed/Fri
+                  line up with their actual rows instead of being spread evenly
+                  across the column via justify-between */}
+              <div className="mr-2 flex flex-col gap-1 text-[10px] md:text-xs text-gray-500 dark:text-gray-400 select-none">
+                {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((label, i) => (
+                  <span key={i} className="h-3.5 md:h-4 flex items-center">{label}</span>
+                ))}
               </div>
               {/* Grid */}
               <div className="relative flex gap-1" ref={containerRef} onMouseLeave={hideTooltip}>
