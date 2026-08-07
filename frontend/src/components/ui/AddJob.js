@@ -33,7 +33,10 @@ function AddJob() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const requiredKeys = useMemo(() => ['company', 'position', 'location', 'appliedDate', 'status', 'description'], []);
+  // Matches the fields handleSubmit actually validates (and the only four
+  // labeled with * in the form) — Status always has a default and
+  // Description is optional, so neither belongs in a "required" count.
+  const requiredKeys = useMemo(() => ['company', 'position', 'location', 'appliedDate'], []);
   const progress = useMemo(() => requiredKeys.filter(k => String(formData[k] || '').trim().length > 0).length, [formData, requiredKeys]);
 
   useEffect(() => {
@@ -133,7 +136,7 @@ function AddJob() {
               <p className="text-muted-foreground">Fill out details to track your application</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-2 text-xs rounded-full border border-border px-2 py-1 text-muted-foreground"><CheckCircle2 className="h-3 w-3" /> {progress}/6 complete</span>
+          <span className="inline-flex items-center gap-2 text-xs rounded-full border border-border px-2 py-1 text-muted-foreground"><CheckCircle2 className="h-3 w-3" /> {progress}/{requiredKeys.length} complete</span>
         </div>
 
         <div>
