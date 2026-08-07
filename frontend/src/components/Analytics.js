@@ -22,13 +22,18 @@ export function Analytics() {
     return acc;
   }, {});
 
+  const escapeCsv = (v) => String(v ?? '').replace(/"/g, '""');
+
   const handleExportCSV = () => {
     const headers = ['Company', 'Role', 'Location', 'Status', 'Date Applied', 'Stipend', 'Notes'];
     const rows = internships.map(j => [
-      j.company, j.role, j.location, j.status,
+      escapeCsv(j.company),
+      escapeCsv(j.role),
+      escapeCsv(j.location),
+      escapeCsv(j.status),
       j.dateApplied ? new Date(j.dateApplied).toLocaleDateString() : '',
-      j.stipend || '',
-      (j.notes || '').replace(/"/g, '""'),
+      escapeCsv(j.stipend),
+      escapeCsv(j.notes),
     ].map(v => `"${v}"`).join(','));
     const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
