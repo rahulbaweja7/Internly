@@ -76,13 +76,14 @@ export default function Profile() {
   const onSaveProfile = async () => {
     try {
       setSaving(true);
-      updateUser({ bio, location });
-      await fetch(`${config.API_BASE_URL}/api/auth/me`, {
+      const res = await fetch(`${config.API_BASE_URL}/api/auth/me`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ bio, location }),
       });
+      if (!res.ok) throw new Error('Failed to save');
+      updateUser({ bio, location });
       setIsEditing(false);
       toast.success('Profile updated');
     } catch (_) {
