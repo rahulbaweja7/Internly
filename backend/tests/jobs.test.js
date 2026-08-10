@@ -217,6 +217,48 @@ describe('POST /api/jobs', () => {
 
     expect(res.body.status).toBe('Applied');
   });
+
+  // onlyUpdateStatusIfExists is sent by the Gmail importer when the email is
+  // already tracked — it should promote status but never overwrite the fields
+  // the user may have edited (location/notes/stipend/dateApplied).
+  describe('onlyUpdateStatusIfExists', () => {
+    it('promotes status on an existing job without touching other fields', async () => {
+      const { user, token } = await createUser();
+
+      await authed('post', '/api/jobs', token)
+        .send({ company: 'Notion', role: 'Designer', status: 'Applied', location: 'SF', notes: 'original note' })
+        .expect(201);
+
+      const res = await authed('post', '/api/jobs', token)
+        .send({
+          company: 'Notion', role: 'Designer', status: 'Phone Interview',
+          location: 'NYC', notes: 'incoming note', onlyUpdateStatusIfExists: true,
+        })
+        .expect(200);
+
+      expect(res.body.status).toBe('Phone Interview');
+
+      const job = await Job.findOne({ userId: user._id, normalizedCompany: 'notion' }).lean();
+      expect(job.status).toBe('Phone Interview');
+      expect(job.location).toBe('SF');           // not overwritten with NYC
+      expect(job.notes).toBe('original note');   // not appended/overwritten
+    });
+
+    it('does not change status when incoming rank is not higher', async () => {
+      const { user, token } = await createUser();
+
+      await authed('post', '/api/jobs', token)
+        .send({ company: 'Notion', role: 'Designer', status: 'Technical Interview' })
+        .expect(201);
+
+      await authed('post', '/api/jobs', token)
+        .send({ company: 'Notion', role: 'Designer', status: 'Applied', onlyUpdateStatusIfExists: true })
+        .expect(200);
+
+      const job = await Job.findOne({ userId: user._id, normalizedCompany: 'notion' }).lean();
+      expect(job.status).toBe('Technical Interview');
+    });
+  });
 });
 
 // ── PUT /api/jobs/:id ─────────────────────────────────────────────────────────
