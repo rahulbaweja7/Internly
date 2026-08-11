@@ -421,7 +421,7 @@ export default function ImportGmail() {
                 );
               })}
 
-              <div className="flex items-center justify-between py-3 rounded-xl border border-border bg-card px-4">
+              <div className="col-span-full flex items-center justify-between py-3 rounded-xl border border-border bg-card px-4">
                 <div className="text-sm text-muted-foreground">
                   Showing <span className="text-foreground font-medium">{start + 1}–{Math.min(start + pageSize, filtered.length)}</span> of <span className="text-foreground font-medium">{filtered.length}</span>
                 </div>
