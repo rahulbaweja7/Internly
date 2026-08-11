@@ -3,6 +3,10 @@ import axios from 'axios';
 import config from '../config/config';
 import { identifyUser, resetUser } from '../utils/analytics';
 
+// Send cookies with every request. Set once at module load rather than on
+// every AuthProvider render.
+axios.defaults.withCredentials = true;
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -17,21 +21,23 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios to include credentials; stop using Authorization header
-  axios.defaults.withCredentials = true;
-
-  // Add CSRF header from cookie for state-changing requests
-  axios.interceptors.request.use((config) => {
-    const method = (config.method || 'get').toLowerCase();
-    if (['post', 'put', 'patch', 'delete'].includes(method)) {
-      const match = document.cookie.match(/(?:^|; )csrf=([^;]+)/);
-      const token = match ? decodeURIComponent(match[1]) : '';
-      if (token) {
-        config.headers['X-CSRF-Token'] = token;
+  // Add CSRF header from cookie for state-changing requests. Registered once
+  // on mount (and ejected on unmount) — registering in the render body stacked
+  // a fresh interceptor on the shared axios instance on every re-render.
+  useEffect(() => {
+    const interceptorId = axios.interceptors.request.use((cfg) => {
+      const method = (cfg.method || 'get').toLowerCase();
+      if (['post', 'put', 'patch', 'delete'].includes(method)) {
+        const match = document.cookie.match(/(?:^|; )csrf=([^;]+)/);
+        const token = match ? decodeURIComponent(match[1]) : '';
+        if (token) {
+          cfg.headers['X-CSRF-Token'] = token;
+        }
       }
-    }
-    return config;
-  });
+      return cfg;
+    });
+    return () => axios.interceptors.request.eject(interceptorId);
+  }, []);
 
   const checkAuth = async () => {
     try {
