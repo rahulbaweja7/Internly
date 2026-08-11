@@ -3,20 +3,25 @@ import { Navbar } from './Navbar';
 import { Activity as ActivityIcon, Clock, Zap, TrendingUp } from 'lucide-react';
 import { getUsageMetrics, formatDuration } from '../lib/usageTracker';
 import { useData } from '../contexts/DataContext';
+import { STATUS_BADGE_CLASS } from '../constants/jobStatuses';
 
-const STATUS_STYLES = {
-  'Applied':             { dot: 'bg-blue-500',    badge: 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-400/20' },
-  'Online Assessment':   { dot: 'bg-violet-500',  badge: 'bg-violet-500/10 text-violet-400 ring-1 ring-violet-400/20' },
-  'Phone Interview':     { dot: 'bg-amber-500',   badge: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-400/20' },
-  'Technical Interview': { dot: 'bg-orange-500',  badge: 'bg-orange-500/10 text-orange-400 ring-1 ring-orange-400/20' },
-  'Final Interview':     { dot: 'bg-rose-500',    badge: 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-400/20' },
-  'Accepted':            { dot: 'bg-emerald-500', badge: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-400/20' },
-  'Rejected':            { dot: 'bg-red-500',     badge: 'bg-red-500/10 text-red-400 ring-1 ring-red-400/20' },
-  'Waitlisted':          { dot: 'bg-yellow-500',  badge: 'bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-400/20' },
-  'Withdrawn':           { dot: 'bg-gray-500',    badge: 'bg-gray-500/10 text-gray-400 ring-1 ring-gray-400/20' },
+// Timeline dot colors only — solid fills, legible in both themes. Badge
+// colors come from the shared, theme-aware STATUS_BADGE_CLASS so they
+// don't repeat the light-mode-illegible pastel map that JobCard had.
+const STATUS_DOT = {
+  'Applied':             'bg-blue-500',
+  'Online Assessment':   'bg-violet-500',
+  'Phone Interview':     'bg-amber-500',
+  'Technical Interview': 'bg-orange-500',
+  'Final Interview':     'bg-rose-500',
+  'Accepted':            'bg-emerald-500',
+  'Rejected':            'bg-red-500',
+  'Waitlisted':          'bg-yellow-500',
+  'Withdrawn':           'bg-gray-500',
 };
 
-const DEFAULT_STYLE = { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-foreground/60 ring-1 ring-border/40' };
+const DEFAULT_DOT = 'bg-muted-foreground/40';
+const DEFAULT_BADGE = 'bg-muted text-muted-foreground';
 
 function relativeTime(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -162,12 +167,12 @@ export default function Activity() {
 
                   <div className="space-y-1">
                     {group.events.map((ev, idx) => {
-                      const style = STATUS_STYLES[ev.status] || DEFAULT_STYLE;
+                      const dotClass = STATUS_DOT[ev.status] || DEFAULT_DOT;
                       return (
                         <div key={idx} className="flex gap-4 group">
                           {/* Dot */}
                           <div className="relative flex-shrink-0 mt-[18px]">
-                            <div className={`w-3.5 h-3.5 rounded-full ring-2 ring-background ${style.dot}`} />
+                            <div className={`w-3.5 h-3.5 rounded-full ring-2 ring-background ${dotClass}`} />
                           </div>
 
                           {/* Card */}
@@ -180,7 +185,7 @@ export default function Activity() {
                                 )}
                               </div>
                               <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style.badge}`}>
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE_CLASS[ev.status] || DEFAULT_BADGE}`}>
                                   {ev.status}
                                 </span>
                                 <span className="text-[11px] text-muted-foreground/70">{relativeTime(ev.at)}</span>
