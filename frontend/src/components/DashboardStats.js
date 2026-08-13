@@ -1,35 +1,21 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Briefcase, ClipboardList, TrendingUp, CheckCircle2, XCircle } from 'lucide-react';
+import { computeStats } from '../lib/statsUtils';
 
 /**
  * @param {{ internships: Array, statusCounts: object }} props
  */
 export function DashboardStats({ internships, statusCounts }) {
-  // Phone/Technical/Final Interview stay distinct everywhere else (job cards,
-  // filters, status picker) — this card just totals them for the overview.
-  const interviewCount =
-    (statusCounts['Phone Interview'] || 0) +
-    (statusCounts['Technical Interview'] || 0) +
-    (statusCounts['Final Interview'] || 0);
+  const s = computeStats(internships.length, statusCounts);
 
   const stats = [
-    { label: 'Total Applications', icon: Briefcase,    value: internships.length,                     color: 'text-blue-300' },
-    { label: 'Online Assessments', icon: ClipboardList, value: statusCounts['Online Assessment'] || 0, color: 'text-violet-300' },
-    { label: 'Interview',          icon: TrendingUp,    value: interviewCount,                         color: 'text-amber-300' },
-    { label: 'Accepted',           icon: CheckCircle2,  value: statusCounts.Accepted || 0,             color: 'text-emerald-300' },
-    { label: 'Rejected',           icon: XCircle,       value: statusCounts.Rejected || 0,             color: 'text-rose-300' },
-    {
-      label: 'Response Rate',
-      icon: TrendingUp,
-      color: 'text-muted-foreground',
-      value: internships.length > 0
-        ? Math.round(
-            ((statusCounts['Online Assessment'] || 0) + (statusCounts.Accepted || 0)) /
-              internships.length * 100
-          ) + '%'
-        : '0%',
-    },
+    { label: 'Total Applications', icon: Briefcase,    value: s.total,             color: 'text-blue-300' },
+    { label: 'Online Assessments', icon: ClipboardList, value: s.onlineAssessments, color: 'text-violet-300' },
+    { label: 'Interview',          icon: TrendingUp,    value: s.interview,         color: 'text-amber-300' },
+    { label: 'Accepted',           icon: CheckCircle2,  value: s.accepted,          color: 'text-emerald-300' },
+    { label: 'Rejected',           icon: XCircle,       value: s.rejected,          color: 'text-rose-300' },
+    { label: 'Response Rate',      icon: TrendingUp,    value: `${s.responseRate}%`, color: 'text-muted-foreground' },
   ];
 
   return (
