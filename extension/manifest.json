@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Add to Applycation",
+  "version": "1.0.0",
+  "description": "One-click capture of the current page into your Applycation job tracker.",
+  "minimum_chrome_version": "96",
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Add to Applycation",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
