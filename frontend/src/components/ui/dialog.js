@@ -57,6 +57,7 @@ const Dialog = React.forwardRef(({ children, open, onOpenChange, ...props }, ref
     <div className="fixed inset-x-0 top-16 bottom-0 z-[9999] flex items-start justify-center px-4 py-6">
       {/* Backdrop */}
       <div
+        data-testid="dialog-backdrop"
         className="fixed inset-x-0 top-16 bottom-0 bg-black/20 z-[9998]"
         onClick={() => onOpenChange(false)}
       />
