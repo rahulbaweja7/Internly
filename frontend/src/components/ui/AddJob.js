@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
@@ -16,20 +16,24 @@ import { JOB_STATUSES } from '../../constants/jobStatuses';
 
 function AddJob() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    company: '',
-    position: '',
-    location: '',
+  const [params] = useSearchParams();
+  // Pre-filled when arriving from the "Add to Applycation" browser extension
+  // (?company=&position=&location=&jobUrl=&description=). appliedDate stays
+  // defaulted to today — extraction time isn't the same as applied time.
+  const [formData, setFormData] = useState(() => ({
+    company: params.get('company') || '',
+    position: params.get('position') || '',
+    location: params.get('location') || '',
     status: 'Applied',
     appliedDate: new Date().toISOString().split('T')[0],
-    description: '',
+    description: params.get('description') || '',
     salary: '',
     notes: '',
-    jobUrl: '',
+    jobUrl: params.get('jobUrl') || '',
     currency: 'USD',
     period: 'month',
     amount: ''
-  });
+  }));
   const [showConfetti, setShowConfetti] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
